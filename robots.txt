@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /assets/
+
+# DIUSF v4 — actualiza el dominio en el sitemap
+Sitemap: https://tudominio.com/sitemap.xml

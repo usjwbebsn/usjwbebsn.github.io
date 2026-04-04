@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#f5f5f7" />
+  <meta name="robots" content="index, follow" />
+  <meta name="author" content="DIUSF" />
+
+  <title>DIUSF — Fuentes Unicode para copiar y pegar | Discord, Instagram, TikTok</title>
+  <meta name="description" content="Convierte cualquier texto a estilos Unicode reales al instante. Herramientas de texto, descarga como imagen, comparación de estilos y más. Funciona en Discord, Instagram, TikTok, Twitter/X, WhatsApp. Gratis." />
+  <meta name="keywords" content="fuentes unicode, letras para copiar, fuentes discord, fuentes instagram, fuentes tiktok, text style copy paste, fuentes decorativas, texto fancy, letras bonitas, generador texto" />
+
+  <meta property="og:title"       content="DIUSF — Fuentes Unicode para copiar y pegar" />
+  <meta property="og:description" content="Convierte tu texto a estilos Unicode reales. Funciona en Discord, Instagram, TikTok, Twitter/X, Steam y WhatsApp. Gratis y sin registro." />
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         id="og-url"   content="" />
+  <meta property="og:image"       id="og-image" content="" />
+  <meta property="og:locale"      content="es_ES" />
+  <meta property="og:site_name"   content="DIUSF" />
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content="DIUSF — Fuentes Unicode para copiar y pegar" />
+  <meta name="twitter:description" content="Convierte tu texto a estilos Unicode. Discord, Instagram, TikTok y más." />
+  <meta name="twitter:image"       id="tw-image" content="" />
+
+  <link rel="canonical" id="canonical-url" href="" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>𝕴</text></svg>" />
+
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"DIUSF","url":"https://tudominio.com/","description":"Conversor de texto a caracteres Unicode. Discord, Instagram, TikTok, Twitter/X, Steam, WhatsApp.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","inLanguage":"es","offers":{"@type":"Offer","price":0,"priceCurrency":"EUR"}}
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"¿Por qué funcionan estas fuentes en Discord pero no en algunos sitios?","acceptedAnswer":{"@type":"Answer","text":"Los caracteres Unicode son parte del estándar universal de texto. La mayoría de apps modernas los aceptan, pero algunos sitios antiguos pueden filtrarlos."}},{"@type":"Question","name":"¿Es gratis para siempre?","acceptedAnswer":{"@type":"Answer","text":"Sí. DIUSF es completamente gratuito y no requiere registro."}},{"@type":"Question","name":"¿Funciona en iPhone y Android?","acceptedAnswer":{"@type":"Answer","text":"Sí. DIUSF funciona en cualquier navegador moderno tanto en iOS como en Android."}},{"@type":"Question","name":"¿Qué diferencia hay entre estas fuentes y las fuentes normales?","acceptedAnswer":{"@type":"Answer","text":"Los caracteres Unicode son el texto en sí mismo; el receptor los ve sin necesitar ninguna fuente instalada. Por eso funcionan en cualquier app."}}]}
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preload" href="css/diusf.css" as="style" />
+  <link rel="stylesheet" href="css/diusf.css" />
+
+  <style>
+/* ══════════════════════════════════════════════
+   DIUSF v5 — Nuevas funciones (parche sobre diusf.css)
+══════════════════════════════════════════════ */
+
+/* ── SEARCH FIX: X centrada y custom ── */
+.search-input { padding-right: 32px; }
+/* Ocultar X nativa del browser */
+.search-input::-webkit-search-cancel-button { -webkit-appearance:none; display:none; }
+.search-input::-ms-clear { display:none; }
+.search-clear {
+  position:absolute; right:8px; top:50%; transform:translateY(-50%);
+  width:18px; height:18px; border-radius:50%;
+  background:rgba(0,0,0,.18); border:none; cursor:pointer;
+  color:#fff; font-size:9px; font-weight:900;
+  display:none; align-items:center; justify-content:center;
+  line-height:1; padding:0; transition:background .15s, transform .15s;
+  flex-shrink:0;
+}
+.search-clear.on { display:flex; }
+.search-clear:hover { background:rgba(0,0,0,.32); }
+.search-clear:active { transform:translateY(-50%) scale(.82); }
+body.dark .search-clear { background:rgba(255,255,255,.22); }
+body.dark .search-clear:hover { background:rgba(255,255,255,.35); }
+
+/* ── TEXTAREA MULTILÍNEA ── */
+.text-field-area {
+  position:relative; z-index:1; width:100%; background:var(--bg2);
+  border:1.5px solid rgba(0,0,0,.09); border-radius:var(--r3);
+  padding:14px 46px 14px 18px; color:var(--t1); font-size:17px;
+  font-weight:500; font-family:var(--sf); letter-spacing:-.3px;
+  outline:none; caret-color:var(--blue);
+  transition:border-color .18s, background .18s, box-shadow .18s;
+  margin-bottom:10px; resize:none; min-height:54px; max-height:140px;
+  overflow-y:auto; line-height:1.45;
+}
+.text-field-area:focus {
+  border-color:rgba(0,122,255,.5); background:#fff;
+  box-shadow:0 0 0 3px rgba(0,122,255,.10);
+}
+.text-field-area::placeholder { color:var(--t4); font-weight:400; }
+
+/* ── LIVE STATS ── */
+.live-stats {
+  display:flex; gap:10px; flex-wrap:wrap; margin-top:2px; margin-bottom:8px;
+}
+.live-stat {
+  font-size:11px; color:var(--t4); font-weight:500;
+  display:flex; align-items:center; gap:3px;
+}
+.live-stat strong { color:var(--t2); font-size:11.5px; }
+
+/* ── HERRAMIENTAS DE TEXTO ── */
+.tools-section {
+  background:var(--bg1); border-radius:var(--r3); border:1px solid rgba(0,0,0,.07);
+  box-shadow:0 1px 4px rgba(0,0,0,.04); margin-bottom:12px;
+  overflow:hidden; animation:fadeUp .4s .12s ease both;
+}
+.tools-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:13px 18px; cursor:pointer; user-select:none;
+  background:transparent; border:none; width:100%; font-family:var(--sf);
+}
+.tools-header:hover { background:var(--bg2); }
+.tools-header-left { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--t2); }
+.tools-arrow { font-size:11px; color:var(--t4); transition:transform .2s ease; }
+.tools-body { display:none; border-top:1px solid rgba(0,0,0,.06); }
+.tools-section.open .tools-body { display:block; }
+.tools-section.open .tools-arrow { transform:rotate(180deg); }
+
+.tools-group { padding:12px 14px 4px; }
+.tools-group-label {
+  font-size:10px; font-weight:700; color:var(--t4);
+  text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px;
+}
+.tools-btns { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+.tool-btn {
+  display:inline-flex; align-items:center; gap:5px;
+  background:var(--bg2); border:1px solid rgba(0,0,0,.09); border-radius:8px;
+  padding:7px 12px; font-size:12px; font-weight:600; font-family:var(--sf);
+  color:var(--t2); cursor:pointer;
+  transition:all .18s cubic-bezier(.34,1.56,.64,1);
+  -webkit-tap-highlight-color:transparent;
+}
+.tool-btn:hover { background:var(--blue-lo); border-color:rgba(0,122,255,.3); color:var(--blue); transform:translateY(-1px); }
+.tool-btn:active { transform:scale(.91); }
+.tool-btn.active { background:var(--blue-lo); border-color:rgba(0,122,255,.4); color:var(--blue); }
+
+/* Repetidor */
+.repeat-row { display:flex; align-items:center; gap:8px; margin-bottom:14px; padding:0 14px; }
+.repeat-label { font-size:12px; font-weight:600; color:var(--t3); white-space:nowrap; }
+.repeat-input {
+  width:56px; background:var(--bg2); border:1px solid rgba(0,0,0,.09);
+  border-radius:8px; padding:6px 10px; font-size:13px; font-weight:700;
+  font-family:var(--sf); color:var(--t1); text-align:center; outline:none;
+  transition:border-color .15s;
+}
+.repeat-input:focus { border-color:var(--blue); }
+.repeat-sep-input {
+  flex:1; background:var(--bg2); border:1px solid rgba(0,0,0,.09);
+  border-radius:8px; padding:6px 10px; font-size:12px; font-weight:500;
+  font-family:var(--sf); color:var(--t1); outline:none;
+  transition:border-color .15s;
+}
+.repeat-sep-input:focus { border-color:var(--blue); }
+.repeat-apply {
+  background:var(--blue); color:#fff; border:none; border-radius:8px;
+  padding:7px 14px; font-size:12px; font-weight:700; font-family:var(--sf);
+  cursor:pointer; transition:transform .18s, background .15s;
+}
+.repeat-apply:hover { background:#1a8aff; transform:scale(1.04); }
+.repeat-apply:active { transform:scale(.91); }
+
+/* Separator input */
+.sep-row { display:flex; align-items:center; gap:8px; margin-bottom:14px; padding:0 14px; }
+.sep-presets { display:flex; gap:5px; flex-wrap:wrap; }
+.sep-chip {
+  background:var(--bg2); border:1px solid rgba(0,0,0,.09); border-radius:6px;
+  padding:4px 9px; font-size:12px; font-weight:600; color:var(--t2);
+  cursor:pointer; transition:all .15s;
+}
+.sep-chip:hover { background:var(--blue-lo); border-color:var(--blue); color:var(--blue); }
+
+/* ── INSPÍRATE ── */
+.inspire-section {
+  background:var(--bg1); border-radius:var(--r3); border:1px solid rgba(0,0,0,.07);
+  box-shadow:0 1px 4px rgba(0,0,0,.04); margin-bottom:12px; padding:14px 16px;
+  animation:fadeUp .4s .15s ease both;
+}
+.inspire-header { font-size:12px; font-weight:700; color:var(--t3); margin-bottom:10px; display:flex; align-items:center; gap:6px; letter-spacing:.05em; text-transform:uppercase; }
+.inspire-chips { display:flex; flex-wrap:wrap; gap:7px; }
+.inspire-chip {
+  display:inline-flex; align-items:center; gap:5px;
+  background:var(--bg2); border:1.5px solid rgba(0,0,0,.08); border-radius:var(--pill);
+  padding:5px 13px; font-size:12px; font-weight:500; color:var(--t2);
+  cursor:pointer; transition:all .2s cubic-bezier(.34,1.56,.64,1);
+  -webkit-tap-highlight-color:transparent;
+}
+.inspire-chip:hover { background:var(--blue-lo); border-color:rgba(0,122,255,.3); color:var(--blue); transform:translateY(-2px) scale(1.03); }
+.inspire-chip:active { transform:scale(.93); }
+
+/* ── DOWNLOAD AS IMAGE (botón en cada card) ── */
+.dl-img-btn {
+  background:var(--bg2); border:1px solid rgba(0,0,0,.09); border-radius:7px;
+  padding:5px 10px; font-size:10px; font-weight:700; color:var(--t3);
+  cursor:pointer; font-family:var(--sf); letter-spacing:.05em;
+  transition:all .18s cubic-bezier(.34,1.56,.64,1);
+  display:inline-flex; align-items:center; gap:4px; white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+}
+.dl-img-btn:hover { background:rgba(175,82,222,.10); border-color:rgba(175,82,222,.3); color:var(--purple); transform:scale(1.06); }
+.dl-img-btn:active { transform:scale(.88); }
+
+/* ── COMPARE MODE ── */
+.compare-bar {
+  display:none; background:var(--bg1); border:1px solid rgba(0,122,255,.25);
+  border-radius:var(--r2); padding:10px 14px; margin-bottom:10px;
+  animation:fadeUp .25s ease both; align-items:center; gap:10px;
+  font-size:12px; color:var(--t2);
+}
+.compare-bar.show { display:flex; }
+.compare-slots { display:flex; gap:6px; flex:1; flex-wrap:wrap; }
+.compare-slot {
+  background:var(--blue-lo); border:1px solid rgba(0,122,255,.25);
+  border-radius:6px; padding:3px 10px; font-size:11px; font-weight:600;
+  color:var(--blue); display:flex; align-items:center; gap:6px;
+}
+.compare-slot-x { cursor:pointer; opacity:.6; font-size:10px; }
+.compare-slot-x:hover { opacity:1; }
+.compare-clear-btn {
+  background:none; border:1px solid rgba(0,0,0,.12); border-radius:6px;
+  padding:4px 10px; font-size:11px; font-weight:600; color:var(--t3);
+  cursor:pointer; white-space:nowrap;
+}
+.compare-clear-btn:hover { color:var(--red); border-color:rgba(255,59,48,.3); }
+
+.cards.compare-mode { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+@media (max-width:500px) { .cards.compare-mode { grid-template-columns:1fr; } }
+.card.compare-selected { box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 2px 10px rgba(0,0,0,.07),0 0 0 2px rgba(0,122,255,.5); }
+
+/* ── compare mode: fix overflow in narrow cards ── */
+.cards.compare-mode .card-body { padding:10px 10px 9px; gap:7px; }
+.cards.compare-mode .card-meta { flex-wrap:wrap; gap:5px; }
+.cards.compare-mode .meta-left { flex-wrap:wrap; gap:4px; }
+.cards.compare-mode .card-actions { flex-shrink:0; flex-wrap:nowrap; gap:4px; }
+.cards.compare-mode .fav-label { display:none; }
+.cards.compare-mode .fav-btn { padding:4px 7px; }
+.cards.compare-mode .copy-btn { padding:5px 10px; font-size:11px; }
+.cards.compare-mode .preview {
+  font-size:17px;
+  white-space:normal;
+  overflow:hidden;
+  text-overflow:clip;
+  word-break:break-word;
+  overflow-wrap:anywhere;
+  line-clamp:3;
+  -webkit-line-clamp:3;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  min-height:48px;
+  padding:9px 10px;
+}
+.cards.compare-mode .badge-use { font-size:10px; }
+.cards.compare-mode .compare-btn { font-size:9px; padding:4px 7px; }
+
+/* ── ADD TO COMPARE btn ── */
+.compare-btn {
+  background:var(--bg2); border:1px solid rgba(0,0,0,.09); border-radius:7px;
+  padding:5px 10px; font-size:10px; font-weight:700; color:var(--t3);
+  cursor:pointer; font-family:var(--sf);
+  transition:all .18s cubic-bezier(.34,1.56,.64,1);
+  display:inline-flex; align-items:center; gap:4px; white-space:nowrap;
+}
+.compare-btn:hover { background:rgba(0,122,255,.10); border-color:rgba(0,122,255,.3); color:var(--blue); }
+.compare-btn.added { background:rgba(0,122,255,.12); border-color:rgba(0,122,255,.4); color:var(--blue); }
+
+/* ── PLATFORM NOTICE ── */
+.plat-notice { font-size:11px; color:var(--t4); padding:4px 2px; margin-top:4px; min-height:16px; }
+
+/* ── FAV COUNT ── */
+.fav-count-badge {
+  background:var(--blue); color:#fff; border-radius:var(--pill);
+  padding:1px 6px; font-size:9px; font-weight:800; display:none;
+}
+.fav-count-badge.show { display:inline-block; }
+
+/* ── SCROLL TOP ── */
+#scroll-top {
+  position:fixed; bottom:calc(max(env(safe-area-inset-bottom),0px) + 72px);
+  right:18px; z-index:500; width:36px; height:36px;
+  background:var(--bg1); border:1px solid rgba(0,0,0,.10); border-radius:50%;
+  box-shadow:0 4px 16px rgba(0,0,0,.12); cursor:pointer;
+  font-size:14px; color:var(--t2);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none;
+  transition:opacity .22s, transform .22s cubic-bezier(.34,1.56,.64,1), background .15s;
+  transform:translateY(8px);
+}
+#scroll-top.show { opacity:1; pointer-events:all; transform:translateY(0); }
+#scroll-top:hover { background:var(--blue); border-color:var(--blue); color:#fff; }
+#scroll-top:active { transform:scale(.85); }
+
+/* ── ANALYTICS COLLAPSED ── */
+.analytics-header {
+  display:flex; align-items:center; justify-content:space-between;
+  cursor:pointer; margin-bottom:0;
+}
+.analytics-panel h3 { margin-bottom:0; cursor:pointer; font-size:13px; }
+.analytics-collapse { font-size:11px; color:var(--t4); transition:transform .2s; }
+.analytics-panel.collapsed .analytics-collapse { transform:rotate(-90deg); }
+.analytics-body { margin-top:14px; }
+.analytics-panel.collapsed .analytics-body { display:none; }
+
+/* ── TWITTER WARN ── */
+.twitter-warn {
+  display:none; align-items:center; gap:8px;
+  background:rgba(255,149,0,.08); border:1px solid rgba(255,149,0,.22);
+  border-radius:var(--r1); padding:8px 12px; margin-top:10px;
+  animation:fadeUp .25s ease both;
+}
+.twitter-warn.show { display:flex; }
+.twitter-warn-ico { font-size:14px; flex-shrink:0; }
+.twitter-warn-text { font-size:12px; font-weight:500; color:#a35f00; flex:1; min-width:0; }
+.twitter-warn-dismiss { background:none; border:none; cursor:pointer; color:var(--t4); font-size:11px; padding:2px 4px; flex-shrink:0; }
+
+/* ── DARK MODE extras ── */
+body.dark #scroll-top { background:var(--bg1); border-color:rgba(255,255,255,.10); }
+body.dark .search-clear { background:rgba(255,255,255,.22); }
+
+@media (max-width:480px) {
+  .tools-btns { gap:5px; }
+  .tool-btn { padding:6px 10px; font-size:11px; }
+  .inspire-chips { gap:5px; }
+  .compare-bar { flex-wrap:wrap; }
+}
+/* ══════════════════════════════════════════════
+   SECCIONES NUEVAS: Símbolos · Decorador · Bio
+══════════════════════════════════════════════ */
+
+/* ── SHARED: collapsible section shell ── */
+.symbols-section,
+.decorator-section,
+.bio-section {
+  background:var(--bg1); border-radius:var(--r3); border:1px solid rgba(0,0,0,.07);
+  box-shadow:0 1px 4px rgba(0,0,0,.04); margin-bottom:12px;
+  overflow:hidden; animation:fadeUp .4s .1s ease both;
+}
+.section-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:13px 18px; cursor:pointer; user-select:none;
+  background:transparent; border:none; width:100%;
+}
+.section-header:hover { background:var(--bg2); }
+.section-header-left { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--t2); font-family:var(--sf); }
+.section-arrow { font-size:15px; color:var(--t4); transition:transform .2s ease; font-family:var(--sf); }
+.section-body { display:none; border-top:1px solid rgba(0,0,0,.06); padding:14px 16px; }
+.symbols-section.open .section-body,
+.decorator-section.open .section-body,
+.bio-section.open .section-body { display:block; }
+.symbols-section.open .section-arrow,
+.decorator-section.open .section-arrow,
+.bio-section.open .section-arrow { transform:rotate(90deg); }
+.section-desc { font-size:12px; color:var(--t3); margin-bottom:12px; line-height:1.5; }
+
+/* ── SÍMBOLOS ── */
+.sym-cats { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+.sym-cat {
+  background:var(--bg2); border:1px solid rgba(0,0,0,.09); border-radius:var(--pill);
+  padding:5px 12px; font-size:11px; font-weight:600; color:var(--t2); cursor:pointer;
+  font-family:var(--sf); transition:all .15s;
+}
+.sym-cat:hover { background:var(--blue-lo); border-color:rgba(0,122,255,.3); color:var(--blue); }
+.sym-cat.active { background:var(--blue-lo); border-color:rgba(0,122,255,.4); color:var(--blue); }
+.sym-grid {
+  display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;
+}
+.sym-item {
+  width:38px; height:38px; background:var(--bg2); border:1px solid rgba(0,0,0,.08);
+  border-radius:8px; display:flex; align-items:center; justify-content:center;
+  font-size:18px; cursor:pointer; transition:all .18s cubic-bezier(.34,1.56,.64,1);
+  -webkit-tap-highlight-color:transparent; position:relative;
+}
+.sym-item:hover { background:var(--blue-lo); border-color:rgba(0,122,255,.3); transform:scale(1.15); }
+.sym-item:active { transform:scale(.88); }
+.sym-item.copied::after {
+  content:'✓'; position:absolute; inset:0; background:rgba(0,200,100,.85);
+  border-radius:7px; display:flex; align-items:center; justify-content:center;
+  font-size:14px; color:#fff; font-weight:800; animation:fadeUp .15s ease;
+}
+.sym-hint { font-size:11px; color:var(--t4); margin:0; }
+
+/* ── DECORADOR ── */
+.deco-input-row { margin-bottom:12px; }
+.deco-input {
+  width:100%; background:var(--bg2); border:1.5px solid rgba(0,0,0,.09);
+  border-radius:var(--r2); padding:10px 14px; font-size:15px; font-weight:500;
+  font-family:var(--sf); color:var(--t1); outline:none; caret-color:var(--blue);
+  transition:border-color .18s, box-shadow .18s;
+}
+.deco-input:focus { border-color:rgba(0,122,255,.5); box-shadow:0 0 0 3px rgba(0,122,255,.10); }
+.deco-input::placeholder { color:var(--t4); font-weight:400; }
+.deco-cards { display:flex; flex-direction:column; gap:7px; }
+.deco-card {
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  background:var(--bg2); border:1px solid rgba(0,0,0,.07); border-radius:var(--r2);
+  padding:10px 14px; cursor:pointer; transition:all .18s cubic-bezier(.34,1.56,.64,1);
+  -webkit-tap-highlight-color:transparent;
+}
+.deco-card:hover { background:var(--blue-lo); border-color:rgba(0,122,255,.25); transform:translateX(2px); }
+.deco-card:active { transform:scale(.97); }
+.deco-text { font-size:16px; color:var(--t1); word-break:break-all; flex:1; }
+.deco-copy-hint { font-size:10px; font-weight:700; color:var(--t4); white-space:nowrap; font-family:var(--sf); letter-spacing:.04em; }
+.deco-card.copied .deco-copy-hint { color:var(--green,#34c759); }
+
+/* ── BIO BUILDER ── */
+.bio-lines { display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+.bio-line-row { display:flex; align-items:center; gap:6px; }
+.bio-line-input {
+  flex:1; background:var(--bg2); border:1.5px solid rgba(0,0,0,.09);
+  border-radius:var(--r2); padding:8px 12px; font-size:13px; font-weight:500;
+  font-family:var(--sf); color:var(--t1); outline:none; caret-color:var(--blue);
+  transition:border-color .15s;
+}
+.bio-line-input:focus { border-color:rgba(0,122,255,.5); }
+.bio-line-input::placeholder { color:var(--t4); font-weight:400; }
+.bio-style-select {
+  background:var(--bg2); border:1px solid rgba(0,0,0,.09); border-radius:var(--r1);
+  padding:7px 8px; font-size:11px; font-family:var(--sf); color:var(--t2);
+  cursor:pointer; outline:none; max-width:130px; min-width:100px;
+  transition:border-color .15s;
+}
+.bio-style-select:focus { border-color:var(--blue); }
+.bio-line-remove {
+  width:28px; height:28px; border-radius:50%; background:var(--bg2);
+  border:1px solid rgba(0,0,0,.09); color:var(--t3); font-size:16px;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; transition:all .15s; font-family:var(--sf);
+}
+.bio-line-remove:hover { background:rgba(255,59,48,.1); border-color:rgba(255,59,48,.3); color:#ff3b30; }
+.bio-actions { margin-bottom:14px; }
+.bio-add-line {
+  background:none; border:1px dashed rgba(0,0,0,.18); border-radius:var(--r2);
+  padding:7px 16px; font-size:12px; font-weight:600; color:var(--t3);
+  cursor:pointer; font-family:var(--sf); width:100%; transition:all .15s;
+}
+.bio-add-line:hover { border-color:var(--blue); color:var(--blue); background:var(--blue-lo); }
+.bio-preview-wrap {
+  background:var(--bg2); border-radius:var(--r2); border:1px solid rgba(0,0,0,.07);
+  padding:14px 16px;
+}
+.bio-preview-label { font-size:10px; font-weight:700; color:var(--t4); text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px; }
+.bio-preview {
+  font-size:15px; color:var(--t1); line-height:1.7; white-space:pre-wrap;
+  min-height:40px; word-break:break-all;
+}
+.bio-copy-btn {
+  margin-top:12px; width:100%; background:var(--blue); color:#fff; border:none;
+  border-radius:var(--r2); padding:10px 18px; font-size:13px; font-weight:700;
+  font-family:var(--sf); cursor:pointer; transition:transform .18s, background .15s;
+}
+.bio-copy-btn:hover { background:#1a8aff; }
+.bio-copy-btn:active { transform:scale(.97); }
+
+/* dark extras */
+body.dark .bio-style-select { background:var(--bg2); color:var(--t1); }
+body.dark .bio-add-line { border-color:rgba(255,255,255,.15); }
+  </style>
+
+  <script>
+    (function(){
+      var base = location.origin + location.pathname.replace(/\/$/, '') + '/';
+      var img  = base + 'assets/og.png';
+      ['canonical-url'].forEach(function(id){ var el=document.getElementById(id); if(el) el.href=base; });
+      ['og-url','og-image','tw-image'].forEach(function(id){
+        var el=document.getElementById(id); if(el) el.setAttribute('content', id==='og-url'?base:img);
+      });
+      document.querySelectorAll('script[type="application/ld+json"]').forEach(function(s){
+        s.textContent=s.textContent.replace(/https:\/\/tudominio\.com\//g,base);
+      });
+      var t=new URLSearchParams(location.search).get('t');
+      if(t) window.__DIUSF_INIT_TEXT__=decodeURIComponent(t).slice(0,200);
+    })();
+  </script>
+</head>
+<body>
+
+<div class="bg-canvas" aria-hidden="true">
+  <div class="blob blob-a"></div>
+  <div class="blob blob-b"></div>
+  <div class="blob blob-c"></div>
+</div>
+
+<!-- NAV -->
+<header class="nav-bar" role="banner">
+  <div class="nav-inner">
+    <div class="nav-top-row">
+      <div class="di-pill" aria-label="Estado: activo">
+        <span class="di-dot" aria-hidden="true"></span>
+        <span class="di-label">Discord · Instagram · TikTok · Steam · WhatsApp</span>
+      </div>
+      <h1 class="app-title" aria-label="DIUSF">DIUSF</h1>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Cambiar modo claro/oscuro" title="Modo oscuro / claro">
+        <span class="theme-icon" id="theme-icon">☀️</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- AD TOP -->
+<div class="page" style="padding-top:14px;padding-bottom:0">
+  <div class="ad-slot" role="complementary" aria-label="Publicidad"><!-- AdSense aquí --></div>
+</div>
+
+<main class="page" role="main">
+
+  <!-- ═══════════════════ INPUT ZONE ═══════════════════ -->
+  <section class="input-zone" aria-label="Campo de texto">
+    <div style="position:relative">
+      <textarea
+        class="text-field-area"
+        id="main-input"
+        placeholder="Escribe tu texto… (admite varias líneas)"
+        maxlength="200"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+        rows="1"
+        aria-label="Texto para convertir a diferentes estilos Unicode"
+      >DIUSF</textarea>
+      <button class="clear-x" id="clear-x" aria-label="Limpiar texto" title="Limpiar">✕</button>
+    </div>
+
+    <!-- Live stats -->
+    <div class="live-stats">
+      <span class="char-count" id="char-count" style="margin:0">5 / 200</span>
+      <span class="live-stat">· <strong id="stat-words">1</strong> palabra</span>
+      <span class="live-stat">· <strong id="stat-lines">1</strong> línea</span>
+    </div>
+
+    <div class="twitter-warn" id="twitter-warn-global" role="alert">
+      <span class="twitter-warn-ico" aria-hidden="true">⚠️</span>
+      <span class="twitter-warn-text" id="twitter-warn-text"></span>
+      <button class="twitter-warn-dismiss" id="twitter-warn-dismiss" aria-label="Cerrar aviso">✕</button>
+    </div>
+
+    <div class="history-chips" id="history-chips"></div>
+
+    <!-- PLATAFORMAS — ampliadas -->
+    <div class="plat-chips" id="platform-chips" role="group" aria-label="Filtrar por plataforma">
+      <button class="plat-chip active" data-platform="">🌐 Todas</button>
+      <button class="plat-chip" data-platform="discord">💬 Discord</button>
+      <button class="plat-chip" data-platform="instagram">📸 Instagram</button>
+      <button class="plat-chip" data-platform="tiktok">🎵 TikTok</button>
+      <button class="plat-chip" data-platform="twitter">🐦 Twitter/X</button>
+      <button class="plat-chip" data-platform="steam">🎮 Steam</button>
+      <button class="plat-chip" data-platform="whatsapp">💚 WhatsApp</button>
+      <button class="plat-chip" data-platform="telegram">✈️ Telegram</button>
+      <button class="plat-chip" data-platform="linkedin">💼 LinkedIn</button>
+    </div>
+    <p class="plat-notice" id="plat-notice" aria-live="polite"></p>
+
+    <div class="cat-chips" id="cat-chips" role="group" aria-label="Filtrar por categoría">
+      <button class="cat-chip active" data-cat="">Todos</button>
+      <button class="cat-chip" data-cat="bold">Bold</button>
+      <button class="cat-chip" data-cat="italic">Italic</button>
+      <button class="cat-chip" data-cat="classic">Clásico</button>
+      <button class="cat-chip" data-cat="decorative">Decorativo</button>
+      <button class="cat-chip" data-cat="glitch">Glitch</button>
+      <button class="cat-chip" data-cat="symbols">Símbolos</button>
+      <button class="cat-chip" data-cat="__favs__">
+        ★ Favoritos <span class="fav-count-badge" id="fav-count-badge"></span>
+      </button>
+    </div>
+
+    <div class="sort-chips" id="sort-chips" role="group" aria-label="Ordenar estilos">
+      <button class="sort-chip active" data-sort="default">📋 Por defecto</button>
+      <button class="sort-chip" data-sort="popular">🔥 Populares</button>
+      <button class="sort-chip" data-sort="recent">🕐 Recientes</button>
+      <button class="sort-chip" data-sort="alpha">🔤 A–Z</button>
+    </div>
+
+    <!-- SEARCH — con X centrada custom -->
+    <div class="search-row">
+      <div class="search-wrap">
+        <span class="search-icon" aria-hidden="true">⌕</span>
+        <input
+          class="search-input"
+          id="s-input"
+          type="search"
+          placeholder="Buscar estilo… (script, fraktur, discord…)"
+          autocomplete="off"
+          aria-label="Filtrar estilos de fuente"
+        />
+        <button class="search-clear" id="search-clear" aria-label="Limpiar búsqueda" tabindex="-1">✕</button>
+      </div>
+      <span class="search-count" id="s-count" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ STATS ═══════════════════ -->
+  <div class="stats-row" aria-label="Estadísticas" role="status">
+    <div class="stat-chip live"><strong id="stat-c">0</strong> copiados</div>
+    <div class="stat-chip"><strong id="stat-total">0</strong> estilos Unicode</div>
+    <div class="stat-chip">✓ Sin internet · sin registro</div>
+  </div>
+
+  <!-- ═══════════════════ TOOLBAR ═══════════════════ -->
+  <div class="toolbar">
+    <button class="tb-btn btn-blue" id="btn-copy-all" aria-label="Copiar todos los estilos visibles" title="Ctrl+Shift+A">
+      ⊕ Copiar todos
+    </button>
+    <button class="tb-btn btn-ghost" id="btn-shuffle" aria-label="Mezclar orden">⇄ Mezclar</button>
+    <button class="tb-btn btn-ghost" id="btn-share" aria-label="Compartir enlace con el texto actual">⬆ Compartir</button>
+    <button class="tb-btn btn-export" id="btn-export-txt" aria-label="Exportar .txt">↓ .txt</button>
+    <button class="tb-btn btn-ghost" id="btn-compare-mode" aria-label="Modo comparación de estilos" title="Selecciona estilos para comparar lado a lado">⊞ Comparar</button>
+    <span class="tb-spacer"></span>
+    <span class="tb-info" id="tb-info"></span>
+  </div>
+
+  <!-- ═══════════════════ COMPARE BAR ═══════════════════ -->
+  <div class="compare-bar" id="compare-bar" role="status" aria-live="polite">
+    <span style="font-weight:700;color:var(--blue);flex-shrink:0;">⊞ Comparando:</span>
+    <div class="compare-slots" id="compare-slots"></div>
+    <button class="compare-clear-btn" id="compare-clear">Salir</button>
+  </div>
+
+  <!-- ═══════════════════ INSPÍRATE ═══════════════════ -->
+  <div class="inspire-section">
+    <div class="inspire-header"><span>✨</span> Prueba con estos textos</div>
+    <div class="inspire-chips" id="inspire-chips">
+      <button class="inspire-chip" data-text="GG EZ">🎮 GG EZ</button>
+      <button class="inspire-chip" data-text="Pro Player">⚡ Pro Player</button>
+      <button class="inspire-chip" data-text="No hay mal que por bien no venga">💬 Refrán</button>
+      <button class="inspire-chip" data-text="Follow me">📱 Follow me</button>
+      <button class="inspire-chip" data-text="Hola Mundo">👋 Hola Mundo</button>
+      <button class="inspire-chip" data-text="Dark Mode">🌙 Dark Mode</button>
+      <button class="inspire-chip" data-text="Level Up">🏆 Level Up</button>
+      <button class="inspire-chip" data-text="Stay Classy">✨ Stay Classy</button>
+      <button class="inspire-chip" data-text="Chill Vibes">🎶 Chill Vibes</button>
+      <button class="inspire-chip" data-text="Bio aquí">📝 Bio aquí</button>
+      <button class="inspire-chip" data-text="No rendirse">💪 No rendirse</button>
+      <button class="inspire-chip" data-text="Carpe Diem">🌅 Carpe Diem</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ HERRAMIENTAS DE TEXTO ═══════════════════ -->
+  <div class="tools-section" id="tools-section">
+    <button class="tools-header" id="tools-toggle" aria-expanded="false" aria-controls="tools-body">
+      <span class="tools-header-left"><span aria-hidden="true">🛠️</span> Herramientas de texto</span>
+      <span class="tools-arrow" aria-hidden="true">▾</span>
+    </button>
+    <div class="tools-body" id="tools-body">
+
+      <!-- Transformación de mayúsculas -->
+      <div class="tools-group">
+        <div class="tools-group-label">Transformar mayúsculas</div>
+        <div class="tools-btns">
+          <button class="tool-btn" data-tool="upper">AA MAYÚSCULAS</button>
+          <button class="tool-btn" data-tool="lower">aa minúsculas</button>
+          <button class="tool-btn" data-tool="title">Aa Título</button>
+          <button class="tool-btn" data-tool="sentence">Aa Oración</button>
+          <button class="tool-btn" data-tool="alternate">aA aLtErNaDo</button>
+          <button class="tool-btn" data-tool="inverse">Aa iNVERSO</button>
+        </div>
+      </div>
+
+      <!-- Transformaciones especiales -->
+      <div class="tools-group">
+        <div class="tools-group-label">Efectos de texto</div>
+        <div class="tools-btns">
+          <button class="tool-btn" data-tool="reverse">←  Invertir orden</button>
+          <button class="tool-btn" data-tool="upside">🙃 Al revés (↕)</button>
+          <button class="tool-btn" data-tool="strike">S̶t̶r̶i̶k̶e̶ Tachado</button>
+          <button class="tool-btn" data-tool="underline">U̲n̲d̲e̲r̲ Subrayado</button>
+          <button class="tool-btn" data-tool="double-strike">D̴o̴b̴l̴e̴ Tachado ×2</button>
+          <button class="tool-btn" data-tool="wavy">W̃ãṽỹ Ondulado</button>
+          <button class="tool-btn" data-tool="vaporwave">Ｖ Ａ Ｐ Ｏ Ｒ</button>
+          <button class="tool-btn" data-tool="mirror">ɹoɹɹıɯ Espejo</button>
+        </div>
+      </div>
+
+      <!-- Separador entre letras -->
+      <div class="tools-group">
+        <div class="tools-group-label">Separador entre letras</div>
+        <div class="sep-row">
+          <span class="repeat-label">Sep:</span>
+          <div class="sep-presets">
+            <button class="sep-chip" data-sep=" ">Espacio</button>
+            <button class="sep-chip" data-sep="·">·</button>
+            <button class="sep-chip" data-sep="•">•</button>
+            <button class="sep-chip" data-sep="-">-</button>
+            <button class="sep-chip" data-sep="★">★</button>
+            <button class="sep-chip" data-sep="♦">♦</button>
+            <button class="sep-chip" data-sep="⚡">⚡</button>
+            <button class="sep-chip" data-sep="">Ninguno</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Repetidor de texto -->
+      <div class="tools-group">
+        <div class="tools-group-label">Repetidor de texto</div>
+        <div class="repeat-row">
+          <span class="repeat-label">Repetir</span>
+          <input class="repeat-input" id="repeat-n" type="number" min="2" max="20" value="3" aria-label="Número de repeticiones" />
+          <span class="repeat-label">veces con separador</span>
+          <input class="repeat-sep-input" id="repeat-sep" type="text" maxlength="10" placeholder="ej: · o espacio" value=" · " aria-label="Separador entre repeticiones" />
+          <button class="repeat-apply" id="repeat-apply">Repetir</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- NO RESULTS -->
+  <div class="no-res" id="no-res" role="status" aria-live="polite">
+    <span class="no-res-icon" aria-hidden="true">🔍</span>
+    <span class="no-res-text">Sin resultados — prueba con otro término</span>
+  </div>
+
+  <!-- FONT CARDS -->
+  <div class="cards" id="cards" role="list" aria-label="Estilos de fuente Unicode"></div>
+
+  <!-- ANALYTICS — colapsado -->
+  <div class="analytics-panel collapsed" id="analytics-panel" style="margin-top:16px">
+    <div class="analytics-header" id="analytics-header" role="button" tabindex="0" aria-expanded="false" aria-controls="analytics-body">
+      <h3>📊 Estilos más copiados</h3>
+      <span class="analytics-collapse" aria-hidden="true">▾</span>
+    </div>
+    <div class="analytics-body" id="analytics-body">
+      <div class="analytics-list" id="analytics-list">
+        <p class="analytics-empty">Aún no hay datos — ¡empieza copiando estilos!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEO BLOCK — ampliado -->
+  <!-- ═══════════════════ SÍMBOLOS ═══════════════════ -->
+  <section class="symbols-section" id="symbols-section" aria-label="Símbolos Unicode">
+    <div class="section-header" id="symbols-toggle" role="button" tabindex="0" aria-expanded="false" aria-controls="symbols-body">
+      <span class="section-header-left"><span aria-hidden="true">✦</span> Símbolos Unicode</span>
+      <span class="section-arrow">›</span>
+    </div>
+    <div class="section-body" id="symbols-body">
+      <div class="sym-cats" id="sym-cats" role="group" aria-label="Categoría de símbolos">
+        <button class="sym-cat active" data-cat="corazones">♡ Corazones</button>
+        <button class="sym-cat" data-cat="estrellas">★ Estrellas</button>
+        <button class="sym-cat" data-cat="flechas">→ Flechas</button>
+        <button class="sym-cat" data-cat="decorativos">✦ Decorativos</button>
+        <button class="sym-cat" data-cat="matematica">∑ Matemáticas</button>
+        <button class="sym-cat" data-cat="monedas">€ Monedas</button>
+        <button class="sym-cat" data-cat="musica">♪ Música</button>
+        <button class="sym-cat" data-cat="clima">☀ Clima</button>
+      </div>
+      <div class="sym-grid" id="sym-grid" role="list" aria-label="Símbolos para copiar"></div>
+      <p class="sym-hint">Toca un símbolo para copiarlo al portapapeles</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ DECORADOR DE TEXTO ═══════════════════ -->
+  <section class="decorator-section" id="decorator-section" aria-label="Decorador de texto">
+    <div class="section-header" id="decorator-toggle" role="button" tabindex="0" aria-expanded="false" aria-controls="decorator-body">
+      <span class="section-header-left"><span aria-hidden="true">⊰</span> Decorador de texto</span>
+      <span class="section-arrow">›</span>
+    </div>
+    <div class="section-body" id="decorator-body">
+      <p class="section-desc">Cada letra de tu texto envuelta en un símbolo decorativo. Ideal para nombres y bios.</p>
+      <div class="deco-input-row">
+        <input class="deco-input" id="deco-input" type="text" maxlength="40" placeholder="Escribe algo…" autocomplete="off" spellcheck="false" />
+      </div>
+      <div class="deco-cards" id="deco-cards" role="list"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════ ARMADOR DE BIO ═══════════════════ -->
+  <section class="bio-section" id="bio-section" aria-label="Armador de bio">
+    <div class="section-header" id="bio-toggle" role="button" tabindex="0" aria-expanded="false" aria-controls="bio-body">
+      <span class="section-header-left"><span aria-hidden="true">👤</span> Armador de bio</span>
+      <span class="section-arrow">›</span>
+    </div>
+    <div class="section-body" id="bio-body">
+      <p class="section-desc">Escribe línea por línea, elige la fuente de cada una y copia el resultado listo para pegar en tu perfil.</p>
+      <div class="bio-lines" id="bio-lines">
+        <div class="bio-line-row" data-index="0">
+          <input class="bio-line-input" type="text" maxlength="80" placeholder="Línea 1 (ej: tu nombre)" autocomplete="off" spellcheck="false" />
+          <select class="bio-style-select" aria-label="Estilo de fuente"></select>
+          <button class="bio-line-remove" aria-label="Eliminar línea">−</button>
+        </div>
+        <div class="bio-line-row" data-index="1">
+          <input class="bio-line-input" type="text" maxlength="80" placeholder="Línea 2 (ej: tu descripción)" autocomplete="off" spellcheck="false" />
+          <select class="bio-style-select" aria-label="Estilo de fuente"></select>
+          <button class="bio-line-remove" aria-label="Eliminar línea">−</button>
+        </div>
+      </div>
+      <div class="bio-actions">
+        <button class="bio-add-line" id="bio-add-line">+ Añadir línea</button>
+      </div>
+      <div class="bio-preview-wrap" id="bio-preview-wrap">
+        <div class="bio-preview-label">Vista previa</div>
+        <div class="bio-preview" id="bio-preview" aria-live="polite"></div>
+        <button class="bio-copy-btn" id="bio-copy-btn">Copiar bio completa</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="seo-block" aria-label="Información sobre DIUSF">
+    <h2>¿Qué es DIUSF y cómo funciona?</h2>
+    <p>DIUSF convierte tu texto a caracteres Unicode reales —no fuentes tipográficas— por lo que los estilos generados (negrita matemática, cursiva, fraktur, texto circulado y muchos más) funcionan en cualquier plataforma: Discord, Instagram, TikTok, Twitter/X, Steam, WhatsApp, Telegram y LinkedIn, sin instalar nada ni crear una cuenta.</p>
+    <p>Además del conversor principal, DIUSF incluye herramientas de transformación de texto (mayúsculas, minúsculas, texto al revés, tachado, subrayado, vaporwave, separadores), modo comparación de estilos y descarga de texto en imágenes PNG directamente desde el navegador.</p>
+
+    <h2>Preguntas frecuentes</h2>
+    <details><summary>¿Por qué funciona en Discord pero no en algunos sitios?</summary><p>Los caracteres Unicode son parte del estándar universal de texto. La mayoría de apps modernas los aceptan, pero algunos sitios antiguos o campos de formulario pueden filtrarlos por seguridad.</p></details>
+    <details><summary>¿Es gratis para siempre?</summary><p>Sí. DIUSF es completamente gratuito y no requiere registro. La app funciona en tu navegador sin enviar ningún dato a servidores externos.</p></details>
+    <details><summary>¿Funciona en iPhone y Android?</summary><p>Sí. Funciona en cualquier navegador moderno tanto en iOS como en Android, y puede instalarse como PWA desde el menú del navegador para acceso rápido desde la pantalla de inicio.</p></details>
+    <details><summary>¿Por qué Twitter/X avisa del doble conteo de caracteres?</summary><p>Twitter/X cuenta algunos caracteres Unicode del plano suplementario como 2 en vez de 1. DIUSF te avisa automáticamente y muestra el recuento real en cada estilo para evitar sorpresas al publicar.</p></details>
+    <details><summary>¿Qué diferencia hay entre estas fuentes y las tipografías normales?</summary><p>Una fuente tipográfica solo cambia el aspecto visual en tu dispositivo. Los caracteres Unicode de DIUSF son el texto en sí: el receptor los ve exactamente igual sin necesitar ninguna fuente instalada.</p></details>
+    <details><summary>¿Puedo usarlo en el nombre de usuario de Instagram o TikTok?</summary><p>Sí, en la mayoría de casos. Usa el filtro de plataforma correspondiente para ver solo los estilos compatibles con cada red social.</p></details>
+    <details><summary>¿Qué hace la herramienta «Vaporwave»?</summary><p>Convierte tu texto a caracteres de ancho completo (fullwidth), el estilo estético popularizado en la cultura internet de los 90. Ejemplo: ＤＩＵＳＦ.</p></details>
+  </section>
+
+  <div class="ad-slot" style="margin-top:16px" role="complementary" aria-label="Publicidad"><!-- AdSense aquí --></div>
+
+  <footer class="footer">
+    <p>DIUSF · <span id="footer-count">0</span> estilos Unicode · Gratis para siempre · <a href="caja.html">📦 Caja</a> · <a href="privacy.html">Privacidad</a> · <a href="terms.html">Términos</a></p>
+    <p style="margin-top:6px;"><a href="https://tiktok.com/@neravdz" target="_blank" rel="noopener">🎵 TikTok @neravdz</a> · v6</p>
+  </footer>
+
+</main>
+
+<!-- SCROLL TO TOP -->
+<button id="scroll-top" aria-label="Volver arriba" title="Volver arriba">↑</button>
+
+<!-- TOAST -->
+<div id="toast" role="status" aria-live="polite">
+  <span class="toast-ico" id="t-ico">✓</span>
+  <span id="t-msg">Copiado</span>
+</div>
+
+<script src="js/unicode.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+/* ══════════════════════════════════════════════════════════
+   DIUSF v5 — nuevas funciones (no modifica app.js original)
+══════════════════════════════════════════════════════════ */
+'use strict';
+
+/* ──────────────── UTILS ──────────────── */
+function toast(msg, ico) {
+  var t = document.getElementById('toast');
+  var tm = document.getElementById('t-msg');
+  var ti = document.getElementById('t-ico');
+  if (!t) return;
+  if (tm) tm.textContent = msg;
+  if (ti) ti.textContent = ico || '✓';
+  t.classList.add('on');
+  clearTimeout(t._to);
+  t._to = setTimeout(function(){ t.classList.remove('on'); }, 1800);
+}
+
+function getInputText() {
+  var ta = document.getElementById('main-input');
+  return ta ? ta.value : '';
+}
+
+function setInputText(val) {
+  var ta = document.getElementById('main-input');
+  if (!ta) return;
+  ta.value = val.slice(0, 200);
+  ta.dispatchEvent(new Event('input', { bubbles: true }));
+  autoResizeTA(ta);
+}
+
+/* ──────────────── TEXTAREA auto-resize + init ──────────────── */
+function autoResizeTA(ta) {
+  ta.style.height = 'auto';
+  ta.style.height = Math.min(ta.scrollHeight, 140) + 'px';
+}
+(function(){
+  var ta = document.getElementById('main-input');
+  if (!ta) return;
+  if (window.__DIUSF_INIT_TEXT__) ta.value = window.__DIUSF_INIT_TEXT__;
+  autoResizeTA(ta);
+  ta.addEventListener('input', function(){ autoResizeTA(ta); updateLiveStats(); });
+  updateLiveStats();
+})();
+
+/* ──────────────── LIVE STATS (palabras, líneas) ──────────────── */
+function updateLiveStats() {
+  var text = getInputText();
+  var words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+  var lines = text === '' ? 1 : text.split('\n').length;
+  var wEl = document.getElementById('stat-words');
+  var lEl = document.getElementById('stat-lines');
+  if (wEl) wEl.textContent = words;
+  if (lEl) lEl.textContent = lines;
+}
+
+/* ──────────────── SEARCH — X centrada y funcional ──────────────── */
+(function(){
+  var input = document.getElementById('s-input');
+  var clearBtn = document.getElementById('search-clear');
+  if (!input || !clearBtn) return;
+
+  function update() {
+    clearBtn.classList.toggle('on', input.value.length > 0);
+  }
+  input.addEventListener('input', update);
+  clearBtn.addEventListener('click', function(){
+    input.value = '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
+    update();
+  });
+  update();
+})();
+
+/* ──────────────── SCROLL TO TOP ──────────────── */
+(function(){
+  var btn = document.getElementById('scroll-top');
+  if (!btn) return;
+  window.addEventListener('scroll', function(){
+    btn.classList.toggle('show', window.scrollY > 400);
+  }, { passive: true });
+  btn.addEventListener('click', function(){
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
+
+/* ──────────────── PLATFORM NOTICE ──────────────── */
+(function(){
+  var notices = {
+    '': '', discord:'Estilos compatibles con Discord — funcionan en nombres, bios y mensajes.',
+    instagram:'Estilos compatibles con Instagram — ideales para bio, nombre de usuario y pies de foto.',
+    tiktok:'Estilos compatibles con TikTok — perfectos para nombre de usuario y descripción.',
+    twitter:'Estilos para Twitter/X — ten en cuenta el aviso de doble conteo de caracteres.',
+    steam:'Estilos compatibles con Steam — funcionan en nombre de perfil y bio.',
+    whatsapp:'Estilos compatibles con WhatsApp — funcionan en mensajes y nombre de contacto.',
+    telegram:'Estilos compatibles con Telegram — funcionan en bios y mensajes.',
+    linkedin:'Estilos compatibles con LinkedIn — ideales para titular profesional y resumen.'
+  };
+  document.querySelectorAll('.plat-chip').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      var el = document.getElementById('plat-notice');
+      if (el) el.textContent = notices[chip.getAttribute('data-platform')] || '';
+    });
+  });
+})();
+
+/* ──────────────── INSPÍRATE ──────────────── */
+(function(){
+  document.querySelectorAll('.inspire-chip').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      setInputText(chip.getAttribute('data-text') || '');
+    });
+  });
+})();
+
+/* ──────────────── FAV COUNT BADGE ──────────────── */
+function updateFavCount() {
+  var badge = document.getElementById('fav-count-badge');
+  if (!badge) return;
+  var favs; try { favs = JSON.parse(localStorage.getItem('diusf_favs')||'[]'); } catch(_){ favs=[]; }
+  badge.textContent = favs.length;
+  badge.classList.toggle('show', favs.length > 0);
+}
+updateFavCount();
+document.addEventListener('click', function(e){
+  if (e.target && (e.target.classList.contains('fav-btn') || e.target.closest('.fav-btn')))
+    setTimeout(updateFavCount, 80);
+});
+
+/* ──────────────── ANALYTICS TOGGLE ──────────────── */
+(function(){
+  var panel  = document.getElementById('analytics-panel');
+  var header = document.getElementById('analytics-header');
+  if (!panel || !header) return;
+  function toggle(){
+    var c = panel.classList.toggle('collapsed');
+    header.setAttribute('aria-expanded', !c);
+  }
+  header.addEventListener('click', toggle);
+  header.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggle(); } });
+})();
+
+/* ──────────────── TOOLS PANEL TOGGLE ──────────────── */
+(function(){
+  var section = document.getElementById('tools-section');
+  var toggle  = document.getElementById('tools-toggle');
+  if (!section || !toggle) return;
+  toggle.addEventListener('click', function(){
+    var open = section.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', open);
+  });
+})();
+
+/* ──────────────── UPSIDE DOWN MAP ──────────────── */
+var UPSIDE_DOWN_MAP = {
+  'a':'ɐ','b':'q','c':'ɔ','d':'p','e':'ǝ','f':'ɟ','g':'ƃ','h':'ɥ','i':'ı','j':'ɾ',
+  'k':'ʞ','l':'l','m':'ɯ','n':'u','o':'o','p':'d','q':'b','r':'ɹ','s':'s','t':'ʇ',
+  'u':'n','v':'ʌ','w':'ʍ','x':'x','y':'ʎ','z':'z',
+  'A':'∀','B':'q','C':'Ɔ','D':'p','E':'Ǝ','F':'Ⅎ','G':'פ','H':'H','I':'I','J':'ɾ',
+  'K':'ʞ','L':'˥','M':'W','N':'N','O':'O','P':'d','Q':'Q','R':'ɹ','S':'S','T':'┴',
+  'U':'∩','V':'Λ','W':'M','X':'X','Y':'⅄','Z':'Z',
+  '0':'0','1':'Ɩ','2':'ᄅ','3':'Ɛ','4':'ㄣ','5':'ϛ','6':'9','7':'ㄥ','8':'8','9':'6',
+  '.':'˙',',':'\'','?':'¿','!':'¡','\'':',','"':'„','(':')',')':'(','[':']',']':'[',
+  '{':'}','}':'{','<':'>','>':'<','&':'⅋','_':'‾',' ':' '
+};
+
+function applyUpsideDown(text) {
+  return [...text].map(function(c){ return UPSIDE_DOWN_MAP[c] || c; }).reverse().join('');
+}
+
+/* ──────────────── VAPORWAVE MAP ──────────────── */
+function applyVaporwave(text) {
+  return [...text].map(function(c){
+    var code = c.codePointAt(0);
+    if (code >= 0x21 && code <= 0x7E) return String.fromCodePoint(code + 0xFEE0);
+    if (c === ' ') return '\u3000';
+    return c;
+  }).join('');
+}
+
+/* ──────────────── TEXT TOOLS ──────────────── */
+var _currentSep = '';
+
+(function(){
+  // Case tools
+  var toolHandlers = {
+    upper:   function(t){ return t.toUpperCase(); },
+    lower:   function(t){ return t.toLowerCase(); },
+    title:   function(t){ return t.replace(/\S+/g, function(w){ return w[0].toUpperCase() + w.slice(1).toLowerCase(); }); },
+    sentence:function(t){ return t.toLowerCase().replace(/(^\s*\w|[.!?]\s+\w)/g, function(c){ return c.toUpperCase(); }); },
+    alternate:function(t){ return [...t].map(function(c,i){ return i%2===0?c.toUpperCase():c.toLowerCase(); }).join(''); },
+    inverse: function(t){ return [...t].map(function(c){ var lo=c.toLowerCase(),up=c.toUpperCase(); return c===lo?up:lo; }).join(''); },
+    reverse: function(t){ return [...t].reverse().join(''); },
+    upside:  function(t){ return applyUpsideDown(t); },
+    mirror:  function(t){ return [...t].reverse().map(function(c){ return UPSIDE_DOWN_MAP[c]||c; }).join(''); },
+    strike:  function(t){ return [...t].map(function(c){ return c==='\n'?c:c+'\u0336'; }).join(''); },
+    underline:function(t){ return [...t].map(function(c){ return c==='\n'?c:c+'\u0332'; }).join(''); },
+    'double-strike':function(t){ return [...t].map(function(c){ return c==='\n'?c:c+'\u0336\u0335'; }).join(''); },
+    wavy:    function(t){ return [...t].map(function(c){ return c===' '?c:c+'\u0303'; }).join(''); },
+    vaporwave:function(t){ return applyVaporwave(t); }
+  };
+
+  document.querySelectorAll('.tool-btn[data-tool]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var tool = btn.getAttribute('data-tool');
+      var fn = toolHandlers[tool];
+      if (!fn) return;
+      var result = fn(getInputText());
+      setInputText(result);
+      // Visual feedback
+      btn.classList.add('active');
+      setTimeout(function(){ btn.classList.remove('active'); }, 300);
+      toast('Transformación aplicada', '✦');
+    });
+  });
+
+  // Separador entre letras
+  document.querySelectorAll('.sep-chip').forEach(function(chip){
+    chip.addEventListener('click', function(){
+      document.querySelectorAll('.sep-chip').forEach(function(c){ c.classList.remove('active'); });
+      chip.classList.add('active');
+      var sep = chip.getAttribute('data-sep');
+      _currentSep = sep;
+      var text = getInputText();
+      // Strip existing single-char separators first if possible, then apply
+      var clean = text; // keep simple: apply to current text
+      var result = [...clean].join(sep);
+      setInputText(result);
+      toast('Separador aplicado', '✦');
+    });
+  });
+
+  // Repetidor
+  document.getElementById('repeat-apply').addEventListener('click', function(){
+    var n = parseInt(document.getElementById('repeat-n').value, 10) || 2;
+    var sep = document.getElementById('repeat-sep').value;
+    n = Math.max(2, Math.min(20, n));
+    var text = getInputText().trim();
+    if (!text) { toast('Escribe algo primero', '⚠'); return; }
+    var result = Array(n).fill(text).join(sep);
+    setInputText(result);
+    toast('Texto repetido × ' + n, '↻');
+  });
+})();
+
+/* ──────────────── DOWNLOAD AS PNG ──────────────── */
+function downloadAsPng(styledText, styleName) {
+  var isDark = document.body.classList.contains('dark');
+  var bg   = isDark ? '#1c1c1e' : '#ffffff';
+  var fg   = isDark ? '#ffffff' : '#1c1c1e';
+  var sub  = isDark ? 'rgba(255,255,255,.4)' : 'rgba(0,0,0,.3)';
+
+  var canvas = document.createElement('canvas');
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var W = 800, H = 240;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  var ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  // Background
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle gradient overlay
+  var grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, 'rgba(0,122,255,.04)');
+  grad.addColorStop(1, 'rgba(175,82,222,.04)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Border
+  ctx.strokeStyle = isDark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(0.5, 0.5, W-1, H-1);
+
+  // Main text
+  ctx.fillStyle = fg;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  var fontSize = Math.max(24, Math.min(64, Math.floor(680 / Math.max(styledText.length, 1))));
+  ctx.font = 'bold ' + fontSize + 'px -apple-system, "SF Pro Display", Arial, sans-serif';
+  ctx.fillText(styledText, W/2, H/2 - 12, W - 80);
+
+  // Style name subtitle
+  ctx.fillStyle = sub;
+  ctx.font = '500 13px -apple-system, Arial, sans-serif';
+  ctx.fillText(styleName + ' · DIUSF', W/2, H/2 + 44);
+
+  // Download
+  canvas.toBlob(function(blob){
+    if (!blob) { toast('Error al generar imagen', '✕'); return; }
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'diusf-' + styleName.replace(/\s+/g,'_').toLowerCase() + '.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('Imagen descargada', '↓');
+  }, 'image/png');
+}
+
+/* Inject download + compare buttons into cards after app.js renders them */
+(function(){
+  var observer = new MutationObserver(function(mutations){
+    mutations.forEach(function(m){
+      m.addedNodes.forEach(function(node){
+        if (node.nodeType !== 1) return;
+        var cards = node.classList && node.classList.contains('card') ? [node] : node.querySelectorAll ? Array.from(node.querySelectorAll('.card')) : [];
+        cards.forEach(injectCardButtons);
+      });
+    });
+  });
+  var cardsEl = document.getElementById('cards');
+  if (cardsEl) observer.observe(cardsEl, { childList: true, subtree: true });
+})();
+
+function injectCardButtons(card) {
+  if (card.dataset.v5injected) return;
+  card.dataset.v5injected = '1';
+
+  var footer = card.querySelector('.card-footer');
+  if (!footer) return;
+
+  var previewEl = card.querySelector('.preview');
+  var badgeName = card.querySelector('.badge-name');
+  var styleName = badgeName ? badgeName.textContent : 'estilo';
+
+  // Download as PNG button
+  var dlBtn = document.createElement('button');
+  dlBtn.className = 'dl-img-btn';
+  dlBtn.setAttribute('aria-label', 'Descargar como imagen PNG');
+  dlBtn.title = 'Descargar imagen PNG';
+  dlBtn.innerHTML = '&#9660; PNG';
+  dlBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    var text = previewEl ? previewEl.textContent : '';
+    downloadAsPng(text, styleName);
+  });
+  footer.appendChild(dlBtn);
+
+  // Compare button
+  var cmpBtn = document.createElement('button');
+  cmpBtn.className = 'compare-btn';
+  cmpBtn.setAttribute('aria-label', 'Añadir al modo comparación');
+  cmpBtn.title = 'Comparar';
+  cmpBtn.innerHTML = '⊞';
+  cmpBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    var text = previewEl ? previewEl.textContent : '';
+    addToCompare(styleName, text, card, cmpBtn);
+  });
+  footer.appendChild(cmpBtn);
+}
+
+/* ──────────────── COMPARE MODE ──────────────── */
+var _compareItems = [];
+var _compareActive = false;
+
+function addToCompare(name, text, card, btn) {
+  if (_compareItems.find(function(i){ return i.name===name; })) {
+    removeFromCompare(name); return;
+  }
+  if (_compareItems.length >= 4) { toast('Máximo 4 estilos para comparar', '⚠'); return; }
+  _compareItems.push({ name:name, text:text, card:card, btn:btn });
+  btn.classList.add('added');
+  btn.innerHTML = '✓';
+  card.classList.add('compare-selected');
+  renderCompareBar();
+}
+
+function removeFromCompare(name) {
+  var item = _compareItems.find(function(i){ return i.name===name; });
+  if (item) {
+    item.btn.classList.remove('added');
+    item.btn.innerHTML = '⊞';
+    item.card.classList.remove('compare-selected');
+  }
+  _compareItems = _compareItems.filter(function(i){ return i.name!==name; });
+  renderCompareBar();
+}
+
+function renderCompareBar() {
+  var bar   = document.getElementById('compare-bar');
+  var slots = document.getElementById('compare-slots');
+  if (!bar || !slots) return;
+  bar.classList.toggle('show', _compareItems.length > 0);
+  slots.innerHTML = '';
+  _compareItems.forEach(function(item){
+    var slot = document.createElement('div');
+    slot.className = 'compare-slot';
+    slot.innerHTML = '<span>' + item.name + '</span><span class="compare-slot-x" data-name="' + item.name + '">✕</span>';
+    slots.appendChild(slot);
+  });
+  slots.querySelectorAll('.compare-slot-x').forEach(function(x){
+    x.addEventListener('click', function(){ removeFromCompare(x.getAttribute('data-name')); });
+  });
+}
+
+document.getElementById('compare-clear').addEventListener('click', function(){
+  _compareItems.slice().forEach(function(i){ removeFromCompare(i.name); });
+});
+
+document.getElementById('btn-compare-mode').addEventListener('click', function(){
+  _compareActive = !_compareActive;
+  var cardsEl = document.getElementById('cards');
+  if (cardsEl) cardsEl.classList.toggle('compare-mode', _compareActive);
+  this.classList.toggle('active', _compareActive);
+  this.textContent = _compareActive ? '✕ Comparar' : '⊞ Comparar';
+  toast(_compareActive ? 'Modo comparación activado' : 'Modo comparación desactivado', '⊞');
+});
+
+/* ──────────────── SHARE WITH URL TEXT ──────────────── */
+(function(){
+  var btn = document.getElementById('btn-share');
+  if (!btn) return;
+  btn.addEventListener('click', function(e){
+    e.stopPropagation();
+    var text = getInputText().trim();
+    var url  = location.origin + location.pathname;
+    if (text) url += '?t=' + encodeURIComponent(text);
+    if (navigator.share) {
+      navigator.share({ title:'DIUSF', url:url }).catch(function(){});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(function(){
+        toast('Enlace copiado al portapapeles', '⬆');
+      }).catch(function(){
+        toast('No se pudo copiar el enlace', '✕');
+      });
+    }
+  }, true);
+})();
+
+/* ──────────────── KEYBOARD SHORTCUTS ──────────────── */
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') {
+    var ta = document.getElementById('main-input');
+    if (ta && document.activeElement !== ta) { setInputText(''); }
+  }
+  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
+    e.preventDefault();
+    var btn = document.getElementById('btn-copy-all');
+    if (btn) btn.click();
+  }
+});
+
+/* ──────────────── SECCIÓN COLAPSABLE GENÉRICA ──────────────── */
+(function(){
+  function initCollapsible(toggleId, sectionId) {
+    var btn = document.getElementById(toggleId);
+    var sec = document.getElementById(sectionId);
+    if (!btn || !sec) return;
+    btn.addEventListener('click', function(){
+      var open = sec.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open);
+    });
+    btn.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); }
+    });
+  }
+  initCollapsible('symbols-toggle',   'symbols-section');
+  initCollapsible('decorator-toggle', 'decorator-section');
+  initCollapsible('bio-toggle',       'bio-section');
+})();
+
+/* ──────────────── SÍMBOLOS ──────────────── */
+(function(){
+  var SYMBOLS = {
+    corazones:   ['♡','♥','❤','❥','❣','💔','🖤','❦','❧','♡','🤍','💛','💚','💙','💜','🧡'],
+    estrellas:   ['★','☆','✦','✧','✩','✪','✫','✬','✭','✮','✯','✰','⭐','🌟','💫','✨'],
+    flechas:     ['→','←','↑','↓','↗','↘','↙','↖','↔','↕','⇒','⇐','⇑','⇓','➤','➜','➝','➞','➡','⬅','⬆','⬇'],
+    decorativos: ['✦','✧','•','·','◆','◇','○','●','□','■','△','▲','▽','▼','◈','⊹','꧁','꧂','༺','༻','⌘','✿','❀','✾','❃','❋'],
+    matematica:  ['∑','∏','∫','√','∞','≈','≠','≤','≥','±','÷','×','∂','∇','∈','∉','⊂','⊃','∀','∃','∅','π','θ','λ','Ω'],
+    monedas:     ['€','£','¥','₩','₽','₿','¢','$','₺','₹','₴','₦','₡','₱','₮','₵','₸','₼','₾'],
+    musica:      ['♪','♫','♬','♩','♭','♮','♯','🎵','🎶','🎼','🎸','🎹','🎺','🎻','🥁','🎷'],
+    clima:       ['☀','☁','⛅','🌤','🌥','🌦','🌧','⛈','🌩','🌨','❄','🌬','🌀','🌈','⚡','🔥','💧','🌊'],
+  };
+
+  var grid = document.getElementById('sym-grid');
+  var cats = document.querySelectorAll('.sym-cat');
+
+  function renderCat(cat) {
+    grid.innerHTML = '';
+    (SYMBOLS[cat] || []).forEach(function(sym) {
+      var el = document.createElement('div');
+      el.className = 'sym-item';
+      el.setAttribute('role', 'listitem');
+      el.setAttribute('title', 'Copiar ' + sym);
+      el.textContent = sym;
+      el.addEventListener('click', function() {
+        navigator.clipboard.writeText(sym).then(function(){
+          el.classList.add('copied');
+          setTimeout(function(){ el.classList.remove('copied'); }, 900);
+        }).catch(function(){});
+      });
+      grid.appendChild(el);
+    });
+  }
+
+  cats.forEach(function(btn) {
+    btn.addEventListener('click', function(){
+      cats.forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      renderCat(btn.dataset.cat);
+    });
+  });
+
+  renderCat('corazones');
+})();
+
+/* ──────────────── DECORADOR ──────────────── */
+(function(){
+  var WRAPPERS = [
+    [['⊰','⊱'], 'Petal Wrap'],
+    [['☾','☽'], 'Moon Wrap'],
+    [['╰','╯'], 'Soft Curl'],
+    [['«','»'],  'Guillemet'],
+    [['❮','❯'],  'Angle'],
+    [['⌠','⌡'],  'Math Edge'],
+    [['〔','〕'], 'Bracket JP'],
+    [['✦',' ✦'], 'Star Space'],
+    [['·','·'],  'Dot Wrap'],
+  ];
+
+  var input   = document.getElementById('deco-input');
+  var cards   = document.getElementById('deco-cards');
+
+  function applyWrap(text, pair) {
+    if (!text) return '';
+    return text.split('').map(function(ch){
+      return ch === ' ' ? ' ' : pair[0] + ch + pair[1];
+    }).join('');
+  }
+
+  function render() {
+    var val = input.value.trim();
+    cards.innerHTML = '';
+    if (!val) return;
+    WRAPPERS.forEach(function(w) {
+      var result = applyWrap(val, w[0]);
+      var card = document.createElement('div');
+      card.className = 'deco-card';
+      card.setAttribute('role', 'listitem');
+      card.setAttribute('title', 'Copiar');
+      card.innerHTML =
+        '<span class="deco-text">' + result.replace(/</g,'&lt;') + '</span>' +
+        '<span class="deco-copy-hint">' + w[1] + ' · copiar</span>';
+      card.addEventListener('click', function(){
+        navigator.clipboard.writeText(result).then(function(){
+          card.classList.add('copied');
+          card.querySelector('.deco-copy-hint').textContent = '✓ Copiado';
+          setTimeout(function(){
+            card.classList.remove('copied');
+            card.querySelector('.deco-copy-hint').textContent = w[1] + ' · copiar';
+          }, 1200);
+        }).catch(function(){});
+      });
+      cards.appendChild(card);
+    });
+  }
+
+  if (input) input.addEventListener('input', render);
+})();
+
+/* ──────────────── BIO BUILDER ──────────────── */
+(function(){
+  var bioLines   = document.getElementById('bio-lines');
+  var addLineBtn = document.getElementById('bio-add-line');
+  var preview    = document.getElementById('bio-preview');
+  var copyBtn    = document.getElementById('bio-copy-btn');
+
+  // Pull style names from FONTS global (defined in unicode.js)
+  function getStyleOptions() {
+    var opts = [{ key: 'plain', name: 'Sin estilo' }];
+    if (window.DIUSF_FONTS && Array.isArray(window.DIUSF_FONTS)) {
+      window.DIUSF_FONTS.slice(0, 40).forEach(function(f){
+        opts.push({ key: f.id || f.name, name: f.name });
+      });
+    }
+    return opts;
+  }
+
+  function applyStyle(text, styleKey) {
+    if (styleKey === 'plain' || !styleKey) return text;
+    if (window.DIUSF_FONTS && Array.isArray(window.DIUSF_FONTS)) {
+      var font = window.DIUSF_FONTS.find(function(f){ return (f.id || f.name) === styleKey; });
+      if (font && typeof font.convert === 'function') return font.convert(text);
+    }
+    return text;
+  }
+
+  function fillSelect(sel) {
+    sel.innerHTML = '';
+    getStyleOptions().forEach(function(o){
+      var opt = document.createElement('option');
+      opt.value = o.key;
+      opt.textContent = o.name;
+      sel.appendChild(opt);
+    });
+  }
+
+  function updatePreview() {
+    if (!preview) return;
+    var rows = bioLines.querySelectorAll('.bio-line-row');
+    var lines = [];
+    rows.forEach(function(row){
+      var inp = row.querySelector('.bio-line-input');
+      var sel = row.querySelector('.bio-style-select');
+      var text = inp ? inp.value : '';
+      var style = sel ? sel.value : 'plain';
+      lines.push(applyStyle(text, style));
+    });
+    preview.textContent = lines.join('\n');
+  }
+
+  function addRemoveListener(row) {
+    var btn = row.querySelector('.bio-line-remove');
+    if (!btn) return;
+    btn.addEventListener('click', function(){
+      var rows = bioLines.querySelectorAll('.bio-line-row');
+      if (rows.length <= 1) return;
+      row.remove();
+      updatePreview();
+    });
+  }
+
+  function addLine(placeholder) {
+    var row = document.createElement('div');
+    row.className = 'bio-line-row';
+    var lineCount = bioLines.querySelectorAll('.bio-line-row').length + 1;
+    row.innerHTML =
+      '<input class="bio-line-input" type="text" maxlength="80" placeholder="Línea ' + lineCount + '" autocomplete="off" spellcheck="false" />' +
+      '<select class="bio-style-select" aria-label="Estilo de fuente"></select>' +
+      '<button class="bio-line-remove" aria-label="Eliminar línea">−</button>';
+    bioLines.appendChild(row);
+    var sel = row.querySelector('.bio-style-select');
+    fillSelect(sel);
+    sel.addEventListener('change', updatePreview);
+    row.querySelector('.bio-line-input').addEventListener('input', updatePreview);
+    addRemoveListener(row);
+  }
+
+  // Init existing rows
+  if (bioLines) {
+    bioLines.querySelectorAll('.bio-line-row').forEach(function(row){
+      var sel = row.querySelector('.bio-style-select');
+      if (sel) {
+        fillSelect(sel);
+        sel.addEventListener('change', updatePreview);
+      }
+      var inp = row.querySelector('.bio-line-input');
+      if (inp) inp.addEventListener('input', updatePreview);
+      addRemoveListener(row);
+    });
+  }
+
+  if (addLineBtn) addLineBtn.addEventListener('click', function(){ addLine(); });
+
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function(){
+      var text = preview ? preview.textContent : '';
+      navigator.clipboard.writeText(text).then(function(){
+        copyBtn.textContent = '✓ ¡Copiado!';
+        setTimeout(function(){ copyBtn.textContent = 'Copiar bio completa'; }, 1800);
+      }).catch(function(){});
+    });
+  }
+
+  // Re-fill selects after FONTS may load async
+  document.addEventListener('DOMContentLoaded', function(){
+    if (bioLines) {
+      bioLines.querySelectorAll('.bio-style-select').forEach(fillSelect);
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
