@@ -16,13 +16,6 @@
 </head>
 <body>
 
-<!-- BACKGROUND BLOBS -->
-<div class="bg-canvas" aria-hidden="true">
-  <div class="blob blob-a"></div>
-  <div class="blob blob-b"></div>
-  <div class="blob blob-c"></div>
-</div>
-
 <!-- NAV -->
 <header class="nav-bar" role="banner">
   <div class="nav-inner">
@@ -241,22 +234,20 @@
    CAJA.JS — Lógica completa
 ═══════════════════════════════════════════════════════ */
 
-/* ── THEME (igual que index.html) ── */
+/* ── THEME ── */
 (function(){
-  var themeIcon = document.getElementById('theme-icon');
-  var metaTheme = document.getElementById('meta-theme');
-  function applyTheme(dark) {
-    document.body.classList.toggle('dark', dark);
-    if (themeIcon) themeIcon.textContent = dark ? '☀️' : '🌙';
-    if (metaTheme) metaTheme.content = dark ? '#000000' : '#f5f5f7';
-    try { localStorage.setItem('diusf_theme', dark ? 'dark' : 'light'); } catch(_) {}
+  var saved = localStorage.getItem('diusf-theme');
+  if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme:dark)').matches)) {
+    document.body.classList.add('dark');
+    var ti = document.getElementById('theme-icon'); if(ti) ti.textContent = '🌙';
+    var mt = document.getElementById('meta-theme'); if(mt) mt.content = '#0d0d0f';
   }
-  var saved = localStorage.getItem('diusf_theme');
-  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  applyTheme(saved ? saved === 'dark' : prefersDark);
   var btn = document.getElementById('theme-toggle');
   if (btn) btn.addEventListener('click', function(){
-    applyTheme(!document.body.classList.contains('dark'));
+    var dark = document.body.classList.toggle('dark');
+    localStorage.setItem('diusf-theme', dark ? 'dark' : 'light');
+    var ti = document.getElementById('theme-icon'); if(ti) ti.textContent = dark ? '🌙' : '☀️';
+    var mt = document.getElementById('meta-theme'); if(mt) mt.content = dark ? '#0d0d0f' : '#f5f5f7';
   });
 })();
 
@@ -773,9 +764,11 @@ var SEQUENCES = [
     tile.setAttribute('title', 'Copiar ' + seq);
     tile.textContent = seq;
     tile.style.width = 'auto';
-    tile.style.padding = '6px 12px';
+    tile.style.padding = '6px 10px';
     tile.style.fontSize = '20px';
     tile.style.borderRadius = '10px';
+    tile.style.background = 'var(--bg2)';
+    tile.style.border = '1px solid rgba(0,0,0,.07)';
     tile.style.cursor = 'pointer';
     tile.style.transition = 'transform .18s';
     tile.addEventListener('click', function(){
@@ -845,9 +838,9 @@ var SEQUENCES = [
 })();
 </script>
 
-<footer>
-  <p>DIUSF · <a href="index.html">Fuentes Unicode</a> · <a href="simbolos.html">∞ Símbolos</a> · <a href="privacy.html">Privacidad</a> · <a href="terms.html">Términos</a></p>
-  <p style="margin-top:5px"><a href="https://tiktok.com/@neravdz" target="_blank" rel="noopener">🎵 TikTok @neravdz</a></p>
+<footer style="text-align:center;padding:20px 18px;font-size:12px;color:var(--t4);border-top:1px solid rgba(0,0,0,.06);margin-top:8px;">
+  <p>DIUSF · <a href="index.html" style="color:var(--blue);text-decoration:none;">Fuentes Unicode</a> · <a href="simbolos.html" style="color:var(--blue);text-decoration:none;">∞ Símbolos</a> · <a href="privacy.html" style="color:var(--blue);text-decoration:none;">Privacidad</a> · <a href="terms.html" style="color:var(--blue);text-decoration:none;">Términos</a></p>
+  <p style="margin-top:5px"><a href="https://tiktok.com/@neravdz" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none;">🎵 TikTok @neravdz</a></p>
 </footer>
 
 </body>
