@@ -858,6 +858,7 @@ function bindEvents() {
   const themeIcon = document.getElementById('theme-icon');
   const applyTheme = (dark) => {
     document.body.classList.toggle('dark', dark);
+    document.documentElement.classList.remove('dark-early'); // limpiar anti-FOUC
     if (themeIcon) themeIcon.textContent = dark ? '☀️' : '🌙';
     try { localStorage.setItem('diusf_theme', dark ? 'dark' : 'light'); } catch(_) {}
   };
