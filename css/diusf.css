@@ -70,6 +70,19 @@ body {
 }
 .nav-inner { max-width:var(--max-w); margin:0 auto; padding:10px var(--px); display:flex; flex-direction:column; align-items:center; gap:6px; }
 .nav-top-row { display:flex; align-items:center; gap:14px; width:100%; justify-content:center; }
+
+/* ── Quick nav links ── */
+.nav-quick-links { display:flex; gap:8px; align-items:center; }
+.nav-quick-link {
+  font-size:12px; font-weight:600; color:var(--t3);
+  text-decoration:none; padding:4px 12px; border-radius:var(--pill);
+  background:var(--bg2); border:1px solid rgba(0,0,0,.07);
+  transition:background .15s, color .15s, border-color .15s;
+  white-space:nowrap;
+}
+.nav-quick-link:hover { background:var(--bg3); color:var(--blue); border-color:rgba(10,132,255,.25); }
+body.dark .nav-quick-link { border-color:rgba(255,255,255,.08); }
+body.dark .nav-quick-link:hover { background:var(--bg3); border-color:rgba(10,132,255,.35); }
 .di-pill { display:inline-flex; align-items:center; gap:7px; background:var(--bg2); border-radius:var(--pill); padding:5px 14px; box-shadow:0 0 0 1px rgba(0,0,0,.07),0 2px 10px rgba(0,0,0,.07); animation:pillDrop .55s cubic-bezier(.34,1.56,.64,1) both; }
 @keyframes pillDrop { from{transform:translateY(-20px) scale(.88);opacity:0} to{transform:translateY(0) scale(1);opacity:1} }
 .di-dot { width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:dotPulse 2.8s ease-in-out infinite;flex-shrink:0; }
@@ -292,6 +305,10 @@ body {
 }
 
 /* ═══════════════════════ DARK MODE ═══════════════════════ */
+/* ── Anti-FOUC: applied by inline <head> script before paint ── */
+html.dark-early { background: #000000; }
+html.dark-early body { background: #000000; color: #ffffff; }
+
 body.dark {
   --bg:        #000000;
   --bg1:       #0c0c0e;
