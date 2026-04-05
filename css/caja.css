@@ -97,7 +97,7 @@ body.dark .nav-bar { background: rgba(0,0,0,.80); border-bottom-color: rgba(255,
   transition: background .15s; flex-shrink: 0;
 }
 .nav-back:hover { background: var(--blue-lo); }
-.nav-title { flex: 1; text-align: center; font-size: 16px; font-weight: 700; color: var(--t1); }
+.nav-title { flex: 1; text-align: center; font-size: 17px; font-weight: 800; color: var(--t1); letter-spacing: -.3px; }
 
 .theme-toggle {
   width: 34px; height: 34px; border-radius: 50%;
@@ -123,8 +123,8 @@ body.dark .theme-toggle { background: var(--bg2); border-color: rgba(255,255,255
 .picker-section {
   background: var(--card-bg);
   border-radius: var(--r4);
-  border: 1px solid rgba(0,0,0,.06);
-  box-shadow: 0 2px 16px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04);
+  border: 1px solid rgba(0,0,0,.07);
+  box-shadow: 0 4px 24px rgba(0,0,0,.09), 0 0 0 1px rgba(0,0,0,.05);
   overflow: hidden;
 }
 body.dark .picker-section {
@@ -142,14 +142,14 @@ body.dark .picker-section {
 body.dark .picker-tabs { border-bottom-color: rgba(255,255,255,.07); background: rgba(255,255,255,.02); }
 
 .ptab {
-  flex: 1; min-width: 70px; padding: 10px 6px; border: none; background: none;
-  cursor: pointer; font-size: 12px; font-weight: 600; color: var(--t3);
+  flex: 1; min-width: 70px; padding: 11px 6px; border: none; background: none;
+  cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--t3);
   transition: color .15s, background .15s; white-space: nowrap;
   -webkit-tap-highlight-color: transparent; font-family: var(--sf);
   border-bottom: 2px solid transparent; margin-bottom: -1px;
 }
 .ptab:hover { color: var(--t2); background: rgba(0,0,0,.03); }
-.ptab.active { color: var(--blue); border-bottom-color: var(--blue); }
+.ptab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 700; }
 body.dark .ptab:hover { background: rgba(255,255,255,.04); }
 
 /* Picker panels */
@@ -215,6 +215,8 @@ body.dark .catbtn { border-color: rgba(255,255,255,.08); }
 .ptile:hover { background: var(--bg2); transform: scale(1.18); }
 .ptile:active { transform: scale(.88); }
 body.dark .ptile:hover { background: var(--bg3); }
+body.dark .ptile.sym { color: var(--t1); }
+body.dark .catbtn { color: var(--t2); }
 
 /* Fuentes */
 .fuentes-grid {
@@ -235,11 +237,13 @@ body.dark .ptile:hover { background: var(--bg3); }
 }
 .fuente-card:hover { background: var(--blue-lo); border-color: rgba(0,122,255,.25); }
 .fuente-card:active { transform: scale(.99); }
-body.dark .fuente-card { border-color: rgba(255,255,255,.07); }
+body.dark .fuente-card { border-color: rgba(255,255,255,.07); background: var(--bg2); }
+body.dark .fn { color: var(--t3); }
+body.dark .fp { color: var(--t1); }
 body.dark .fuente-card:hover { border-color: rgba(10,132,255,.3); }
 
 .fn { font-size: 10px; font-weight: 600; color: var(--t3); white-space: nowrap; min-width: 70px; }
-.fp { font-size: 17px; color: var(--t1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fp { font-size: 18px; color: var(--t1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Bordes */
 .picker-hint { font-size: 11px; color: var(--t3); }
@@ -258,6 +262,7 @@ body.dark .fuente-card:hover { border-color: rgba(10,132,255,.3); }
 }
 .borde-btn:hover { background: var(--blue-lo); border-color: rgba(0,122,255,.25); }
 body.dark .borde-btn { border-color: rgba(255,255,255,.07); }
+body.dark .borde-pre { color: var(--t1); }
 
 .borde-pre {
   font-family: 'Courier New', Courier, 'Segoe UI Symbol', monospace;
@@ -272,8 +277,8 @@ body.dark .borde-btn { border-color: rgba(255,255,255,.07); }
 .canvas-section {
   background: var(--card-bg);
   border-radius: var(--r4);
-  border: 1px solid rgba(0,0,0,.06);
-  box-shadow: 0 2px 16px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04);
+  border: 1px solid rgba(0,0,0,.07);
+  box-shadow: 0 4px 24px rgba(0,0,0,.09), 0 0 0 1px rgba(0,0,0,.05);
   overflow: hidden;
   display: flex; flex-direction: column;
 }
@@ -290,7 +295,7 @@ body.dark .canvas-section {
 }
 body.dark .canvas-header { border-bottom-color: rgba(255,255,255,.06); background: rgba(255,255,255,.02); }
 
-.canvas-label { font-size: 13px; font-weight: 700; color: var(--t2); }
+.canvas-label { font-size: 14px; font-weight: 800; color: var(--t1); letter-spacing: -.2px; }
 
 .canvas-btns { display: flex; gap: 6px; }
 .cbtn {
@@ -301,12 +306,16 @@ body.dark .canvas-header { border-bottom-color: rgba(255,255,255,.06); backgroun
   -webkit-tap-highlight-color: transparent;
 }
 .cbtn:hover { background: var(--bg3); }
-.cbtn.primary { background: var(--blue); color: #fff; border-color: transparent; }
-.cbtn.primary:hover { background: #0070e8; }
+.cbtn.primary {
+  background: var(--blue); color: #fff; border-color: transparent;
+  box-shadow: 0 2px 12px rgba(0,122,255,.35), 0 1px 0 rgba(255,255,255,.2) inset;
+  font-weight: 700;
+}
+.cbtn.primary:hover { background: #0070e8; box-shadow: 0 4px 18px rgba(0,122,255,.45); }
 body.dark .cbtn { border-color: rgba(255,255,255,.10); }
 
 .canvas-area {
-  width: 100%; min-height: 260px; resize: vertical;
+  width: 100%; min-height: 280px; resize: vertical;
   padding: 14px 16px;
   border: none; outline: none;
   background: transparent; color: var(--t1);
@@ -315,6 +324,8 @@ body.dark .cbtn { border-color: rgba(255,255,255,.10); }
   scrollbar-width: thin;
 }
 .canvas-area::placeholder { color: var(--t4); font-style: italic; }
+body.dark .canvas-area::placeholder { color: rgba(255,255,255,.25); }
+body.dark .canvas-area { color: var(--t1); }
 
 .canvas-footer {
   display: flex; gap: 14px; padding: 8px 14px;
@@ -345,3 +356,57 @@ footer {
 }
 footer p { font-size: 12px; color: var(--t4); }
 footer a { color: var(--t3); }
+
+
+/* ═══════════════════════════════════════════════════════════
+   CAJA v9 — Mejoras de jerarquía y aspecto herramienta
+═══════════════════════════════════════════════════════════ */
+
+/* ── Picker section: accent top border ── */
+.picker-section::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: linear-gradient(90deg, #007AFF 0%, #AF52DE 50%, #FF2D55 100%);
+}
+
+/* ── Tab active: stronger indicator ── */
+.ptab.active {
+  background: rgba(0,122,255,.05);
+}
+
+/* ── Canvas area: char ruler tick ── */
+.canvas-section { position: relative; }
+
+/* ── Copy button: bigger & more impactful ── */
+#canvas-copy {
+  padding: 7px 18px !important;
+  font-size: 13px !important;
+  letter-spacing: -.1px;
+}
+
+/* ── Picker tile: better active feedback ── */
+.ptile:active { transform: scale(.80) !important; background: var(--blue-lo) !important; }
+
+/* ── Fuente card: tag indicator ── */
+.fuente-card:hover .fn { color: var(--blue); }
+
+/* ── Canvas area focus ring ── */
+.canvas-area:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 2px rgba(0,122,255,.15);
+}
+
+/* ── Canvas header gradient accent ── */
+.canvas-header {
+  border-bottom: 2px solid rgba(0,0,0,.06);
+}
+body.dark .canvas-header {
+  border-bottom-color: rgba(255,255,255,.06);
+}
+
+/* ── Borde button: monospace style ── */
+.borde-btn:hover .borde-pre { color: var(--blue); }
+
+/* ── Catbtn active: bolder text ── */
+.catbtn.active { font-weight: 700; }
