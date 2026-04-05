@@ -3,771 +3,407 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Buscador de Símbolos Unicode — Mejorado</title>
+<title>DIUSF — Buscador de Símbolos Unicode</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap');
-
-  :root {
-    --bg: #0a0a0f;
-    --panel: #12121a;
-    --border: #2a2a3a;
-    --accent: #7c5cfc;
-    --accent2: #fc5c7d;
-    --text: #e8e8f0;
-    --muted: #666680;
-    --success: #5cfca4;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Syne', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 24px 16px;
-  }
-
-  header {
-    text-align: center;
-    margin-bottom: 28px;
-  }
-
-  header h1 {
-    font-size: 2rem;
-    font-weight: 800;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: -0.5px;
-  }
-
-  header p {
-    color: var(--muted);
-    font-size: 0.82rem;
-    margin-top: 6px;
-    font-family: 'Space Mono', monospace;
-  }
-
-  .badge {
-    display: inline-block;
-    background: linear-gradient(135deg, #1a1a2e, #2a1a3e);
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    padding: 3px 10px;
-    border-radius: 20px;
-    margin-top: 8px;
-    letter-spacing: 1px;
-  }
-
-  .main {
-    width: 100%;
-    max-width: 520px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .canvas-wrap {
-    background: var(--panel);
-    border: 1.5px solid var(--border);
-    border-radius: 16px;
-    padding: 16px;
-    position: relative;
-  }
-
-  .canvas-label {
-    font-size: 0.72rem;
-    color: var(--muted);
-    font-family: 'Space Mono', monospace;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-
-  canvas {
-    background: #1a1a28;
-    border-radius: 10px;
-    display: block;
-    width: 100%;
-    height: 220px;
-    cursor: crosshair;
-    touch-action: none;
-  }
-
-  .controls {
-    display: flex;
-    gap: 10px;
-    margin-top: 12px;
-    flex-wrap: wrap;
-  }
-
-  .btn {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.75rem;
-    padding: 9px 18px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    letter-spacing: 0.5px;
-  }
-
-  .btn-primary {
-    background: var(--accent);
-    color: #fff;
-    flex: 1;
-  }
-  .btn-primary:hover { background: #9b7dff; transform: translateY(-1px); }
-  .btn-primary:active { transform: translateY(0); }
-
-  .btn-ghost {
-    background: transparent;
-    color: var(--muted);
-    border: 1px solid var(--border);
-  }
-  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-
-  .method-selector {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .method-btn {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.68rem;
-    padding: 6px 12px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    transition: all 0.15s;
-    letter-spacing: 0.5px;
-  }
-
-  .method-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: white;
-  }
-
-  .section-title {
-    font-size: 0.7rem;
-    color: var(--muted);
-    font-family: 'Space Mono', monospace;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-
-  .results-panel {
-    background: var(--panel);
-    border: 1.5px solid var(--border);
-    border-radius: 16px;
-    padding: 16px;
-  }
-
-  .best-match {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 14px;
-    background: linear-gradient(135deg, #1a1530, #1a2030);
-    border: 1px solid var(--accent);
-    border-radius: 12px;
-    margin-bottom: 14px;
-  }
-
-  .symbol-big {
-    font-size: 3rem;
-    line-height: 1;
-    min-width: 56px;
-    text-align: center;
-  }
-
-  .match-info { flex: 1; }
-  .match-score {
-    font-family: 'Space Mono', monospace;
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--success);
-  }
-  .match-name {
-    font-size: 0.78rem;
-    color: var(--muted);
-    margin-top: 2px;
-    font-family: 'Space Mono', monospace;
-  }
-  .match-code {
-    font-size: 0.68rem;
-    color: var(--accent);
-    font-family: 'Space Mono', monospace;
-    margin-top: 2px;
-  }
-
-  .copy-btn {
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.72rem;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .copy-btn:hover { background: #9b7dff; }
-
-  .alts-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 8px;
-  }
-
-  .alt-item {
-    background: #1a1a28;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 4px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.15s;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-  }
-
-  .alt-item:hover {
-    border-color: var(--accent);
-    background: #1a1530;
-  }
-
-  .alt-symbol { font-size: 1.5rem; }
-  .alt-score {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.58rem;
-    color: var(--muted);
-  }
-
-  .progress-bar {
-    height: 3px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-    margin-top: 8px;
-  }
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    transition: width 0.4s ease;
-  }
-
-  .status {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--muted);
-    text-align: center;
-    padding: 20px;
-  }
-
-  .thinking {
-    display: inline-block;
-    animation: pulse 1.2s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 1; }
-  }
-
-  .tag-row {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-top: 8px;
-  }
-
-  .tag {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.6rem;
-    padding: 3px 8px;
-    border-radius: 4px;
-    background: #1a1a28;
-    color: var(--muted);
-    border: 1px solid var(--border);
-  }
-
-  .copied-msg {
-    color: var(--success);
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    margin-top: 6px;
-    text-align: center;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-
-  .copied-msg.show { opacity: 1; }
-
-  .stroke-info {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.65rem;
-    color: var(--muted);
-    margin-top: 6px;
-    display: flex;
-    gap: 12px;
-  }
-
-  .stroke-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-    display: inline-block;
-    margin-right: 4px;
-  }
+:root{
+  --bg:#0b0b12;--s1:#13131e;--s2:#1a1a2c;--s3:#22223a;
+  --ac:#7c5cfc;--ac2:#a78bfa;--ac3:#c4b5fd;
+  --green:#4ade80;--yellow:#fbbf24;--red:#f87171;
+  --text:#e4e1ff;--muted:#6b6888;--border:#252540;
+  --r:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;min-height:100vh;padding:16px 14px 60px}
+header{text-align:center;margin-bottom:20px;padding-top:4px}
+.logo{font-size:1.5rem;font-weight:900;letter-spacing:-1px}
+.logo span{color:var(--ac2)}
+.tagline{font-size:.78rem;color:var(--muted);margin-top:3px}
+.tagline b{color:var(--green)}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:14px}
+#c{display:block;width:100%;height:190px;background:#07070f;border-radius:10px;border:2px solid var(--border);cursor:crosshair;touch-action:none;transition:border-color .2s}
+#c.on{border-color:var(--ac)}
+.bar{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center}
+.btn{padding:8px 15px;border-radius:9px;border:1px solid var(--border);background:var(--s2);color:var(--text);font-size:.83rem;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;font-family:inherit}
+.btn:hover{border-color:var(--ac);color:var(--ac3)}
+.btn:disabled{opacity:.35;pointer-events:none}
+.btn.go{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:700}
+.btn.go:hover{background:var(--ac2)}
+.status{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:.78rem;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.dot.ok{background:var(--green)}.dot.run{background:var(--yellow);animation:blink 1s infinite}.dot.err{background:var(--red)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.pbar-wrap{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:8px}
+.pbar{height:100%;background:linear-gradient(90deg,var(--ac),var(--ac2));width:0;transition:width .12s}
+.best{text-align:center;padding:10px 0 16px}
+.best-label{font-size:.68rem;color:var(--ac2);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:10px}
+.best-char{font-size:5rem;line-height:1;display:block;cursor:pointer;transition:transform .15s;user-select:none}
+.best-char:hover{transform:scale(1.08)}
+.best-meta{font-size:.75rem;color:var(--ac2);font-weight:600;margin-top:6px}
+.best-sub{font-size:.7rem;color:var(--muted);margin-top:2px}
+.copy-btn{margin:12px auto 0;display:flex}
+.score-row{display:flex;gap:7px;align-items:center;margin-bottom:13px;flex-wrap:wrap}
+.pill{background:var(--s3);border:1px solid var(--border);border-radius:20px;padding:4px 11px;font-size:.7rem;color:var(--ac3)}
+.sec-lbl{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:9px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:5px}
+.sym{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:9px 3px 6px;text-align:center;cursor:pointer;transition:all .15s}
+.sym:hover{border-color:var(--ac);background:var(--s3)}
+.sym.top{border-color:var(--ac)}
+.sym .ch{font-size:1.45rem;display:block;line-height:1.2}
+.sym .sc{font-size:.55rem;color:var(--ac2);font-weight:700;margin-top:2px}
+.sym .u{font-size:.47rem;color:var(--muted)}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ac);color:#fff;padding:9px 22px;border-radius:30px;font-size:.88rem;font-weight:700;transition:transform .25s;z-index:999;pointer-events:none}
+#toast.show{transform:translateX(-50%) translateY(0)}
+#off{display:none}
 </style>
 </head>
 <body>
-
-<a href="index.html" style="
-  position:fixed; top:14px; left:16px; z-index:999;
-  display:inline-flex; align-items:center; gap:6px;
-  background:rgba(20,20,30,0.85); backdrop-filter:blur(10px);
-  border:1px solid rgba(124,92,252,0.3); border-radius:20px;
-  padding:7px 14px; color:#c0b8f8; font-family:'Syne',sans-serif;
-  font-size:13px; font-weight:700; text-decoration:none;
-  transition:all .18s; -webkit-tap-highlight-color:transparent;
-" onmouseover="this.style.background='rgba(124,92,252,0.25)';this.style.borderColor='rgba(124,92,252,0.6)'"
-   onmouseout="this.style.background='rgba(20,20,30,0.85)';this.style.borderColor='rgba(124,92,252,0.3)'">‹ DIUSF</a>
-
 <header>
-  <h1>Símbolo Unicode</h1>
-  <p>Dibuja → análisis vectorial inteligente</p>
-  <div class="badge">▲ PRECISIÓN MEJORADA</div>
+  <div class="logo">DIU<span>SF</span></div>
+  <div class="tagline">Motor: <b>DT² + HOG + 2-Stage</b> · <span id="gc">iniciando…</span> glifos indexados</div>
 </header>
 
-<div class="main">
-
-  <div class="canvas-wrap">
-    <div class="canvas-label">✏ Área de dibujo</div>
-    <canvas id="c" width="600" height="220"></canvas>
-    <div class="stroke-info" id="strokeInfo">
-      <span><span class="stroke-dot"></span>Trazos: 0</span>
-      <span>Puntos: 0</span>
-    </div>
-
-    <div style="margin-top:12px">
-      <div class="section-title">Método de análisis</div>
-      <div class="method-selector">
-        <button class="method-btn active" data-m="combined">🧠 Combinado</button>
-        <button class="method-btn" data-m="shape">📐 Forma</button>
-        <button class="method-btn" data-m="topology">🔄 Topología</button>
-        <button class="method-btn" data-m="stroke">✏ Trazo</button>
-      </div>
-    </div>
-
-    <div class="controls">
-      <button class="btn btn-primary" id="analyzeBtn">Analizar símbolo</button>
-      <button class="btn btn-ghost" id="clearBtn">Borrar</button>
-    </div>
+<div class="card">
+  <canvas id="c" width="600" height="190"></canvas>
+  <div class="bar">
+    <button class="btn go" id="bSearch" disabled>🔍 Buscar</button>
+    <button class="btn" id="bClear">🗑 Borrar</button>
+    <button class="btn" id="bUndo">↩ Deshacer</button>
   </div>
-
-  <div class="results-panel" id="resultsPanel">
-    <div class="section-title">Resultados</div>
-    <div class="status" id="statusMsg">Dibuja algo y pulsa <b>Analizar</b></div>
-  </div>
-
+  <div class="status"><div class="dot run" id="dot"></div><span id="stxt">Iniciando motor…</span></div>
+  <div class="pbar-wrap"><div class="pbar" id="pb"></div></div>
 </div>
 
+<div id="rpanel" class="card" style="display:none">
+  <div class="best" id="bestDiv"></div>
+  <div class="score-row" id="scoreRow"></div>
+  <div class="sec-lbl">▸ Alternativas similares</div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<canvas id="off" width="32" height="32"></canvas>
+<div id="toast"></div>
+
 <script>
-// ── Canvas setup ──────────────────────────────────────────────
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-let drawing = false;
-let strokes = [];
-let currentStroke = [];
-let allPoints = [];
-let method = 'combined';
+/* ═══════════════════════════════════════════════════════
+   CONFIGURACIÓN
+═══════════════════════════════════════════════════════ */
+const SZ=32, TH=8;
+const DTSZ=SZ*SZ, THSZ=TH*TH;
+const HOG_C=4, HOG_B=8, HOG_SZ=HOG_C*HOG_C*HOG_B; // 128
+const HOG_CS=SZ/HOG_C; // 8
+const KEEP=350, RES_N=40;
 
-function resizeCanvas() {
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-  return { scaleX, scaleY };
-}
-
-function getPos(e) {
-  const rect = canvas.getBoundingClientRect();
-  const { scaleX, scaleY } = resizeCanvas();
-  if (e.touches) {
-    return {
-      x: (e.touches[0].clientX - rect.left) * scaleX,
-      y: (e.touches[0].clientY - rect.top) * scaleY
-    };
-  }
-  return {
-    x: (e.clientX - rect.left) * scaleX,
-    y: (e.clientY - rect.top) * scaleY
-  };
-}
-
-ctx.strokeStyle = '#a090ff';
-ctx.lineWidth = 3;
-ctx.lineCap = 'round';
-ctx.lineJoin = 'round';
-
-canvas.addEventListener('mousedown', startDraw);
-canvas.addEventListener('mousemove', draw);
-canvas.addEventListener('mouseup', endDraw);
-canvas.addEventListener('mouseleave', endDraw);
-canvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e); }, {passive:false});
-canvas.addEventListener('touchmove', e => { e.preventDefault(); draw(e); }, {passive:false});
-canvas.addEventListener('touchend', e => { e.preventDefault(); endDraw(e); }, {passive:false});
-
-function startDraw(e) {
-  drawing = true;
-  currentStroke = [];
-  const p = getPos(e);
-  ctx.beginPath();
-  ctx.moveTo(p.x, p.y);
-  currentStroke.push(p);
-  updateInfo();
-}
-
-function draw(e) {
-  if (!drawing) return;
-  const p = getPos(e);
-  ctx.lineTo(p.x, p.y);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(p.x, p.y);
-  currentStroke.push(p);
-  updateInfo();
-}
-
-function endDraw() {
-  if (!drawing) return;
-  drawing = false;
-  if (currentStroke.length > 2) {
-    strokes.push([...currentStroke]);
-    allPoints.push(...currentStroke);
-  }
-  updateInfo();
-}
-
-function updateInfo() {
-  const total = allPoints.length + currentStroke.length;
-  document.getElementById('strokeInfo').innerHTML =
-    `<span><span class="stroke-dot"></span>Trazos: ${strokes.length}</span><span>Puntos: ${total}</span>`;
-}
-
-document.getElementById('clearBtn').addEventListener('click', () => {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  strokes = []; currentStroke = []; allPoints = [];
-  updateInfo();
-  document.getElementById('statusMsg').textContent = 'Dibuja algo y pulsa Analizar';
-  document.getElementById('resultsPanel').innerHTML = '<div class="section-title">Resultados</div><div class="status" id="statusMsg">Dibuja algo y pulsa <b>Analizar</b></div>';
-});
-
-document.querySelectorAll('.method-btn').forEach(b => {
-  b.addEventListener('click', () => {
-    document.querySelectorAll('.method-btn').forEach(x => x.classList.remove('active'));
-    b.classList.add('active');
-    method = b.dataset.m;
-  });
-});
-
-// ── Feature Extraction ──────────────────────────────────────
-function extractFeatures(pts) {
-  if (pts.length < 3) return null;
-
-  const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
-  const minX = Math.min(...xs), maxX = Math.max(...xs);
-  const minY = Math.min(...ys), maxY = Math.max(...ys);
-  const w = maxX - minX || 1, h = maxY - minY || 1;
-  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
-
-  // Normalize points to -1..1
-  const norm = pts.map(p => ({ x: (p.x - cx) / (Math.max(w,h)/2), y: (p.y - cy) / (Math.max(w,h)/2) }));
-
-  // Aspect ratio
-  const aspect = w / h;
-
-  // Curvature: average angle change
-  let totalCurv = 0, curvCount = 0;
-  for (let i = 1; i < norm.length - 1; i++) {
-    const a = Math.atan2(norm[i].y - norm[i-1].y, norm[i].x - norm[i-1].x);
-    const b = Math.atan2(norm[i+1].y - norm[i].y, norm[i+1].x - norm[i].x);
-    let diff = Math.abs(b - a);
-    if (diff > Math.PI) diff = 2*Math.PI - diff;
-    totalCurv += diff;
-    curvCount++;
-  }
-  const avgCurv = curvCount > 0 ? totalCurv / curvCount : 0;
-
-  // Total arc length
-  let arc = 0;
-  for (let i = 1; i < norm.length; i++) {
-    const dx = norm[i].x - norm[i-1].x;
-    const dy = norm[i].y - norm[i-1].y;
-    arc += Math.sqrt(dx*dx + dy*dy);
-  }
-
-  // Closure: distance from first to last point (normalized)
-  const startEnd = Math.sqrt(
-    Math.pow(norm[0].x - norm[norm.length-1].x,2) +
-    Math.pow(norm[0].y - norm[norm.length-1].y,2)
-  );
-  const closure = 1 - Math.min(startEnd / (arc||1), 1);
-
-  // Symmetry: compare left/right halves
-  const leftPts = norm.filter(p => p.x < 0);
-  const rightPts = norm.filter(p => p.x > 0);
-  const vSym = leftPts.length > 0 && rightPts.length > 0
-    ? 1 - Math.abs(leftPts.length - rightPts.length) / norm.length
-    : 0.5;
-
-  // Bounding box fill (convex hull approx via grid)
-  const GRID = 10;
-  const grid = new Set();
-  norm.forEach(p => {
-    const gx = Math.round((p.x + 1) / 2 * GRID);
-    const gy = Math.round((p.y + 1) / 2 * GRID);
-    grid.add(`${gx},${gy}`);
-  });
-  const fill = grid.size / (GRID * GRID);
-
-  // Direction histogram (8 directions)
-  const dirHist = new Array(8).fill(0);
-  for (let i = 1; i < norm.length; i++) {
-    const dx = norm[i].x - norm[i-1].x;
-    const dy = norm[i].y - norm[i-1].y;
-    if (Math.abs(dx) + Math.abs(dy) < 0.01) continue;
-    let angle = Math.atan2(dy, dx);
-    if (angle < 0) angle += 2 * Math.PI;
-    const bin = Math.floor(angle / (2*Math.PI) * 8) % 8;
-    dirHist[bin]++;
-  }
-  const histTotal = dirHist.reduce((a,b)=>a+b,0) || 1;
-  const normHist = dirHist.map(v => v / histTotal);
-
-  // Stroke count
-  const strokeCount = strokes.length;
-
-  // Vertical crossings at center
-  let vCross = 0;
-  for (let i = 1; i < norm.length; i++) {
-    if ((norm[i-1].y < 0) !== (norm[i].y < 0)) vCross++;
-  }
-
-  // Horizontal crossings at center
-  let hCross = 0;
-  for (let i = 1; i < norm.length; i++) {
-    if ((norm[i-1].x < 0) !== (norm[i].x < 0)) hCross++;
-  }
-
-  return { aspect, avgCurv, arc, closure, vSym, fill, normHist, strokeCount, vCross, hCross, norm };
-}
-
-// ── Symbol Definitions ─────────────────────────────────────────
-const SYMBOLS = [
-  // Circles / Ovals
-  { char:'○', name:'Círculo vacío', u:'25CB', aspect:[0.7,1.4], closure:[0.7,1], avgCurv:[0.05,0.35], fill:[0.04,0.2], vSym:[0.6,1], strokes:[1,1] },
-  { char:'●', name:'Círculo lleno', u:'25CF', aspect:[0.7,1.4], closure:[0.7,1], avgCurv:[0.05,0.35], fill:[0.3,0.9], vSym:[0.6,1], strokes:[1,1] },
-  { char:'◯', name:'Círculo grande', u:'25EF', aspect:[0.7,1.4], closure:[0.7,1], avgCurv:[0.05,0.35], fill:[0.03,0.15], vSym:[0.6,1], strokes:[1,1] },
-  { char:'⬭', name:'Elipse horizontal', u:'2B2D', aspect:[1.5,4], closure:[0.6,1], avgCurv:[0.04,0.3], fill:[0.04,0.2], vSym:[0.5,1], strokes:[1,1] },
-  { char:'⬬', name:'Elipse vertical', u:'2B2C', aspect:[0.1,0.7], closure:[0.6,1], avgCurv:[0.04,0.3], fill:[0.04,0.2], vSym:[0.5,1], strokes:[1,1] },
-
-  // Squares / Rectangles
-  { char:'□', name:'Cuadrado vacío', u:'25A1', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.0,0.15], fill:[0.04,0.2], vSym:[0.5,1], strokes:[1,2] },
-  { char:'■', name:'Cuadrado lleno', u:'25A0', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.0,0.15], fill:[0.3,0.9], vSym:[0.5,1], strokes:[1,2] },
-  { char:'▭', name:'Rectángulo horiz.', u:'25AD', aspect:[1.5,5], closure:[0.4,1], avgCurv:[0.0,0.15], fill:[0.04,0.2], vSym:[0.5,1], strokes:[1,2] },
-  { char:'▯', name:'Rectángulo vert.', u:'25AF', aspect:[0.1,0.7], closure:[0.4,1], avgCurv:[0.0,0.15], fill:[0.04,0.2], vSym:[0.5,1], strokes:[1,2] },
-
-  // Triangles
-  { char:'△', name:'Triángulo arriba', u:'25B3', aspect:[0.7,1.8], closure:[0.5,1], avgCurv:[0.1,0.5], fill:[0.04,0.25], vSym:[0.6,1], strokes:[1,2] },
-  { char:'▽', name:'Triángulo abajo', u:'25BD', aspect:[0.7,1.8], closure:[0.5,1], avgCurv:[0.1,0.5], fill:[0.04,0.25], vSym:[0.6,1], strokes:[1,2] },
-  { char:'◁', name:'Triángulo izq.', u:'25C1', aspect:[0.2,0.8], closure:[0.5,1], avgCurv:[0.1,0.5], fill:[0.04,0.25], vSym:[0.1,0.5], strokes:[1,2] },
-  { char:'▷', name:'Triángulo der.', u:'25B7', aspect:[1.2,4], closure:[0.5,1], avgCurv:[0.1,0.5], fill:[0.04,0.25], vSym:[0.1,0.5], strokes:[1,2] },
-
-  // Arrows
-  { char:'→', name:'Flecha derecha', u:'2192', aspect:[1.5,6], closure:[0,0.4], avgCurv:[0.05,0.4], fill:[0.02,0.15], vSym:[0.1,0.5], strokes:[1,3] },
-  { char:'←', name:'Flecha izquierda', u:'2190', aspect:[1.5,6], closure:[0,0.4], avgCurv:[0.05,0.4], fill:[0.02,0.15], vSym:[0.1,0.5], strokes:[1,3] },
-  { char:'↑', name:'Flecha arriba', u:'2191', aspect:[0.1,0.8], closure:[0,0.4], avgCurv:[0.05,0.4], fill:[0.02,0.15], vSym:[0.5,1], strokes:[1,3] },
-  { char:'↓', name:'Flecha abajo', u:'2193', aspect:[0.1,0.8], closure:[0,0.4], avgCurv:[0.05,0.4], fill:[0.02,0.15], vSym:[0.5,1], strokes:[1,3] },
-  { char:'↗', name:'Flecha diagonal ↗', u:'2197', aspect:[0.7,1.4], closure:[0,0.4], avgCurv:[0.05,0.5], fill:[0.02,0.12], vSym:[0.1,0.5], strokes:[1,2] },
-  { char:'↙', name:'Flecha diagonal ↙', u:'2199', aspect:[0.7,1.4], closure:[0,0.4], avgCurv:[0.05,0.5], fill:[0.02,0.12], vSym:[0.1,0.5], strokes:[1,2] },
-  { char:'↔', name:'Flecha doble horiz.', u:'2194', aspect:[2,8], closure:[0,0.4], avgCurv:[0.05,0.5], fill:[0.02,0.15], vSym:[0.1,0.5], strokes:[1,2] },
-  { char:'↕', name:'Flecha doble vert.', u:'2195', aspect:[0.1,0.6], closure:[0,0.4], avgCurv:[0.05,0.5], fill:[0.02,0.15], vSym:[0.5,1], strokes:[1,2] },
-
-  // Lines / Curves
-  { char:'—', name:'Raya (em dash)', u:'2014', aspect:[3,20], closure:[0,0.3], avgCurv:[0,0.08], fill:[0.01,0.1], vSym:[0.1,0.6], strokes:[1,1] },
-  { char:'|', name:'Línea vertical', u:'007C', aspect:[0.01,0.25], closure:[0,0.3], avgCurv:[0,0.08], fill:[0.01,0.1], vSym:[0.5,1], strokes:[1,1] },
-  { char:'/', name:'Diagonal /', u:'002F', aspect:[0.3,1.5], closure:[0,0.3], avgCurv:[0,0.12], fill:[0.01,0.1], vSym:[0.1,0.5], strokes:[1,1] },
-  { char:'\\', name:'Diagonal \\', u:'005C', aspect:[0.3,1.5], closure:[0,0.3], avgCurv:[0,0.12], fill:[0.01,0.1], vSym:[0.1,0.5], strokes:[1,1] },
-  { char:'~', name:'Virgulilla/onda', u:'007E', aspect:[2,8], closure:[0,0.4], avgCurv:[0.1,0.5], fill:[0.01,0.1], vSym:[0.3,0.7], strokes:[1,1] },
-  { char:'∫', name:'Integral', u:'222B', aspect:[0.1,0.7], closure:[0,0.4], avgCurv:[0.1,0.5], fill:[0.01,0.1], vSym:[0.1,0.5], strokes:[1,1] },
-  { char:'∞', name:'Infinito', u:'221E', aspect:[1.5,4], closure:[0.5,1], avgCurv:[0.05,0.35], fill:[0.05,0.2], vSym:[0.5,1], strokes:[1,2] },
-
-  // Stars / Crosses
-  { char:'★', name:'Estrella llena', u:'2605', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.15,0.6], fill:[0.1,0.35], vSym:[0.5,1], strokes:[1,2] },
-  { char:'☆', name:'Estrella vacía', u:'2606', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.15,0.6], fill:[0.04,0.18], vSym:[0.5,1], strokes:[1,2] },
-  { char:'✚', name:'Cruz gruesa', u:'271A', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.05,0.3], fill:[0.08,0.3], vSym:[0.6,1], strokes:[1,3] },
-  { char:'✕', name:'X cruzada', u:'2715', aspect:[0.7,1.4], closure:[0,0.5], avgCurv:[0.1,0.5], fill:[0.04,0.18], vSym:[0.5,1], strokes:[1,3] },
-  { char:'✓', name:'Check/Palomita', u:'2713', aspect:[0.5,2], closure:[0,0.4], avgCurv:[0.1,0.5], fill:[0.02,0.12], vSym:[0.1,0.5], strokes:[1,2] },
-
-  // Hearts / Diamonds
-  { char:'♥', name:'Corazón lleno', u:'2665', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.05,0.4], fill:[0.15,0.5], vSym:[0.6,1], strokes:[1,2] },
-  { char:'♡', name:'Corazón vacío', u:'2661', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.05,0.4], fill:[0.04,0.2], vSym:[0.6,1], strokes:[1,2] },
-  { char:'◆', name:'Diamante lleno', u:'25C6', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.1,0.4], fill:[0.15,0.5], vSym:[0.6,1], strokes:[1,2] },
-  { char:'◇', name:'Diamante vacío', u:'25C7', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.1,0.4], fill:[0.04,0.2], vSym:[0.6,1], strokes:[1,2] },
-
-  // Math
-  { char:'≈', name:'Aprox. igual', u:'2248', aspect:[2,7], closure:[0,0.4], avgCurv:[0.05,0.4], fill:[0.02,0.12], vSym:[0.3,0.7], strokes:[1,3] },
-  { char:'≠', name:'No igual', u:'2260', aspect:[1,4], closure:[0,0.5], avgCurv:[0.0,0.2], fill:[0.03,0.15], vSym:[0.3,0.7], strokes:[1,3] },
-  { char:'±', name:'Más-menos', u:'00B1', aspect:[0.5,1.5], closure:[0,0.5], avgCurv:[0.0,0.2], fill:[0.03,0.15], vSym:[0.5,1], strokes:[1,4] },
-  { char:'∑', name:'Sumatorio', u:'2211', aspect:[0.4,1.2], closure:[0,0.6], avgCurv:[0.05,0.4], fill:[0.03,0.15], vSym:[0.2,0.6], strokes:[1,2] },
-  { char:'√', name:'Raíz cuadrada', u:'221A', aspect:[0.5,2], closure:[0,0.4], avgCurv:[0.05,0.4], fill:[0.02,0.12], vSym:[0.1,0.5], strokes:[1,2] },
-  { char:'π', name:'Pi', u:'03C0', aspect:[1,3], closure:[0,0.4], avgCurv:[0.05,0.4], fill:[0.02,0.12], vSym:[0.5,1], strokes:[1,3] },
-
-  // Misc shapes
-  { char:'⬟', name:'Pentágono', u:'2B1F', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.1,0.4], fill:[0.04,0.2], vSym:[0.6,1], strokes:[1,2] },
-  { char:'⬡', name:'Hexágono', u:'2B21', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.07,0.3], fill:[0.04,0.2], vSym:[0.5,1], strokes:[1,2] },
-  { char:'⟳', name:'Flecha circular der.', u:'27F3', aspect:[0.7,1.4], closure:[0.2,0.8], avgCurv:[0.05,0.35], fill:[0.03,0.18], vSym:[0.3,0.7], strokes:[1,2] },
-  { char:'⟲', name:'Flecha circular izq.', u:'27F2', aspect:[0.7,1.4], closure:[0.2,0.8], avgCurv:[0.05,0.35], fill:[0.03,0.18], vSym:[0.3,0.7], strokes:[1,2] },
-  { char:'◎', name:'Círculo con punto', u:'25CE', aspect:[0.7,1.4], closure:[0.7,1], avgCurv:[0.05,0.35], fill:[0.04,0.2], vSym:[0.6,1], strokes:[2,3] },
-  { char:'⊕', name:'Círculo con cruz', u:'2295', aspect:[0.7,1.4], closure:[0.6,1], avgCurv:[0.04,0.35], fill:[0.06,0.25], vSym:[0.6,1], strokes:[1,4] },
+const RANGES=[
+  [33,126],[161,591],[688,767],[880,1327],[7424,7615],
+  [7680,7935],[8192,8303],[8304,8351],[8352,8399],
+  [8448,8527],[8528,8591],[8592,8703],[8704,8959],
+  [8960,9215],[9216,9279],[9312,9471],[9472,9599],
+  [9600,9631],[9632,9727],[9728,9983],[9984,10175],
+  [10176,10239],[10496,10623],[10624,10751],
+  [10752,11007],[11008,11263],[12288,12351],
+  [12800,13055],[65281,65438],
+  [119808,120831],[127744,128511],[128512,128591],
+  [128640,128767],[128896,129023],[129280,129535],
 ];
 
-// ── Scoring ────────────────────────────────────────────────────
-function rangeScore(val, [lo, hi]) {
-  if (val >= lo && val <= hi) return 1;
-  const dist = val < lo ? lo - val : val - hi;
-  const range = hi - lo || 0.01;
-  return Math.max(0, 1 - dist / range * 1.5);
+/* ═══════════════════════════════════════════════════════
+   ESTADO
+═══════════════════════════════════════════════════════ */
+let glyphCPs=[], matTH=null, matDT=null, matHOG=null;
+let N=0, ready=false;
+let strokes=[], cur=[], drawing=false;
+
+/* ═══════════════════════════════════════════════════════
+   CANVAS PRINCIPAL
+═══════════════════════════════════════════════════════ */
+const C=document.getElementById('c');
+const ctx=C.getContext('2d');
+ctx.strokeStyle='#a78bfa'; ctx.lineWidth=3;
+ctx.lineCap='round'; ctx.lineJoin='round';
+
+function pos(e){
+  const r=C.getBoundingClientRect();
+  const s=e.touches?e.touches[0]:e;
+  return [(s.clientX-r.left)*C.width/r.width,(s.clientY-r.top)*C.height/r.height];
+}
+function sd(e){drawing=true;const p=pos(e);cur=[p];ctx.beginPath();ctx.moveTo(...p);C.classList.add('on')}
+function mv(e){if(!drawing)return;const p=pos(e);cur.push(p);ctx.lineTo(...p);ctx.stroke();ctx.beginPath();ctx.moveTo(...p)}
+function ed(){if(!drawing)return;drawing=false;if(cur.length>1)strokes.push([...cur]);cur=[];C.classList.remove('on');updBtn()}
+C.addEventListener('mousedown',sd);C.addEventListener('mousemove',mv);C.addEventListener('mouseup',ed);C.addEventListener('mouseleave',ed);
+C.addEventListener('touchstart',e=>{e.preventDefault();sd(e)},{passive:false});
+C.addEventListener('touchmove',e=>{e.preventDefault();mv(e)},{passive:false});
+C.addEventListener('touchend',e=>{e.preventDefault();ed()},{passive:false});
+
+document.getElementById('bClear').onclick=()=>{
+  ctx.clearRect(0,0,C.width,C.height);strokes=[];cur=[];
+  document.getElementById('bSearch').disabled=true;
+  document.getElementById('rpanel').style.display='none';
+};
+document.getElementById('bUndo').onclick=()=>{
+  if(!strokes.length)return;strokes.pop();
+  ctx.clearRect(0,0,C.width,C.height);
+  strokes.forEach(s=>{ctx.beginPath();ctx.moveTo(s[0][0],s[0][1]);s.forEach(p=>ctx.lineTo(p[0],p[1]));ctx.stroke()});
+  updBtn();
+};
+document.getElementById('bSearch').onclick=()=>search();
+function updBtn(){document.getElementById('bSearch').disabled=!(ready&&strokes.length>0)}
+
+/* ═══════════════════════════════════════════════════════
+   OFF-SCREEN CANVAS
+═══════════════════════════════════════════════════════ */
+const off=document.getElementById('off');
+const oc=off.getContext('2d',{willReadFrequently:true});
+
+function clrOff(){oc.fillStyle='#000';oc.fillRect(0,0,SZ,SZ)}
+function px(){
+  const d=oc.getImageData(0,0,SZ,SZ).data;
+  const v=new Float32Array(DTSZ);
+  for(let i=0;i<DTSZ;i++)v[i]=d[i*4]/255;
+  return v;
 }
 
-function scoreSymbol(feat, sym) {
-  const weights = {
-    aspect: 1.8,
-    closure: 2.2,
-    avgCurv: 1.5,
-    fill: 1.2,
-    vSym: 1.0,
-    strokes: 1.8
-  };
-
-  const scores = {
-    aspect: rangeScore(feat.aspect, sym.aspect),
-    closure: rangeScore(feat.closure, sym.closure),
-    avgCurv: rangeScore(feat.avgCurv, sym.avgCurv),
-    fill: rangeScore(feat.fill, sym.fill),
-    vSym: rangeScore(feat.vSym, sym.vSym),
-    strokes: rangeScore(feat.strokeCount, sym.strokes)
-  };
-
-  let total = 0, wTotal = 0;
-  for (const [k, w] of Object.entries(weights)) {
-    total += scores[k] * w;
-    wTotal += w;
-  }
-
-  return total / wTotal;
+/* ═══════════════════════════════════════════════════════
+   RENDER GLIFO
+═══════════════════════════════════════════════════════ */
+function renderG(ch){
+  clrOff();
+  oc.fillStyle='#fff';
+  oc.font=`${Math.round(SZ*.72)}px sans-serif`;
+  oc.textAlign='center';oc.textBaseline='middle';
+  oc.fillText(ch,SZ/2,SZ/2);
+  return px();
+}
+function isValid(v){
+  let w=0;for(let i=0;i<DTSZ;i++)if(v[i]>0.12)w++;
+  return w>8&&w<DTSZ*.96;
 }
 
-// ── Analyze ───────────────────────────────────────────────────
-document.getElementById('analyzeBtn').addEventListener('click', () => {
-  const pts = allPoints.length > 0 ? allPoints : currentStroke;
-  if (pts.length < 5) {
-    document.getElementById('statusMsg').innerHTML = '<span style="color:#fc5c7d">Dibuja algo primero</span>';
-    return;
+/* ═══════════════════════════════════════════════════════
+   NORMALIZAR DIBUJO USUARIO
+═══════════════════════════════════════════════════════ */
+function normUser(stks){
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  for(const s of stks)for(const [x,y] of s){
+    if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;
+  }
+  const w=x1-x0||1,h=y1-y0||1;
+  const sc=(SZ*.78)/Math.max(w,h);
+  const ox=(SZ-w*sc)/2-x0*sc,oy=(SZ-h*sc)/2-y0*sc;
+  clrOff();
+  oc.strokeStyle='#fff';
+  oc.lineWidth=Math.max(1.5,SZ*.05);
+  oc.lineCap='round';oc.lineJoin='round';
+  for(const s of stks){
+    oc.beginPath();oc.moveTo(s[0][0]*sc+ox,s[0][1]*sc+oy);
+    for(let i=1;i<s.length;i++)oc.lineTo(s[i][0]*sc+ox,s[i][1]*sc+oy);
+    oc.stroke();
+  }
+  return px();
+}
+
+/* ═══════════════════════════════════════════════════════
+   DISTANCE TRANSFORM — campo de proximidad (tolerante
+   a diferencias trazo vs relleno)
+═══════════════════════════════════════════════════════ */
+function computeDT(v){
+  const maxD=Math.ceil(SZ*.28);
+  const d=new Float32Array(DTSZ);
+  for(let i=0;i<DTSZ;i++)d[i]=v[i]>0.12?0:maxD+1;
+  for(let y=0;y<SZ;y++)for(let x=0;x<SZ;x++){
+    const i=y*SZ+x;
+    if(x>0&&d[i-1]+1<d[i])d[i]=d[i-1]+1;
+    if(y>0&&d[i-SZ]+1<d[i])d[i]=d[i-SZ]+1;
+  }
+  for(let y=SZ-1;y>=0;y--)for(let x=SZ-1;x>=0;x--){
+    const i=y*SZ+x;
+    if(x<SZ-1&&d[i+1]+1<d[i])d[i]=d[i+1]+1;
+    if(y<SZ-1&&d[i+SZ]+1<d[i])d[i]=d[i+SZ]+1;
+  }
+  for(let i=0;i<DTSZ;i++)d[i]=Math.max(0,1-d[i]/maxD);
+  return d;
+}
+
+/* ═══════════════════════════════════════════════════════
+   HOG — captura direcciones de bordes (estructura forma)
+   4×4 celdas, 8 bins orientación
+═══════════════════════════════════════════════════════ */
+function computeHOG(v){
+  const h=new Float32Array(HOG_SZ);
+  for(let y=1;y<SZ-1;y++)for(let x=1;x<SZ-1;x++){
+    const gx=v[y*SZ+x+1]-v[y*SZ+x-1];
+    const gy=v[(y+1)*SZ+x]-v[(y-1)*SZ+x];
+    const mag=Math.sqrt(gx*gx+gy*gy);
+    if(mag<0.04)continue;
+    const ang=(Math.atan2(gy,gx)+Math.PI)/(2*Math.PI);
+    const bin=Math.floor(ang*HOG_B)%HOG_B;
+    const cy=Math.floor(y/HOG_CS),cx=Math.floor(x/HOG_CS);
+    if(cy<HOG_C&&cx<HOG_C)h[(cy*HOG_C+cx)*HOG_B+bin]+=mag;
+  }
+  let s=0;for(let i=0;i<HOG_SZ;i++)s+=h[i]*h[i];
+  s=Math.sqrt(s)+1e-7;
+  for(let i=0;i<HOG_SZ;i++)h[i]/=s;
+  return h;
+}
+
+/* ═══════════════════════════════════════════════════════
+   THUMBNAIL — downsample SZ→TH para prefilter rápido
+═══════════════════════════════════════════════════════ */
+const SC=SZ/TH;
+function computeTH(v){
+  const t=new Float32Array(THSZ);
+  for(let ty=0;ty<TH;ty++)for(let tx=0;tx<TH;tx++){
+    let s=0;
+    for(let dy=0;dy<SC;dy++)for(let dx=0;dx<SC;dx++)
+      s+=v[(ty*SC+dy)*SZ+(tx*SC+dx)];
+    t[ty*TH+tx]=s/(SC*SC);
+  }
+  return t;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SIMILITUD COSENO — inlined para máxima velocidad
+═══════════════════════════════════════════════════════ */
+function cosA(a,ai,b,bi,len){
+  let dot=0,na=0,nb=0;
+  for(let k=0;k<len;k++){
+    const x=a[ai+k],y=b[bi+k];
+    dot+=x*y;na+=x*x;nb+=y*y;
+  }
+  return na<1e-10||nb<1e-10?0:dot/Math.sqrt(na*nb);
+}
+
+/* ═══════════════════════════════════════════════════════
+   INICIALIZACIÓN — indexar todos los glifos
+═══════════════════════════════════════════════════════ */
+async function buildDB(){
+  setSt('run','Escaneando glifos Unicode…');
+  const total=RANGES.reduce((a,[s,e])=>a+(e-s+1),0);
+  let scanned=0;
+  const valid=[];
+
+  for(const [s,e] of RANGES){
+    for(let cp=s;cp<=e;cp++){
+      if(cp>=0xD800&&cp<=0xDFFF){scanned++;continue;}
+      const v=renderG(String.fromCodePoint(cp));
+      if(isValid(v))valid.push(cp);
+      scanned++;
+    }
+    setPb(scanned/total*45);
+    setSt('run',`Escaneando… ${scanned}/${total} · ${valid.length} válidos`);
+    await tick();
   }
 
-  const panel = document.getElementById('resultsPanel');
-  panel.innerHTML = `<div class="section-title">Analizando...</div><div class="status"><span class="thinking">⬤ ⬤ ⬤</span></div>`;
+  N=valid.length;
+  glyphCPs=valid;
+  matTH =new Float32Array(N*THSZ);
+  matDT =new Float32Array(N*DTSZ);
+  matHOG=new Float32Array(N*HOG_SZ);
 
-  setTimeout(() => {
-    const feat = extractFeatures(pts);
-    if (!feat) return;
+  for(let i=0;i<N;i++){
+    const v=renderG(String.fromCodePoint(valid[i]));
+    matTH.set(computeTH(v), i*THSZ);
+    matDT.set(computeDT(v), i*DTSZ);
+    matHOG.set(computeHOG(v),i*HOG_SZ);
+    if(i%80===0){
+      setPb(45+i/N*55);
+      setSt('run',`Indexando… ${i}/${N} features calculadas`);
+      await tick();
+    }
+  }
 
-    const scored = SYMBOLS.map(sym => ({
-      ...sym,
-      score: scoreSymbol(feat, sym)
-    })).sort((a, b) => b.score - a.score);
+  document.getElementById('gc').textContent=`${N}`;
+  setPb(100);
+  setSt('ok',`Motor listo · ${N} glifos indexados`);
+  ready=true;
+  updBtn();
+}
 
-    const top = scored[0];
-    const pct = Math.round(top.score * 100);
-    const alts = scored.slice(1, 13);
+/* ═══════════════════════════════════════════════════════
+   BÚSQUEDA — pipeline 2 etapas
+═══════════════════════════════════════════════════════ */
+function search(){
+  if(!ready||!strokes.length)return;
+  setSt('run','Buscando…');
+  const t0=performance.now();
 
-    // Debug info
-    const debugTags = [
-      `aspecto: ${feat.aspect.toFixed(2)}`,
-      `cierre: ${feat.closure.toFixed(2)}`,
-      `curvatura: ${feat.avgCurv.toFixed(2)}`,
-      `relleno: ${feat.fill.toFixed(2)}`,
-      `simetría: ${feat.vSym.toFixed(2)}`,
-      `trazos: ${feat.strokeCount}`
-    ];
+  const uV  =normUser(strokes);
+  const uTH =computeTH(uV);
+  const uDT =computeDT(uV);
+  const uHOG=computeHOG(uV);
 
-    panel.innerHTML = `
-      <div class="section-title">✦ Mejor coincidencia</div>
-      <div class="best-match">
-        <div class="symbol-big">${top.char}</div>
-        <div class="match-info">
-          <div class="match-score">${pct}% similitud</div>
-          <div class="match-name">${top.name}</div>
-          <div class="match-code">U+${top.u}</div>
-          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
-        </div>
-        <button class="copy-btn" id="copyTop">Copiar</button>
-      </div>
+  /* Stage 1 — comparar thumbnails 8×8 (ultra rápido) */
+  const s1=new Float32Array(N);
+  for(let i=0;i<N;i++)s1[i]=cosA(uTH,0,matTH,i*THSZ,THSZ);
 
-      <div class="tag-row">
-        ${debugTags.map(t => `<span class="tag">${t}</span>`).join('')}
-      </div>
+  /* Top KEEP índices */
+  const idx=Array.from({length:N},(_,i)=>i)
+    .sort((a,b)=>s1[b]-s1[a]).slice(0,KEEP);
 
-      <div style="margin-top:16px">
-        <div class="section-title">Alternativas similares</div>
-        <div class="alts-grid">
-          ${alts.map(s => `
-            <div class="alt-item" data-char="${s.char}" title="${s.name} U+${s.u}">
-              <div class="alt-symbol">${s.char}</div>
-              <div class="alt-score">${Math.round(s.score*100)}%</div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-      <div class="copied-msg" id="copiedMsg">✓ ¡Copiado!</div>
-    `;
+  /* Stage 2 — DT + HOG sobre candidatos */
+  const res=idx.map(i=>{
+    const dts=cosA(uDT,0,matDT,i*DTSZ,DTSZ);
+    const hgs=cosA(uHOG,0,matHOG,i*HOG_SZ,HOG_SZ);
+    // Pesos calibrados: DT bridgea trazo↔relleno, HOG captura estructura
+    return{
+      cp:glyphCPs[i],
+      ch:String.fromCodePoint(glyphCPs[i]),
+      score:0.55*dts+0.30*hgs+0.15*s1[i],
+      dts,hgs,th:s1[i]
+    };
+  });
+  res.sort((a,b)=>b.score-a.score);
 
-    document.getElementById('copyTop').addEventListener('click', () => {
-      navigator.clipboard.writeText(top.char).then(() => {
-        const msg = document.getElementById('copiedMsg');
-        msg.classList.add('show');
-        setTimeout(() => msg.classList.remove('show'), 1500);
-      });
-    });
+  const ms=(performance.now()-t0).toFixed(1);
+  display(res.slice(0,RES_N),ms);
+  setSt('ok',`${ms}ms · ${N} glifos comparados`);
+}
 
-    document.querySelectorAll('.alt-item').forEach(el => {
-      el.addEventListener('click', () => {
-        navigator.clipboard.writeText(el.dataset.char).then(() => {
-          const msg = document.getElementById('copiedMsg');
-          msg.classList.add('show');
-          setTimeout(() => msg.classList.remove('show'), 1500);
-        });
-      });
-    });
+/* ═══════════════════════════════════════════════════════
+   DISPLAY
+═══════════════════════════════════════════════════════ */
+function display(res,ms){
+  if(!res.length)return;
+  document.getElementById('rpanel').style.display='block';
+  const b=res[0];
+  const ub=b.cp.toString(16).toUpperCase().padStart(4,'0');
+  document.getElementById('bestDiv').innerHTML=`
+    <div class="best-label">★ Mejor coincidencia</div>
+    <span class="best-char" onclick="cp('${b.ch}')" title="Click para copiar">${b.ch}</span>
+    <div class="best-meta">${Math.round(b.score*100)}% · U+${ub}</div>
+    <div class="best-sub">DT ${Math.round(b.dts*100)}%  HOG ${Math.round(b.hgs*100)}%  Thumb ${Math.round(b.th*100)}%</div>
+    <button class="btn go copy-btn" onclick="cp('${b.ch}')">📋 Copiar ${b.ch}</button>`;
+  document.getElementById('scoreRow').innerHTML=`
+    <div class="pill">⚡ ${ms}ms</div>
+    <div class="pill">🔍 ${N} glifos</div>
+    <div class="pill">2-Stage ${KEEP}→${RES_N}</div>
+    <div class="pill">DT²+HOG+Thumb</div>`;
+  const g=document.getElementById('grid');g.innerHTML='';
+  for(let i=1;i<res.length;i++){
+    const r=res[i];
+    const u=r.cp.toString(16).toUpperCase().padStart(4,'0');
+    const d=document.createElement('div');
+    d.className='sym'+(i<=5?' top':'');
+    d.innerHTML=`<span class="ch">${r.ch}</span><span class="sc">${Math.round(r.score*100)}%</span><span class="u">U+${u}</span>`;
+    d.onclick=()=>cp(r.ch);
+    g.appendChild(d);
+  }
+  document.getElementById('rpanel').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
 
-  }, 250);
-});
+/* ═══════════════════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════════════════ */
+function cp(ch){
+  navigator.clipboard.writeText(ch).catch(()=>{});
+  const t=document.getElementById('toast');
+  t.textContent=`Copiado: ${ch}`;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+function setSt(s,t){document.getElementById('dot').className='dot '+s;document.getElementById('stxt').textContent=t}
+function setPb(p){document.getElementById('pb').style.width=p+'%'}
+function tick(){return new Promise(r=>setTimeout(r,0))}
+
+buildDB();
 </script>
 </body>
 </html>

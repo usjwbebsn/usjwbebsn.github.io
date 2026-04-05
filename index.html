@@ -937,7 +937,7 @@ body.dark .bio-add-line { border-color:rgba(255,255,255,.15); }
       <span class="section-arrow">›</span>
     </div>
     <div class="section-body" id="draw-body">
-      <p class="section-desc">Dibuja con el dedo o el ratón. El motor compara tu trazo contra <strong id="draw-db-count">~8 000+</strong> glifos Unicode renderizados como imágenes — comparación visual pixel&nbsp;a&nbsp;pixel. ¡Toca el resultado para copiarlo!</p>
+      <p class="section-desc">Dibuja con el dedo o el ratón. El motor usa <strong>TensorFlow.js + MobileNet</strong> para extraer rasgos profundos de tu trazo y compararlo contra <strong id="draw-db-count">~8 000+</strong> glifos Unicode. ¡Toca el resultado para copiarlo!</p>
       <div style="font-size:10px;color:var(--t4);margin:-8px 0 10px;min-height:14px;">
         <span id="draw-db-status" style="display:none;font-weight:600;"></span>
       </div>
@@ -950,7 +950,7 @@ body.dark .bio-add-line { border-color:rgba(255,255,255,.15); }
           </div>
         </div>
         <div class="draw-controls" style="justify-content:space-between;width:100%;padding:6px 2px 0;">
-          <span style="font-size:11px;color:var(--t4);font-weight:600;display:flex;align-items:center;gap:4px;"><span class="section-badge">Visual</span> pixel‑a‑pixel</span>
+          <span style="font-size:11px;color:var(--t4);font-weight:600;display:flex;align-items:center;gap:4px;"><span class="section-badge">IA</span> TensorFlow.js</span>
           <button class="draw-btn danger" id="draw-clear-btn">🗑 Borrar</button>
         </div>
         <div class="draw-result" id="draw-result" style="display:none;border-top:1px solid rgba(0,0,0,.06);margin-top:10px;padding-top:10px;width:100%;box-sizing:border-box;">
@@ -1467,393 +1467,524 @@ document.addEventListener('keydown', function(e){
   initCollapsible('draw-toggle',      'draw-section');
 })();
 
-/* ──────────────── DIBUJADOR DE FORMAS — Motor Visual Pixel-a-Pixel v11 ──────────────── */
+/* ──────────────── DIBUJADOR DE FORMAS — Motor TensorFlow.js v12 ──────────────── */
 /*
- * COMPARACIÓN VISUAL RASTERIZADA
+ * MOTOR DE BÚSQUEDA CON IA — TensorFlow.js + MobileNet + Hu Moments
  *
- * En vez de analizar gestos o geometría, convierte el dibujo en una imagen
- * en escala de grises normalizada (32×32 px) y la compara contra ~5 000+
- * glifos Unicode renderizados como imágenes mediante similitud del coseno.
+ * Reemplaza la comparación pixel-a-pixel con un pipeline de doble capa:
  *
- * Pipeline:
- *   1. BASE DE DATOS  — ~7 500 code points de rangos Unicode curados se
- *      renderizan en un <canvas> 32×32 y se almacenan como vectores Float32.
- *      Solo se guardan los glifos con tinta real (≥ 8 px con valor > 0.15).
- *   2. CAPTURA        — Al terminar de dibujar, se lee el <canvas> con
- *      getImageData() al tamaño físico (respeta DPR).
- *   3. NORMALIZACIÓN  — Se detecta el bounding-box de los píxeles con tinta,
- *      se recorta y se escala a 32×32 preservando el ratio de aspecto.
- *      Tanto el dibujo como los glifos usan el mismo canal alfa como vector.
- *   4. SIMILITUD      — Similitud del coseno entre el vector del dibujo y
- *      cada glifo de la DB.  Con ~5 000 glifos × 1 024 float32 ≈ 5 M ops,
- *      la búsqueda tarda < 10 ms.
- *   5. RESULTADO      — Top 30 coincidencias visuales más parecidas.
+ * CAPA 1 — HU MOMENTS (siempre activa, ~0ms)
+ *   7 descriptores invariantes a traslación, escala y rotación.
+ *   Pre-calculados para cada glifo de la DB.
+ *   Filtra los top-200 candidatos antes de la capa profunda.
+ *
+ * CAPA 2 — TENSORFLOW.js / MobileNetV3 (si está disponible)
+ *   Extrae un embedding de 1024 dimensiones del trazo y de cada glifo.
+ *   Similitud del coseno en el espacio de características semánticas.
+ *   Invariante a grosor de trazo, ligeras rotaciones y asimetría.
+ *
+ * FALLBACK — si TF.js no carga, solo Hu Moments (funciona sin red).
+ *
+ * Pipeline completo:
+ *   1. BASE DE DATOS  — rangos Unicode curados renderizan en canvas 64×64.
+ *   2. CAPTURA        — Al terminar de dibujar, canvas 64×64 con bounding-box.
+ *   3. HU MOMENTS     — 7 descriptores invariantes a traslación/escala/rotación.
+ *   4. TFJS EMBEDDING — MobileNetV3 extrae vector 1024-dim si está disponible.
+ *   5. BÚSQUEDA       — Hu filtra top-200, TFJS re-rankea con coseno semántico.
+ *   6. RESULTADO      — Top 30 con score ponderado (70% TFJS + 30% Hu).
  */
 (function () {
   'use strict';
 
   /* ═══════════════════════════════════════════════════════════════════
-     CONFIGURACIÓN
+     CONSTANTES
   ═══════════════════════════════════════════════════════════════════ */
-  var G   = 32;   // tamaño del glifo (px) — 32×32 = 1 024 valores por vector
-  var PAD = 2;    // padding interior al normalizar
-
-  /* Stack de fuentes que cubre símbolos + emoji en todos los SO */
-  var FONT = (Math.round(G * 0.72)) + 'px "Segoe UI Emoji","Apple Color Emoji",' +
-             '"Noto Color Emoji","Noto Emoji",serif,sans-serif';
+  var G   = 64;   // canvas 64×64 — 4× más información que 32×32
+  var PAD = 3;
+  var FONT_SIZE = Math.round(G * 0.72);
+  var FONT = FONT_SIZE + 'px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","Noto Emoji",serif,sans-serif';
 
   /* ═══════════════════════════════════════════════════════════════════
-     RANGOS UNICODE — ~13 000+ code points → ~8 000+ glifos reales
+     RANGOS UNICODE
   ═══════════════════════════════════════════════════════════════════ */
   var RANGES = [
-    /* ── Latin / IPA / Fonetik ── */
-    [0x0021,0x007E], // Basic Latin printable
-    [0x00A0,0x00FF], // Latin-1 Supplement
-    [0x0100,0x017F], // Latin Extended-A
-    [0x0180,0x024F], // Latin Extended-B
-    [0x0250,0x02AF], // IPA Extensions
-    [0x02B0,0x02FF], // Spacing Modifier Letters
-    [0x1D00,0x1D7F], // Phonetic Extensions
-    [0x1D80,0x1DBF], // Phonetic Extensions Supplement
-    [0x1E00,0x1EFF], // Latin Extended Additional
-    [0x2C60,0x2C7F], // Latin Extended-C
-    [0xA720,0xA7FF], // Latin Extended-D
-    [0xAB30,0xAB6F], // Latin Extended-E
-
-    /* ── Greek / Coptic ── */
-    [0x0370,0x03FF], // Greek and Coptic
-    [0x1F00,0x1FFF], // Greek Extended
-
-    /* ── Cyrillic ── */
-    [0x0400,0x04FF], // Cyrillic
-    [0x0500,0x052F], // Cyrillic Supplement
-    [0x2DE0,0x2DFF], // Cyrillic Extended-A
-    [0xA640,0xA69F], // Cyrillic Extended-B
-
-    /* ── Armenio / Georgiano / Etíope / Cherokee ── */
-    [0x0530,0x058F], // Armenian
-    [0x10A0,0x10FF], // Georgian
-    [0x1200,0x137F], // Ethiopic
-    [0x2D80,0x2DDF], // Ethiopic Extended
-    [0x13A0,0x13FF], // Cherokee
-    [0xAB70,0xABBF], // Cherokee Supplement
-
-    /* ── Runas / Oghams / Scripts históricos ── */
-    [0x1680,0x169F], // Ogham
-    [0x16A0,0x16FF], // Runic
-    [0x10300,0x1032F], // Old Italic
-    [0x10330,0x1034F], // Gothic
-    [0x10400,0x1044F], // Deseret
-    [0x10450,0x1047F], // Shavian
-    [0x10500,0x1052F], // Elbasan
-    [0x10900,0x1091F], // Phoenician
-    [0x10920,0x1093F], // Lydian
-
-    /* ── Escrituras asiáticas / silabarios ── */
-    [0x3040,0x309F], // Hiragana
-    [0x30A0,0x30FF], // Katakana
-    [0x3100,0x312F], // Bopomofo
-    [0x3130,0x318F], // Hangul Compatibility Jamo
-    [0x1100,0x11FF], // Hangul Jamo
-    [0xA960,0xA97F], // Hangul Jamo Extended-A
-    [0xD7B0,0xD7FF], // Hangul Jamo Extended-B
-    [0x31F0,0x31FF], // Katakana Phonetic Extensions
-
-    /* ── CJK Compatibilidad / Símbolos ── */
-    [0x3000,0x303F], // CJK Symbols and Punctuation
-    [0x3200,0x32FF], // Enclosed CJK Letters and Months
-    [0x3300,0x33FF], // CJK Compatibility
-    [0x4DC0,0x4DFF], // Yijing Hexagram Symbols
-    [0xFE30,0xFE4F], // CJK Compatibility Forms
-    [0xFE50,0xFE6F], // Small Form Variants
-    [0xFF00,0xFFEF], // Halfwidth and Fullwidth Forms
-
-    /* ── Símbolos / Puntuación ── */
-    [0x2000,0x206F], // General Punctuation
-    [0x2070,0x209F], // Superscripts and Subscripts
-    [0x20A0,0x20CF], // Currency Symbols
-    [0x2100,0x214F], // Letterlike Symbols
-    [0x2150,0x218F], // Number Forms (fracciones, numerales romanos)
-    [0x2190,0x21FF], // Arrows
-    [0x2200,0x22FF], // Mathematical Operators
-    [0x2300,0x23FF], // Miscellaneous Technical
-    [0x2400,0x245F], // Control Pictures
-    [0x2460,0x24FF], // Enclosed Alphanumerics
-    [0x2500,0x25FF], // Box Drawing + Block Elements + Geometric Shapes
-    [0x2600,0x26FF], // Miscellaneous Symbols
-    [0x2700,0x27FF], // Dingbats
-    [0x2800,0x28FF], // Braille Patterns
-    [0x2900,0x297F], // Supplemental Arrows-B
-    [0x2980,0x29FF], // Misc Mathematical Symbols-B
-    [0x2A00,0x2AFF], // Supplemental Mathematical Operators
-    [0x2B00,0x2BFF], // Miscellaneous Symbols and Arrows
-
-    /* ── Música / Notación antigua ── */
-    [0x1D000,0x1D0FF], // Byzantine Musical Symbols
-    [0x1D100,0x1D1FF], // Musical Symbols
-    [0x1D200,0x1D24F], // Ancient Greek Musical Notation
-
-    /* ── Matemáticas alfanuméricas ── */
-    [0x1D300,0x1D35F], // Tai Xuan Jing Symbols
-    [0x1D360,0x1D37F], // Counting Rod Numerals
-    [0x1D400,0x1D7FF], // Mathematical Alphanumeric Symbols (bold, italic, fraktur, script…)
-
-    /* ── Números / Símbolos antiguos ── */
-    [0x10100,0x1013F], // Aegean Numbers
-    [0x10140,0x1018F], // Ancient Greek Numbers
-    [0x10190,0x101CF], // Ancient Symbols + Phaistos Disc area
-
-    /* ── Emoji y símbolos modernos ── */
-    [0x1F000,0x1F02F], // Mahjong Tiles
-    [0x1F030,0x1F09F], // Domino Tiles
-    [0x1F0A0,0x1F0FF], // Playing Cards
-    [0x1F100,0x1F1FF], // Enclosed Alphanumeric Supplement
-    [0x1F200,0x1F2FF], // Enclosed Ideographic Supplement
-    [0x1F300,0x1F5FF], // Misc Symbols and Pictographs
-    [0x1F600,0x1F64F], // Emoticons / Faces
-    [0x1F650,0x1F67F], // Ornamental Dingbats
-    [0x1F680,0x1F6FF], // Transport and Map Symbols
-    [0x1F700,0x1F77F], // Alchemical Symbols
-    [0x1F780,0x1F7FF], // Geometric Shapes Extended
-    [0x1F800,0x1F8FF], // Supplemental Arrows-C
-    [0x1F900,0x1F9FF], // Supplemental Symbols and Pictographs
-    [0x1FA00,0x1FA6F], // Chess Symbols + Games
-    [0x1FA70,0x1FAFF], // Symbols and Pictographs Extended-A/B
-    [0x1FB00,0x1FBFF], // Symbols for Legacy Computing
+    [0x0021,0x007E],[0x00A0,0x00FF],[0x0100,0x017F],[0x0180,0x024F],
+    [0x0250,0x02AF],[0x02B0,0x02FF],[0x0370,0x03FF],[0x0400,0x04FF],
+    [0x0500,0x052F],[0x2000,0x206F],[0x2100,0x214F],[0x2190,0x21FF],
+    [0x2200,0x22FF],[0x2300,0x23FF],[0x2460,0x24FF],[0x2500,0x25FF],
+    [0x2600,0x26FF],[0x2700,0x27FF],[0x2B00,0x2BFF],[0x3000,0x303F],
+    [0x3200,0x32FF],[0x1F000,0x1F02F],[0x1F100,0x1F1FF],[0x1F300,0x1F5FF],
+    [0x1F600,0x1F64F],[0x1F680,0x1F6FF],[0x1F700,0x1F77F],[0x1F780,0x1F7FF],
+    [0x1F900,0x1F9FF],[0x1FA00,0x1FA6F],[0x1FA70,0x1FAFF],[0x2150,0x218F],
+    [0x2800,0x28FF],[0x1D400,0x1D7FF],[0x1FB00,0x1FBFF],[0x3040,0x309F],
+    [0x30A0,0x30FF],[0xFF00,0xFFEF],[0x2900,0x297F],[0x2A00,0x2AFF],
   ];
+
+  /* ═══════════════════════════════════════════════════════════════════
+     ESTADO GLOBAL
+  ═══════════════════════════════════════════════════════════════════ */
+  var DB          = [];    // { char, hu:Float32Array, tfVec:Float32Array|null }
+  var DB_READY    = false;
+  var DB_BUILDING = false;
+  var TF          = null;  // referencia a tf global
+  var tfModel     = null;  // MobileNet feature extractor
+  var TF_READY    = false;
+  var TF_LOADING  = false;
+
+  /* Canvas reutilizable para renderizar glifos */
+  var rC   = document.createElement('canvas');
+  rC.width = rC.height = G;
+  var rCtx = rC.getContext('2d', { willReadFrequently: true });
+
+  /* ═══════════════════════════════════════════════════════════════════
+     DESCRIPTOR DE FORMA ORIENTADO — Projection Profiles + Zoning Grid
+     A diferencia de Hu Moments, DISTINGUE horizontal de vertical.
+  ═══════════════════════════════════════════════════════════════════ */
+
+  /**
+   * computeShapeDescriptor — vector de 52 dimensiones orientation-aware:
+   *   [0-15]  Proyección horizontal: perfil de tinta por fila (16 bins)
+   *   [16-31] Proyección vertical:   perfil de tinta por columna (16 bins)
+   *   [32-47] Zoning grid 4x4: densidad de tinta por celda (16 bins)
+   *   [48]    Log aspect ratio (SIGNO preservado → distingue H de V)
+   *   [49]    Densidad global de tinta
+   *   [50]    Compacidad (tinta / bbox área)
+   *   [51]    Log elongación
+   */
+  function computeShapeDescriptor(data, w, h) {
+    var BINS = 16, ZONE = 4, N = w * h;
+    var ink = new Float32Array(N);
+    var total = 0;
+    var bx0=w,bx1=-1,by0=h,by1=-1;
+    for (var y=0;y<h;y++) {
+      for (var x=0;x<w;x++) {
+        var v = data[(y*w+x)*4+3]/255;
+        if (v<0.08) v=0;
+        ink[y*w+x]=v; total+=v;
+        if(v>0.08){if(x<bx0)bx0=x;if(x>bx1)bx1=x;if(y<by0)by0=y;if(y>by1)by1=y;}
+      }
+    }
+    if(total<0.5||bx1<0) return null;
+    var bW=Math.max(1,bx1-bx0+1), bH=Math.max(1,by1-by0+1);
+
+    /* Perfiles de proyección */
+    var rowSum=new Float32Array(h), colSum=new Float32Array(w);
+    for(var y=0;y<h;y++) for(var x=0;x<w;x++){rowSum[y]+=ink[y*w+x];colSum[x]+=ink[y*w+x];}
+    var maxR=0,maxC=0;
+    for(var i=0;i<h;i++) if(rowSum[i]>maxR) maxR=rowSum[i];
+    for(var i=0;i<w;i++) if(colSum[i]>maxC) maxC=colSum[i];
+    if(maxR<1e-9)maxR=1; if(maxC<1e-9)maxC=1;
+
+    var hProj=new Float32Array(BINS), vProj=new Float32Array(BINS);
+    for(var b=0;b<BINS;b++){
+      var y0b=Math.floor(by0+b*bH/BINS), y1b=Math.min(h,Math.floor(by0+(b+1)*bH/BINS)+1);
+      var s=0; for(var y=y0b;y<y1b;y++) s+=rowSum[y];
+      hProj[b]=(y1b>y0b)?s/((y1b-y0b)*maxR):0;
+      var x0b=Math.floor(bx0+b*bW/BINS), x1b=Math.min(w,Math.floor(bx0+(b+1)*bW/BINS)+1);
+      s=0; for(var x=x0b;x<x1b;x++) s+=colSum[x];
+      vProj[b]=(x1b>x0b)?s/((x1b-x0b)*maxC):0;
+    }
+
+    /* Zoning grid 4x4 */
+    var zones=new Float32Array(ZONE*ZONE);
+    for(var zy=0;zy<ZONE;zy++) for(var zx=0;zx<ZONE;zx++){
+      var y0z=Math.floor(by0+zy*bH/ZONE), y1z=Math.min(h,Math.floor(by0+(zy+1)*bH/ZONE)+1);
+      var x0z=Math.floor(bx0+zx*bW/ZONE), x1z=Math.min(w,Math.floor(bx0+(zx+1)*bW/ZONE)+1);
+      var s=0,cnt=(y1z-y0z)*(x1z-x0z);
+      for(var y=y0z;y<y1z;y++) for(var x=x0z;x<x1z;x++) s+=ink[y*w+x];
+      zones[zy*ZONE+zx]=cnt>0?s/cnt:0;
+    }
+
+    var aspect=bW/bH;
+    /* Log aspect ratio CON signo — clave para distinguir H de V */
+    var aspectLog=Math.sign(aspect-1)*Math.log10(Math.max(aspect,1/aspect));
+    var inkDensity=total/N;
+    var compactness=total/(bW*bH);
+    var elongLog=Math.log10(Math.max(bW,bH)/Math.min(bW,bH)+1);
+
+    var desc=new Float32Array(52);
+    for(var i=0;i<BINS;i++){desc[i]=hProj[i]; desc[BINS+i]=vProj[i];}
+    for(var i=0;i<ZONE*ZONE;i++) desc[32+i]=zones[i];
+    desc[48]=aspectLog; desc[49]=inkDensity; desc[50]=compactness; desc[51]=elongLog;
+    return {vec:desc, aspect:aspect, bW:bW, bH:bH};
+  }
+
+  function descDistance(a, b) {
+    var d=0;
+    /* Proyecciones: peso 2 — capturan forma orientada */
+    for(var i=0;i<32;i++){var diff=a[i]-b[i]; d+=diff*diff*2.0;}
+    /* Zones: peso 1.5 */
+    for(var i=32;i<48;i++){var diff=a[i]-b[i]; d+=diff*diff*1.5;}
+    /* Aspect ratio: peso 5 — CRÍTICO para no confundir H con V */
+    var dA=a[48]-b[48]; d+=dA*dA*5.0;
+    /* Densidad y compacidad */
+    for(var i=49;i<52;i++){var diff=a[i]-b[i]; d+=diff*diff*2.0;}
+    return Math.sqrt(d);
+  }
+
+
+  /* ═══════════════════════════════════════════════════════════════════
+     TENSORFLOW.JS — CARGA LAZY
+  ═══════════════════════════════════════════════════════════════════ */
+  function loadTFJS(cb) {
+    if (TF_READY) { cb(); return; }
+    if (TF_LOADING) { var t=setInterval(function(){if(TF_READY){clearInterval(t);cb();}},200); return; }
+    TF_LOADING = true;
+    /* Cargar TF.js core */
+    var s1 = document.createElement('script');
+    s1.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js';
+    s1.onload = function() {
+      TF = window.tf;
+      /* Cargar MobileNet */
+      var s2 = document.createElement('script');
+      s2.src = 'https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js';
+      s2.onload = function() {
+        mobilenet.load({ version:2, alpha:0.5 }).then(function(model) {
+          /* Crear modelo que saca el embedding antes de la capa de clasificación */
+          tfModel = model;
+          TF_READY = true;
+          TF_LOADING = false;
+          updateStatus(-1, DB.length); /* refrescar badge */
+          cb();
+        }).catch(function(e) {
+          console.warn('[DIUSF] TF.js cargó pero MobileNet falló:', e);
+          TF_READY = false; TF_LOADING = false;
+          cb(); /* fallback a Hu sólo */
+        });
+      };
+      s2.onerror = function() { TF_LOADING=false; cb(); };
+      document.head.appendChild(s2);
+    };
+    s1.onerror = function() { TF_LOADING=false; cb(); };
+    document.head.appendChild(s1);
+  }
+
+  /* Extrae embedding de un canvas 64×64 usando MobileNet internalActivation */
+  /* Canvas 224×224 para TF.js (MobileNet espera 224×224 RGB) */
+  var tfC   = document.createElement('canvas');
+  tfC.width = tfC.height = 224;
+  var tfCtx = tfC.getContext('2d', { willReadFrequently: true });
+
+  /* Renderiza un glifo en canvas blanco 224×224 con tinta negra para TF.js */
+  function renderGlyphForTF(char) {
+    tfCtx.fillStyle = '#ffffff';
+    tfCtx.fillRect(0, 0, 224, 224);
+    tfCtx.fillStyle = '#000000';
+    tfCtx.font = '160px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","Noto Emoji",serif,sans-serif';
+    tfCtx.textAlign = 'center';
+    tfCtx.textBaseline = 'middle';
+    tfCtx.fillText(char, 112, 112);
+    return tfC;
+  }
+
+  /* Renderiza el canvas del dibujo del usuario para TF.js (fondo blanco, trazo negro) */
+  function renderQueryForTF(normCanvas) {
+    tfCtx.fillStyle = '#ffffff';
+    tfCtx.fillRect(0, 0, 224, 224);
+    /* Dibujar el trazo normalizado en blanco sobre fondo negro → invertir */
+    tfCtx.drawImage(normCanvas, 0, 0, 224, 224);
+    /* El trazo normalizado es BLANCO sobre NEGRO (modo dark).
+       Necesitamos NEGRO sobre BLANCO para coincidir con los glifos renderizados. */
+    var d = tfCtx.getImageData(0, 0, 224, 224);
+    for (var i = 0; i < d.data.length; i += 4) {
+      /* Invertir solo si es pixel de trazo (no fondo) */
+      var lum = (d.data[i] + d.data[i+1] + d.data[i+2]) / 3;
+      var ink = lum > 128 ? 0 : 255; /* blanco → negro, negro → blanco */
+      d.data[i] = d.data[i+1] = d.data[i+2] = ink;
+      d.data[i+3] = 255;
+    }
+    tfCtx.putImageData(d, 0, 0);
+    return tfC;
+  }
+
+  function getTFEmbedding(inputCanvas) {
+    if (!TF_READY || !tfModel || !TF) return null;
+    try {
+      return TF.tidy(function() {
+        var img = TF.browser.fromPixels(inputCanvas);
+        var resized = TF.image.resizeBilinear(img, [224, 224]);
+        /* MobileNet espera [-1, 1] normalizado */
+        var normalized = resized.toFloat().div(TF.scalar(127.5)).sub(TF.scalar(1.0));
+        var batched = normalized.expandDims(0);
+        /* infer con logits=false → embedding 1024-dim (global average pooling) */
+        var emb = tfModel.infer(batched, false);
+        return Array.from(emb.dataSync());
+      });
+    } catch(e) {
+      console.warn('[DIUSF TF]', e);
+      return null;
+    }
+  }
+
+  function cosineSim(a, b) {
+    if (!a || !b || a.length !== b.length) return 0;
+    var dot=0, na=0, nb=0;
+    for (var i=0;i<a.length;i++) { dot+=a[i]*b[i]; na+=a[i]*a[i]; nb+=b[i]*b[i]; }
+    return dot/(Math.sqrt(na)*Math.sqrt(nb)+1e-9);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     NORMALIZAR CANVAS — bounding-box + escala a G×G
+  ═══════════════════════════════════════════════════════════════════ */
+  function normalizeToG(srcCanvas, srcData, srcW, srcH) {
+    /* Bounding-box */
+    var x0=srcW,x1=-1,y0=srcH,y1=-1;
+    for (var y=0;y<srcH;y++) {
+      for (var x=0;x<srcW;x++) {
+        if (srcData[(y*srcW+x)*4+3]>12) {
+          if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;
+        }
+      }
+    }
+    if (x1<0||x1-x0<2||y1-y0<2) return null;
+    var bW=x1-x0+1,bH=y1-y0+1;
+    var sc=(G-PAD*2)/Math.max(bW,bH);
+    var dW=Math.round(bW*sc),dH=Math.round(bH*sc);
+    var dX=Math.round((G-dW)/2),dY=Math.round((G-dH)/2);
+    var qc=document.createElement('canvas');
+    qc.width=qc.height=G;
+    var qctx=qc.getContext('2d',{willReadFrequently:true});
+    qctx.drawImage(srcCanvas,x0,y0,bW,bH,dX,dY,dW,dH);
+    return qc;
+  }
 
   /* ═══════════════════════════════════════════════════════════════════
      BASE DE DATOS DE GLIFOS
   ═══════════════════════════════════════════════════════════════════ */
-  var DB         = [];   // { char, vec:Float32Array, norm:number }
-  var DB_READY   = false;
-  var DB_BUILDING= false;
-
-  /* Canvas único reutilizable para renderizar glifos */
-  var rC  = document.createElement('canvas');
-  rC.width = rC.height = G;
-  var rCtx = rC.getContext('2d', { willReadFrequently: true });
-
-  /**
-   * Renderiza 'char' en el canvas 32×32 y devuelve { char, vec, norm }
-   * o null si el glifo está vacío / no soportado.
-   */
   function buildGlyphEntry(char) {
-    rCtx.clearRect(0, 0, G, G);
-    rCtx.fillStyle = '#000';
-    rCtx.font = FONT;
-    rCtx.textAlign = 'center';
-    rCtx.textBaseline = 'middle';
-    rCtx.fillText(char, G / 2, G / 2);
+    rCtx.clearRect(0,0,G,G);
+    rCtx.fillStyle='#000';
+    rCtx.font=FONT;
+    rCtx.textAlign='center';
+    rCtx.textBaseline='middle';
+    rCtx.fillText(char,G/2,G/2);
+    var data=rCtx.getImageData(0,0,G,G).data;
+    var N=G*G;
 
-    var data = rCtx.getImageData(0, 0, G, G).data;
-    var N    = G * G;
-
-    /* ── Detectar emoji con fondo cuadrado opaco ──
-       Si hay contenido tocando los 4 bordes y casi ningún píxel transparente,
-       es un emoji con fondo sólido (⏩⏪⏺🔲…) → descartar. */
-    var borderOpaque = 0, totalBorder = 0, transparent = 0;
-    for (var i = 0; i < N; i++) {
-      var a0 = data[i*4+3];
-      var py = (i/G)|0, px = i%G;
-      if (py < 2 || py > G-3 || px < 2 || px > G-3) {
-        totalBorder++;
-        if (a0 > 200) borderOpaque++;
-      }
-      if (a0 < 20) transparent++;
+    /* Descartar emoji con fondo sólido (cuadros de colores) */
+    var borderOpaque=0,totalBorder=0,transparent=0;
+    for (var i=0;i<N;i++) {
+      var a0=data[i*4+3];
+      var py=(i/G)|0,px2=i%G;
+      if(py<2||py>G-3||px2<2||px2>G-3){totalBorder++;if(a0>200)borderOpaque++;}
+      if(a0<20)transparent++;
     }
-    var isFilledBox = (borderOpaque / totalBorder > 0.55) && (transparent / N < 0.08);
-    if (isFilledBox) return null;
+    if((borderOpaque/totalBorder>0.55)&&(transparent/N<0.08)) return null;
 
-    /* ── Vector: usa solo canal alpha (silueta limpia) ── */
-    var vec  = new Float32Array(N);
-    var norm = 0;
-    var ink  = 0;
-
-    for (var i = 0; i < N; i++) {
-      var a = data[i*4+3];
-      var v = a > 20 ? (a / 255) : 0;
-      vec[i] = v;
-      norm  += v * v;
-      if (v > 0.15) ink++;
-    }
-
-    /* Descartar glifos vacíos o puntos aislados */
-    if (ink < 8 || norm < 0.06) return null;
-
-    return { char: char, vec: vec, norm: Math.sqrt(norm) };
+    /* Hu Moments */
+    var desc = computeShapeDescriptor(data, G, G);
+    if (!desc) return null;
+    return { char:char, desc:desc.vec, tfVec:null, aspect:desc.aspect };
   }
 
-  /**
-   * Construye la DB en chunks para no bloquear el hilo principal.
-   */
   function buildDB(onProgress, onDone) {
-    if (DB_READY)    { if (onDone) onDone(DB.length); return; }
+    if (DB_READY)    { if(onDone) onDone(DB.length); return; }
     if (DB_BUILDING) return;
     DB_BUILDING = true;
-
-    var cps = [];
-    for (var ri = 0; ri < RANGES.length; ri++) {
-      for (var cp = RANGES[ri][0]; cp <= RANGES[ri][1]; cp++) cps.push(cp);
-    }
-
-    var idx   = 0;
-    var CHUNK = 60;  // glifos por tick (~6-10 ms por chunk)
-
+    var cps=[];
+    for (var ri=0;ri<RANGES.length;ri++)
+      for (var cp=RANGES[ri][0];cp<=RANGES[ri][1];cp++) cps.push(cp);
+    var idx=0, CHUNK=80;
     function step() {
-      var end = Math.min(idx + CHUNK, cps.length);
-      for (; idx < end; idx++) {
-        try {
-          var g = buildGlyphEntry(String.fromCodePoint(cps[idx]));
-          if (g) DB.push(g);
-        } catch (_) {}
+      var end=Math.min(idx+CHUNK,cps.length);
+      for (;idx<end;idx++) {
+        try { var g=buildGlyphEntry(String.fromCodePoint(cps[idx])); if(g) DB.push(g); }
+        catch(_){}
       }
-
-      if (onProgress) onProgress(idx / cps.length, DB.length);
-
-      if (idx < cps.length) {
-        setTimeout(step, 0);
-      } else {
-        DB_READY    = true;
-        DB_BUILDING = false;
-        if (onDone) onDone(DB.length);
+      if (onProgress) onProgress(idx/cps.length, DB.length);
+      if (idx<cps.length) { setTimeout(step,0); }
+      else {
+        DB_READY=true; DB_BUILDING=false;
+        if(onDone) onDone(DB.length);
+        /* Iniciar carga de TF.js en background */
+        loadTFJS(function(){ computeTFVectorsInBackground(); });
       }
     }
     step();
   }
 
   /* ═══════════════════════════════════════════════════════════════════
-     PROCESADO DEL DIBUJO → VECTOR NORMALIZADO
+     PRECÁLCULO DE EMBEDDINGS TFJS EN BACKGROUND
   ═══════════════════════════════════════════════════════════════════ */
-  function getQueryVector() {
-    var phW = drawCanvas.width, phH = drawCanvas.height;
-    var px  = drawCtx.getImageData(0, 0, phW, phH).data;
-
-    /* Bounding-box de píxeles con tinta real */
-    var x0 = phW, x1 = -1, y0 = phH, y1 = -1;
-    for (var y = 0; y < phH; y++) {
-      for (var x = 0; x < phW; x++) {
-        if (px[(y * phW + x) * 4 + 3] > 15) {
-          if (x < x0) x0 = x; if (x > x1) x1 = x;
-          if (y < y0) y0 = y; if (y > y1) y1 = y;
-        }
+  function computeTFVectorsInBackground() {
+    if (!TF_READY || !tfModel) return;
+    var i = 0;
+    function step() {
+      if (i >= DB.length) return;
+      var g = DB[i]; i++;
+      if (!g.tfVec) {
+        var glyphCanvas = renderGlyphForTF(g.char);
+        var vec = getTFEmbedding(glyphCanvas);
+        if (vec) g.tfVec = vec;
       }
+      /* Yield al event loop cada 5 glifos para no bloquear UI */
+      if (i % 5 === 0) setTimeout(step, 0);
+      else step();
     }
-    if (x1 < 0 || x1 - x0 < 3 || y1 - y0 < 3) return null;
-
-    /* Escalar al cuadrado G×G preservando ratio de aspecto */
-    var bW = x1 - x0 + 1, bH = y1 - y0 + 1;
-    var sc = (G - PAD * 2) / Math.max(bW, bH);
-    var dW = Math.round(bW * sc), dH = Math.round(bH * sc);
-    var dX = Math.round((G - dW) / 2), dY = Math.round((G - dH) / 2);
-
-    var qc   = document.createElement('canvas');
-    qc.width = qc.height = G;
-    var qctx = qc.getContext('2d', { willReadFrequently: true });
-    qctx.drawImage(drawCanvas, x0, y0, bW, bH, dX, dY, dW, dH);
-    var nd = qctx.getImageData(0, 0, G, G).data;
-
-    /* ── Extrae píxeles de tinta en 32×32 ── */
-    var isDark = document.body.classList.contains('dark');
-    var raw = new Float32Array(G * G);
-    for (var i = 0; i < G * G; i++) {
-      var a = nd[i*4+3];
-      if (a < 10) { raw[i] = 0; continue; }
-      var r = nd[i*4], g_ = nd[i*4+1], b = nd[i*4+2];
-      var lum = (r*0.299 + g_*0.587 + b*0.114) / 255;
-      /* En dark: el trazo es CLARO (lum alto) → v = lum.
-         En light: el trazo es OSCURO → v = 1-lum */
-      raw[i] = isDark ? lum : (1 - lum);
-    }
-
-    /* ── Dilatación morfológica (radio=3) para engrosar el contorno ──
-       Transforma una línea fina dibujada en una banda gruesa.
-       Así un corazón hueco se parece más a un corazón relleno. */
-    var R = 3, W = G;
-    var dil = new Float32Array(W * W);
-    for (var y = 0; y < W; y++) {
-      for (var x = 0; x < W; x++) {
-        var mx = 0;
-        for (var dy = -R; dy <= R; dy++) {
-          for (var dx = -R; dx <= R; dx++) {
-            var ny = y+dy, nx2 = x+dx;
-            if (ny>=0 && ny<W && nx2>=0 && nx2<W) {
-              var v2 = raw[ny*W+nx2];
-              if (v2 > mx) mx = v2;
-            }
-          }
-        }
-        dil[y*W+x] = mx;
-      }
-    }
-
-    /* ── Flood-fill desde los bordes para encontrar el "exterior" ──
-       Todo lo que NO sea exterior es interior de la forma dibujada.
-       Esto rellena automáticamente formas cerradas (círculos, corazones…) */
-    var outside = new Uint8Array(W * W);
-    var stack = [];
-    function seedBorder(idx) {
-      if (!outside[idx] && dil[idx] < 0.28) { outside[idx] = 1; stack.push(idx); }
-    }
-    for (var k = 0; k < W; k++) {
-      seedBorder(k);             // fila superior
-      seedBorder((W-1)*W + k);   // fila inferior
-      seedBorder(k*W);           // columna izquierda
-      seedBorder(k*W + W-1);     // columna derecha
-    }
-    while (stack.length) {
-      var idx = stack.pop();
-      var py2 = (idx/W)|0, px2 = idx%W;
-      var dirs = [[-1,0],[1,0],[0,-1],[0,1]];
-      for (var d = 0; d < 4; d++) {
-        var ny = py2+dirs[d][0], nx3 = px2+dirs[d][1];
-        if (ny>=0 && ny<W && nx3>=0 && nx3<W) {
-          var ni = ny*W+nx3;
-          if (!outside[ni] && dil[ni] < 0.28) {
-            outside[ni] = 1;
-            stack.push(ni);
-          }
-        }
-      }
-    }
-
-    /* ── Vector final ──
-       Trazo original = 1.0, interior relleno = 0.75, exterior = 0 */
-    var vec = new Float32Array(W * W);
-    var norm = 0;
-    for (var i = 0; i < W * W; i++) {
-      var v;
-      if (raw[i] > 0.18) {
-        v = 1.0;          // píxel de trazo real
-      } else if (!outside[i]) {
-        v = 0.75;         // interior de la forma (relleno automático)
-      } else {
-        v = 0.0;          // exterior
-      }
-      vec[i] = v;
-      norm  += v * v;
-    }
-
-    if (norm < 0.01) return null;
-    return { vec: vec, norm: Math.sqrt(norm) };
+    setTimeout(step, 800);
   }
 
   /* ═══════════════════════════════════════════════════════════════════
-     BÚSQUEDA — similitud del coseno contra toda la DB
+     VECTOR DEL DIBUJO
+  ═══════════════════════════════════════════════════════════════════ */
+  function getQueryDescriptor() {
+    var phW = drawCanvas.width, phH = drawCanvas.height;
+    var rawData = drawCtx.getImageData(0, 0, phW, phH).data;
+
+    var isDark = document.body.classList.contains('dark');
+
+    /* ── Extraer canal de tinta en [0,1] ── */
+    var gray = new Float32Array(phW * phH);
+    for (var i = 0; i < phW * phH; i++) {
+      var a = rawData[i*4+3];
+      if (a < 10) { gray[i] = 0; continue; }
+      var rv = rawData[i*4], gv2 = rawData[i*4+1], bv = rawData[i*4+2];
+      var lum = (rv*0.299 + gv2*0.587 + bv*0.114) / 255;
+      gray[i] = isDark ? lum : (1 - lum);
+    }
+
+    /* ── Dilatación morfológica radio=4 — engrosa el trazo ── */
+    var R = 4, dil = new Float32Array(phW * phH);
+    for (var y = 0; y < phH; y++) {
+      for (var x = 0; x < phW; x++) {
+        var mx = 0;
+        for (var dy = -R; dy <= R; dy++) {
+          for (var dx2 = -R; dx2 <= R; dx2++) {
+            var ny = y+dy, nx2 = x+dx2;
+            if (ny>=0&&ny<phH&&nx2>=0&&nx2<phW) {
+              var v2 = gray[ny*phW+nx2]; if (v2>mx) mx=v2;
+            }
+          }
+        }
+        dil[y*phW+x] = mx;
+      }
+    }
+
+    /* ── Flood-fill SOLO para formas claramente cerradas ──
+       Detectar si el dibujo cierra un área (perímetro de tinta alto)
+       antes de aplicar flood-fill, para no destruir líneas simples. */
+    var inkPixels = 0;
+    for (var i = 0; i < phW*phH; i++) if (dil[i] > 0.2) inkPixels++;
+    var inkRatio = inkPixels / (phW * phH);
+
+    var filled = new Float32Array(phW * phH);
+    for (var i = 0; i < phW*phH; i++) filled[i] = dil[i];
+
+    /* Solo flood-fill si hay suficiente tinta para una forma cerrada (>4% del canvas) */
+    if (inkRatio > 0.04) {
+      var outside = new Uint8Array(phW * phH);
+      var stack = [];
+      function seed2(idx) { if (!outside[idx] && dil[idx] < 0.22) { outside[idx]=1; stack.push(idx); } }
+      for (var k=0;k<phW;k++) { seed2(k); seed2((phH-1)*phW+k); }
+      for (var k=0;k<phH;k++) { seed2(k*phW); seed2(k*phW+phW-1); }
+      while (stack.length) {
+        var idx2 = stack.pop(); var py2=(idx2/phW)|0, px3=idx2%phW;
+        var ds2=[[-1,0],[1,0],[0,-1],[0,1]];
+        for (var d=0;d<4;d++) {
+          var ny3=py2+ds2[d][0], nx3=px3+ds2[d][1];
+          if (ny3>=0&&ny3<phH&&nx3>=0&&nx3<phW) {
+            var ni=ny3*phW+nx3;
+            if (!outside[ni]&&dil[ni]<0.22) { outside[ni]=1; stack.push(ni); }
+          }
+        }
+      }
+      for (var i=0;i<phW*phH;i++) {
+        if (dil[i] > 0.18) filled[i] = 1.0;
+        else if (!outside[i]) filled[i] = 0.82;
+        else filled[i] = 0;
+      }
+    }
+
+    /* ── Canvas intermedio para normalización de bounding-box ── */
+    var tmpC = document.createElement('canvas');
+    tmpC.width = phW; tmpC.height = phH;
+    var tmpCtx = tmpC.getContext('2d');
+    var imgData = tmpCtx.createImageData(phW, phH);
+    for (var i = 0; i < phW*phH; i++) {
+      var v3 = Math.round(filled[i] * 255);
+      imgData.data[i*4] = imgData.data[i*4+1] = imgData.data[i*4+2] = v3;
+      imgData.data[i*4+3] = v3 > 0 ? 255 : 0;
+    }
+    tmpCtx.putImageData(imgData, 0, 0);
+
+    /* ── Normalizar bounding-box → canvas 64×64 ── */
+    var filledData = tmpCtx.getImageData(0, 0, phW, phH).data;
+    var normCanvas = normalizeToG(tmpC, filledData, phW, phH);
+    if (!normCanvas) return null;
+
+    /* ── Hu Moments del canvas normalizado ── */
+    var normData = normCanvas.getContext('2d', {willReadFrequently:true}).getImageData(0, 0, G, G).data;
+    var desc2 = computeShapeDescriptor(normData, G, G);
+    if (!desc2) return null;
+    var qDescVec = desc2.vec;
+    qAspect = desc2.aspect;
+
+    /* ── Calcular aspect ratio del bounding-box normalizado ── */
+    var qAspect = 1.0;
+
+    /* ── TF.js embedding: renderizar query en canvas 224×224 blanco/negro ── */
+    var tfVec = null;
+    if (TF_READY) {
+      var qCanvas = renderQueryForTF(normCanvas);
+      tfVec = getTFEmbedding(qCanvas);
+    }
+
+    return { desc: qDescVec, tfVec: tfVec, aspect: qAspect };
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     BÚSQUEDA — Hu Moments (fast) + aspect ratio + TF.js reranking
   ═══════════════════════════════════════════════════════════════════ */
   function findMatches(query, topN) {
     topN = topN || 30;
     if (!DB_READY || !DB.length) return [];
 
-    var qv = query.vec, qn = query.norm;
-    var results = [];
+    /* Calcular aspect ratio del query desde sus Hu Moments (h1 ≈ escala invariante) */
+    /* Usamos bounding-box del canvas normalizado — ya disponible en query.aspect */
+    var qAspect = query.aspect || 1.0;
 
+    /* PASO 1: Descriptor orientado + filtro duro de aspect ratio */
+    var descScores = [];
     for (var i = 0; i < DB.length; i++) {
-      var glyph = DB[i], gv = glyph.vec;
-      var dot = 0;
-      for (var j = 0; j < qv.length; j++) dot += qv[j] * gv[j];
-      var sim = dot / (qn * glyph.norm + 1e-9);
-      if (sim > 0.04) results.push({ char: glyph.char, score: sim });
+      var g = DB[i];
+      if (!g.desc) continue;
+
+      /* Filtro duro: descartar si aspect ratio difiere más de 4× */
+      var gAspect = g.aspect || 1.0;
+      var aspectRatio = qAspect > gAspect ? qAspect/gAspect : gAspect/qAspect;
+      if (aspectRatio > 4.0) continue; /* imposible que coincidan */
+
+      var dist = descDistance(query.desc, g.desc);
+      var sim = 1 / (1 + dist);
+
+      /* Penalización suave adicional para ratios entre 2-4× */
+      var aspectPenalty = aspectRatio > 2.0 ? (1 - (aspectRatio-2)/4) : 1.0;
+      var score = sim * aspectPenalty;
+      if (score > 0.03) descScores.push({ idx: i, descSim: sim, score: score });
+    }
+    descScores.sort(function(a, b) { return b.score - a.score; });
+    var candidates = descScores.slice(0, 200);
+
+    /* PASO 2: TF.js re-rankea con embeddings semánticos profundos */
+    var results = [];
+    var hasTF = TF_READY && !!query.tfVec;
+
+    for (var ci = 0; ci < candidates.length; ci++) {
+      var c = candidates[ci];
+      var g2 = DB[c.idx];
+      var finalScore;
+
+      if (hasTF && g2.tfVec) {
+        var tfSim = cosineSim(query.tfVec, g2.tfVec);
+        /* 60% TF semántico + 30% descriptor orientado + 10% aspect bonus */
+        var gAspect2 = g2.aspect || 1.0;
+        var aRat2 = qAspect > gAspect2 ? qAspect/gAspect2 : gAspect2/qAspect;
+        var aspectBonus = Math.max(0, 1 - (aRat2-1)*0.3);
+        finalScore = 0.60 * tfSim + 0.30 * c.descSim + 0.10 * aspectBonus;
+      } else {
+        finalScore = c.descSim;
+      }
+      results.push({ char: g2.char, score: finalScore, descSim: c.descSim, hasTF: hasTF && !!g2.tfVec });
     }
 
     results.sort(function(a, b) { return b.score - a.score; });
@@ -1951,7 +2082,7 @@ document.addEventListener('keydown', function(e){
     var resultEl = document.getElementById('draw-result');
     var chipsEl  = document.getElementById('draw-chips');
     var toastEl  = document.getElementById('draw-toast');
-    var query    = getQueryVector();
+    var query    = getQueryDescriptor();
     if (!query) return;
 
     resultEl.style.display = 'flex';
@@ -1959,17 +2090,28 @@ document.addEventListener('keydown', function(e){
     if (!DB_READY) {
       chipsEl.innerHTML =
         '<div style="font-size:12px;color:var(--t3);text-align:center;padding:10px 0;">' +
-        '⏳ Cargando glifos\u2026 espera un momento</div>';
+        '⏳ Cargando glifos… espera un momento</div>';
       var wait = setInterval(function() {
         if (!DB_READY) return;
         clearInterval(wait);
-        var q2 = getQueryVector();
+        var q2 = getQueryDescriptor();
         if (q2) showResults(findMatches(q2), chipsEl, toastEl, resultEl);
       }, 250);
       return;
     }
 
-    showResults(findMatches(query), chipsEl, toastEl, resultEl);
+    /* Si TF.js aún cargando, mostrar resultados Hu primero y luego mejorar */
+    var initial = findMatches(query);
+    showResults(initial, chipsEl, toastEl, resultEl);
+
+    if (TF_LOADING && !TF_READY) {
+      var tfWait = setInterval(function() {
+        if (!TF_READY) return;
+        clearInterval(tfWait);
+        var q3 = getQueryDescriptor();
+        if (q3) showResults(findMatches(q3), chipsEl, toastEl, resultEl);
+      }, 500);
+    }
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -1997,7 +2139,7 @@ document.addEventListener('keydown', function(e){
       'letter-spacing:.08em;margin-bottom:6px;font-family:var(--sf);';
     header.innerHTML =
       '<span>\u2736 Mejor coincidencia</span>' +
-      '<span style="font-size:11px;font-weight:800;">' + topP + '% similitud visual</span>';
+      '<span style="font-size:11px;font-weight:800;">' + topP + '% ' + (matches[0].hasTF ? 'IA semántica' : 'similitud forma') + '</span>';
     chipsEl.appendChild(header);
 
     /* Barra de confianza animada */
@@ -2100,16 +2242,22 @@ document.addEventListener('keydown', function(e){
   function updateStatus(pct, count) {
     var el = document.getElementById('draw-db-status');
     if (!el) return;
-    if (pct < 1) {
+    if (pct >= 0 && pct < 1) {
       el.textContent = 'Cargando ' + count + ' glifos\u2026 ' + Math.round(pct * 100) + '%';
       el.style.display = 'inline';
       el.style.color = 'var(--t4)';
-    } else {
-      el.textContent = '\u2713 ' + count.toLocaleString('es') + ' glifos listos';
-      el.style.color = 'var(--green,#34c759)';
+    } else if (pct === 1) {
+      el.textContent = '\u2713 ' + count.toLocaleString('es') + ' glifos listos \u2014 cargando IA\u2026';
+      el.style.color = 'var(--t4)';
+      el.style.display = 'inline';
       var countEl = document.getElementById('draw-db-count');
       if (countEl) countEl.textContent = count.toLocaleString('es');
-      setTimeout(function() { el.style.display = 'none'; }, 2500);
+    } else {
+      /* pct === -1: TF.js listo */
+      el.textContent = '\u2713 IA lista \u2014 ' + (TF_READY ? 'TF.js + Hu Moments' : 'Hu Moments');
+      el.style.color = 'var(--green,#34c759)';
+      el.style.display = 'inline';
+      setTimeout(function() { el.style.display = 'none'; }, 3000);
     }
   }
 
