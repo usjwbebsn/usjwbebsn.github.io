@@ -295,6 +295,17 @@ body.dark .text-field-area:focus {
   display:flex; align-items:center; justify-content:space-between;
   cursor:pointer; margin-bottom:0;
 }
+.analytics-panel {
+  background:var(--bg1); border-radius:var(--r3);
+  border:1px solid rgba(0,0,0,.07);
+  box-shadow:0 1px 4px rgba(0,0,0,.04);
+  padding:14px 16px;
+  margin-top:16px; margin-bottom:20px;
+}
+body.dark .analytics-panel {
+  border-color:rgba(255,255,255,.07);
+  box-shadow:0 2px 16px rgba(0,0,0,.3),0 0 0 1px rgba(255,255,255,.04);
+}
 .analytics-panel h3 { margin-bottom:0; cursor:pointer; font-size:13px; }
 .analytics-collapse { font-size:11px; color:var(--t4); transition:transform .2s; }
 .analytics-panel.collapsed .analytics-collapse { transform:rotate(-90deg); }
@@ -394,6 +405,7 @@ body.dark .draw-section { border-color:rgba(255,255,255,.07); box-shadow:0 2px 1
   border:2px solid rgba(0,0,0,.09);
   touch-action:none; cursor:crosshair; display:block;
   width:100% !important; max-width:100%;
+  min-height:180px;
   box-shadow:0 2px 16px rgba(0,0,0,.07) inset, 0 0 0 1px rgba(0,0,0,.04);
   transition:border-color .2s;
 }
@@ -914,7 +926,10 @@ body.dark .bio-add-line { border-color:rgba(255,255,255,.15); }
       <span class="section-arrow">›</span>
     </div>
     <div class="section-body" id="draw-body">
-      <p class="section-desc">Dibuja con el dedo o el ratón y te diremos qué símbolo o emoji se parece más. ¡Toca el resultado para copiarlo!</p>
+      <p class="section-desc">Dibuja con el dedo o el ratón. El motor compara tu trazo contra <strong id="draw-db-count">~8 000+</strong> glifos Unicode renderizados como imágenes — comparación visual pixel&nbsp;a&nbsp;pixel. ¡Toca el resultado para copiarlo!</p>
+      <div style="font-size:10px;color:var(--t4);margin:-8px 0 10px;min-height:14px;">
+        <span id="draw-db-status" style="display:none;font-weight:600;"></span>
+      </div>
       <div style="display:flex;flex-direction:column;align-items:center;gap:0;width:100%;box-sizing:border-box;">
         <div style="position:relative;width:100%;text-align:center;">
           <canvas id="draw-canvas" width="300" height="200" style="max-width:100%;width:100%;"></canvas>
@@ -924,7 +939,7 @@ body.dark .bio-add-line { border-color:rgba(255,255,255,.15); }
           </div>
         </div>
         <div class="draw-controls" style="justify-content:space-between;width:100%;padding:6px 2px 0;">
-          <span style="font-size:11px;color:var(--t4);font-weight:600;display:flex;align-items:center;gap:4px;"><span class="section-badge">Auto</span> reconocimiento</span>
+          <span style="font-size:11px;color:var(--t4);font-weight:600;display:flex;align-items:center;gap:4px;"><span class="section-badge">Visual</span> pixel‑a‑pixel</span>
           <button class="draw-btn danger" id="draw-clear-btn">🗑 Borrar</button>
         </div>
         <div class="draw-result" id="draw-result" style="display:none;border-top:1px solid rgba(0,0,0,.06);margin-top:10px;padding-top:10px;width:100%;box-sizing:border-box;">
@@ -1441,1376 +1456,679 @@ document.addEventListener('keydown', function(e){
   initCollapsible('draw-toggle',      'draw-section');
 })();
 
-/* ──────────────── DIBUJADOR DE FORMAS — Motor HÍBRIDO v10 ──────────────── */
+/* ──────────────── DIBUJADOR DE FORMAS — Motor Visual Pixel-a-Pixel v11 ──────────────── */
 /*
- * Motor de reconocimiento HÍBRIDO — DIUSF v10
- * Combina tres capas de reconocimiento en cascada:
+ * COMPARACIÓN VISUAL RASTERIZADA
  *
- * CAPA 1 — ANÁLISIS GEOMÉTRICO (GeoPipeline™)
- *   Extrae ~40 características independientes de escala/rotación:
- *   • Curvatura local con detección de esquinas (IStraw mejorado)
- *   • Vectores de dirección y cambios angulares
- *   • Ratio aspecto, circularidad, convexidad
- *   • Conteo de inflexiones, crestas y valles
- *   • Firma radial (descriptor polar de 16 bins)
- *   • Análisis de direccionalidad del trazo (start-angle, sweep)
+ * En vez de analizar gestos o geometría, convierte el dibujo en una imagen
+ * en escala de grises normalizada (32×32 px) y la compara contra ~5 000+
+ * glifos Unicode renderizados como imágenes mediante similitud del coseno.
  *
- * CAPA 2 — $1 PROTRACTOR (plantillas matemáticas)
- *   Implementación completa con 200+ plantillas.
- *   Ahora con ScaleWithAspect para formas asimétricas (rayos, flechas).
- *
- * CAPA 3 — FUSIÓN BAYESIANA PONDERADA
- *   Combina scores de Capa 1 y Capa 2 con pesos aprendidos por forma.
- *   La Capa 1 domina para formas con features geométricos fuertes (rayo,
- *   zigzag, estrella). La Capa 2 domina para formas suaves (círculo, espiral).
- *
- * Resultado: el rayo ⚡ y sus vecinos (⌁ ↯ ☇) se distinguen con precisión
- * porque cada uno tiene un perfil de inflexiones/ángulos único.
- *
- * Basado en investigación académica:
- *   $1:  Wobbrock et al. UIST 2007
- *   $N:  Anthony & Wobbrock, GI 2010/2012
- *   IStraw: Sezgin et al., SBIM 2005 (corner detection)
- *   GeoPipeline: características propias DIUSF v10
+ * Pipeline:
+ *   1. BASE DE DATOS  — ~7 500 code points de rangos Unicode curados se
+ *      renderizan en un <canvas> 32×32 y se almacenan como vectores Float32.
+ *      Solo se guardan los glifos con tinta real (≥ 8 px con valor > 0.15).
+ *   2. CAPTURA        — Al terminar de dibujar, se lee el <canvas> con
+ *      getImageData() al tamaño físico (respeta DPR).
+ *   3. NORMALIZACIÓN  — Se detecta el bounding-box de los píxeles con tinta,
+ *      se recorta y se escala a 32×32 preservando el ratio de aspecto.
+ *      Tanto el dibujo como los glifos usan el mismo canal alfa como vector.
+ *   4. SIMILITUD      — Similitud del coseno entre el vector del dibujo y
+ *      cada glifo de la DB.  Con ~5 000 glifos × 1 024 float32 ≈ 5 M ops,
+ *      la búsqueda tarda < 10 ms.
+ *   5. RESULTADO      — Top 30 coincidencias visuales más parecidas.
  */
-(function(){
-  var canvas = document.getElementById('draw-canvas');
-  if (!canvas) return;
-  var ctx = canvas.getContext('2d');
-  var drawing = false;
-  var strokes = [];
-  var currentStroke = [];
-  var recognizeTimer = null;
+(function () {
+  'use strict';
 
-  /* ── Colores tema ── */
-  function getColor(){ return document.body.classList.contains('dark') ? '#e5e5ea' : '#1c1c1e'; }
+  /* ═══════════════════════════════════════════════════════════════════
+     CONFIGURACIÓN
+  ═══════════════════════════════════════════════════════════════════ */
+  var G   = 32;   // tamaño del glifo (px) — 32×32 = 1 024 valores por vector
+  var PAD = 2;    // padding interior al normalizar
 
-  /* ══════════════════════════════════════════════════════════════
-     BIBLIOTECA DE FORMAS — emoji + símbolos Unicode por categoría
-  ══════════════════════════════════════════════════════════════ */
-  var SHAPE_LIB = {
-    'círculo':       { emoji:'⭕', syms:['○','●','◯','◉','⊙','◎','◌','⬤','🔵','⚫','🟠','🟡','🟢','🔴','🟣'] },
-    'óvalo':         { emoji:'⬭', syms:['⬭','⬬','⬫','◔','◕','◑','◐','⊕','⊗'] },
-    'triángulo':     { emoji:'🔺', syms:['▲','△','▴','▵','▷','◁','▶','◀','⊿','◿','◺','◸','◹'] },
-    'cuadrado':      { emoji:'⬛', syms:['■','□','▪','▫','◼','◻','▬','▭','🔲','🔳','⊞','⊟'] },
-    'rectángulo':    { emoji:'▬', syms:['▬','▭','▮','▯','═','║','╔','╗','╚','╝','╠','╣','╦','╩','╬'] },
-    'diamante':      { emoji:'💎', syms:['◆','◇','◈','♦','🔷','🔹','⬧','⬦','❖','⟐','⌘'] },
-    'estrella':      { emoji:'⭐', syms:['★','☆','✦','✧','✩','✪','✫','✬','✭','✮','✯','✰','💫','🌟','✨','🌠'] },
-    'corazón':       { emoji:'❤️', syms:['♥','❤','♡','❥','❣','💕','💗','💖','💝','💘','💓','💞','🖤','🤍'] },
-    'flecha→':       { emoji:'➡️', syms:['→','←','↑','↓','↗','↘','↙','↖','↔','↕','⇒','⇐','⇑','⇓','➤','➜','➝','➞','➡','⬅','⬆','⬇','⟶','⟵'] },
-    'flecha↗':       { emoji:'↗️', syms:['↗','↘','↙','↖','⬈','⬉','⬊','⬋','↱','↲','↴','↵','⤴','⤵','↩','↪'] },
-    'zigzag/rayo':   { emoji:'⚡', syms:['⚡','↯','⌁','☇','ϟ','ℨ','Ƶ','⦑','⦒','≋','≈','⌇','∿','〰','⌊','⌋','⟨','⟩','⫻','⩧'] },
-    'espiral':       { emoji:'🌀', syms:['🌀','🔄','↺','↻','⟳','⟲','⤻','⤼','⥀','⥁'] },
-    'luna':          { emoji:'🌙', syms:['☽','☾','🌛','🌜','🌚','🌑','◑','◐','☪','🌒','🌘'] },
-    'infinito':      { emoji:'∞', syms:['∞','♾️','⟁','⊗','⊕','≈','≋','⌁','∾','⊸'] },
-    'cruz/más':      { emoji:'✚', syms:['✚','✛','✜','✝','†','‡','➕','❌','✞','⛏','☩','✙','⊕','⊞'] },
-    'línea':         { emoji:'➖', syms:['─','━','▬','—','–','‐','⸻','═','▔','▁','‾','＿'] },
-    'ola/curva':     { emoji:'〰️', syms:['〰','∿','⌇','∽','≋','≈','~','〜','ʿ','ʾ'] },
-    'tic/check':     { emoji:'✔️', syms:['✔','✓','✅','☑','✗','✘','✕','✖','❎','⊘','☒'] },
-    'flor':          { emoji:'🌸', syms:['✿','❀','✾','❃','❋','🌺','🌼','💐','🪷','❁','✡','꧁','꧂'] },
-    'sol':           { emoji:'☀️', syms:['☀','🌞','✦','✧','⊙','☼','🌤','🌻','🔆','✺','❋','✸','✹'] },
-    'espiral zig':   { emoji:'🔄', syms:['⟲','⟳','↺','↻','⤻','⤼','🔃','🔁','🔂','↯'] },
-    'mano':          { emoji:'✋', syms:['✋','🖐','👋','☞','☟','👆','👇','🤚','🫱','☜','☝','☟'] },
-    'nota':          { emoji:'🎵', syms:['♪','♫','♬','♩','🎶','🎼','🎵','♭','♮','♯'] },
-    'pentágono':     { emoji:'⬠', syms:['⬠','⬡','⬢','⬣','⎔','🔷','🔶','⭓'] },
-    'hexágono':      { emoji:'⬡', syms:['⬡','⬢','⬣','⎔','🔶','🔷','⬠','⬟'] },
-    'signo de interrogación': { emoji:'❓', syms:['?','？','❓','❔','⁇','⁈','⁉'] },
-    'ángulo/v':      { emoji:'∨', syms:['∨','∧','V','v','⌄','⌃','⋁','⋀','◡','◠'] },
-  };
+  /* Stack de fuentes que cubre símbolos + emoji en todos los SO */
+  var FONT = (Math.round(G * 0.72)) + 'px "Segoe UI Emoji","Apple Color Emoji",' +
+             '"Noto Color Emoji","Noto Emoji",serif,sans-serif';
 
-  /* ══════════════════════════════════════════════════════════════
-     ALGORITMO $1 UNISTROKE RECOGNIZER
-     Implementación completa con Protractor enhancement
-  ══════════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════════════════
+     RANGOS UNICODE — ~13 000+ code points → ~8 000+ glifos reales
+  ═══════════════════════════════════════════════════════════════════ */
+  var RANGES = [
+    /* ── Latin / IPA / Fonetik ── */
+    [0x0021,0x007E], // Basic Latin printable
+    [0x00A0,0x00FF], // Latin-1 Supplement
+    [0x0100,0x017F], // Latin Extended-A
+    [0x0180,0x024F], // Latin Extended-B
+    [0x0250,0x02AF], // IPA Extensions
+    [0x02B0,0x02FF], // Spacing Modifier Letters
+    [0x1D00,0x1D7F], // Phonetic Extensions
+    [0x1D80,0x1DBF], // Phonetic Extensions Supplement
+    [0x1E00,0x1EFF], // Latin Extended Additional
+    [0x2C60,0x2C7F], // Latin Extended-C
+    [0xA720,0xA7FF], // Latin Extended-D
+    [0xAB30,0xAB6F], // Latin Extended-E
 
-  var NUM_POINTS = 128;
-  var SQUARE_SIZE = 250.0;
-  var ORIGIN = {x:0, y:0};
-  var Diagonal = Math.sqrt(SQUARE_SIZE*SQUARE_SIZE + SQUARE_SIZE*SQUARE_SIZE);
-  var HalfDiagonal = 0.5 * Diagonal;
-  var AngleRange = Math.PI * 0.25; // 45°
-  var AnglePrecision = Math.PI / 90; // 2°
-  var Phi = 0.5 * (-1.0 + Math.sqrt(5.0)); // Golden Ratio
+    /* ── Greek / Coptic ── */
+    [0x0370,0x03FF], // Greek and Coptic
+    [0x1F00,0x1FFF], // Greek Extended
 
-  function Point(x,y){ return {x:x, y:y}; }
-  function Rectangle(x,y,w,h){ return {x:x, y:y, width:w, height:h}; }
+    /* ── Cyrillic ── */
+    [0x0400,0x04FF], // Cyrillic
+    [0x0500,0x052F], // Cyrillic Supplement
+    [0x2DE0,0x2DFF], // Cyrillic Extended-A
+    [0xA640,0xA69F], // Cyrillic Extended-B
 
-  /* ── Core $1 pipeline ── */
-  function Resample(points, n){
-    var I = PathLength(points)/(n-1);
-    var D = 0.0;
-    var newpoints = [points[0]];
-    for (var i=1; i<points.length; i++){
-      var d = Distance(points[i-1], points[i]);
-      if ((D+d) >= I){
-        var qx = points[i-1].x + ((I-D)/d)*(points[i].x-points[i-1].x);
-        var qy = points[i-1].y + ((I-D)/d)*(points[i].y-points[i-1].y);
-        var q = Point(qx,qy);
-        newpoints.push(q);
-        points.splice(i, 0, q);
-        D = 0.0;
+    /* ── Armenio / Georgiano / Etíope / Cherokee ── */
+    [0x0530,0x058F], // Armenian
+    [0x10A0,0x10FF], // Georgian
+    [0x1200,0x137F], // Ethiopic
+    [0x2D80,0x2DDF], // Ethiopic Extended
+    [0x13A0,0x13FF], // Cherokee
+    [0xAB70,0xABBF], // Cherokee Supplement
+
+    /* ── Runas / Oghams / Scripts históricos ── */
+    [0x1680,0x169F], // Ogham
+    [0x16A0,0x16FF], // Runic
+    [0x10300,0x1032F], // Old Italic
+    [0x10330,0x1034F], // Gothic
+    [0x10400,0x1044F], // Deseret
+    [0x10450,0x1047F], // Shavian
+    [0x10500,0x1052F], // Elbasan
+    [0x10900,0x1091F], // Phoenician
+    [0x10920,0x1093F], // Lydian
+
+    /* ── Escrituras asiáticas / silabarios ── */
+    [0x3040,0x309F], // Hiragana
+    [0x30A0,0x30FF], // Katakana
+    [0x3100,0x312F], // Bopomofo
+    [0x3130,0x318F], // Hangul Compatibility Jamo
+    [0x1100,0x11FF], // Hangul Jamo
+    [0xA960,0xA97F], // Hangul Jamo Extended-A
+    [0xD7B0,0xD7FF], // Hangul Jamo Extended-B
+    [0x31F0,0x31FF], // Katakana Phonetic Extensions
+
+    /* ── CJK Compatibilidad / Símbolos ── */
+    [0x3000,0x303F], // CJK Symbols and Punctuation
+    [0x3200,0x32FF], // Enclosed CJK Letters and Months
+    [0x3300,0x33FF], // CJK Compatibility
+    [0x4DC0,0x4DFF], // Yijing Hexagram Symbols
+    [0xFE30,0xFE4F], // CJK Compatibility Forms
+    [0xFE50,0xFE6F], // Small Form Variants
+    [0xFF00,0xFFEF], // Halfwidth and Fullwidth Forms
+
+    /* ── Símbolos / Puntuación ── */
+    [0x2000,0x206F], // General Punctuation
+    [0x2070,0x209F], // Superscripts and Subscripts
+    [0x20A0,0x20CF], // Currency Symbols
+    [0x2100,0x214F], // Letterlike Symbols
+    [0x2150,0x218F], // Number Forms (fracciones, numerales romanos)
+    [0x2190,0x21FF], // Arrows
+    [0x2200,0x22FF], // Mathematical Operators
+    [0x2300,0x23FF], // Miscellaneous Technical
+    [0x2400,0x245F], // Control Pictures
+    [0x2460,0x24FF], // Enclosed Alphanumerics
+    [0x2500,0x25FF], // Box Drawing + Block Elements + Geometric Shapes
+    [0x2600,0x26FF], // Miscellaneous Symbols
+    [0x2700,0x27FF], // Dingbats
+    [0x2800,0x28FF], // Braille Patterns
+    [0x2900,0x297F], // Supplemental Arrows-B
+    [0x2980,0x29FF], // Misc Mathematical Symbols-B
+    [0x2A00,0x2AFF], // Supplemental Mathematical Operators
+    [0x2B00,0x2BFF], // Miscellaneous Symbols and Arrows
+
+    /* ── Música / Notación antigua ── */
+    [0x1D000,0x1D0FF], // Byzantine Musical Symbols
+    [0x1D100,0x1D1FF], // Musical Symbols
+    [0x1D200,0x1D24F], // Ancient Greek Musical Notation
+
+    /* ── Matemáticas alfanuméricas ── */
+    [0x1D300,0x1D35F], // Tai Xuan Jing Symbols
+    [0x1D360,0x1D37F], // Counting Rod Numerals
+    [0x1D400,0x1D7FF], // Mathematical Alphanumeric Symbols (bold, italic, fraktur, script…)
+
+    /* ── Números / Símbolos antiguos ── */
+    [0x10100,0x1013F], // Aegean Numbers
+    [0x10140,0x1018F], // Ancient Greek Numbers
+    [0x10190,0x101CF], // Ancient Symbols + Phaistos Disc area
+
+    /* ── Emoji y símbolos modernos ── */
+    [0x1F000,0x1F02F], // Mahjong Tiles
+    [0x1F030,0x1F09F], // Domino Tiles
+    [0x1F0A0,0x1F0FF], // Playing Cards
+    [0x1F100,0x1F1FF], // Enclosed Alphanumeric Supplement
+    [0x1F200,0x1F2FF], // Enclosed Ideographic Supplement
+    [0x1F300,0x1F5FF], // Misc Symbols and Pictographs
+    [0x1F600,0x1F64F], // Emoticons / Faces
+    [0x1F650,0x1F67F], // Ornamental Dingbats
+    [0x1F680,0x1F6FF], // Transport and Map Symbols
+    [0x1F700,0x1F77F], // Alchemical Symbols
+    [0x1F780,0x1F7FF], // Geometric Shapes Extended
+    [0x1F800,0x1F8FF], // Supplemental Arrows-C
+    [0x1F900,0x1F9FF], // Supplemental Symbols and Pictographs
+    [0x1FA00,0x1FA6F], // Chess Symbols + Games
+    [0x1FA70,0x1FAFF], // Symbols and Pictographs Extended-A/B
+    [0x1FB00,0x1FBFF], // Symbols for Legacy Computing
+  ];
+
+  /* ═══════════════════════════════════════════════════════════════════
+     BASE DE DATOS DE GLIFOS
+  ═══════════════════════════════════════════════════════════════════ */
+  var DB         = [];   // { char, vec:Float32Array, norm:number }
+  var DB_READY   = false;
+  var DB_BUILDING= false;
+
+  /* Canvas único reutilizable para renderizar glifos */
+  var rC  = document.createElement('canvas');
+  rC.width = rC.height = G;
+  var rCtx = rC.getContext('2d', { willReadFrequently: true });
+
+  /**
+   * Renderiza 'char' en el canvas 32×32 y devuelve { char, vec, norm }
+   * o null si el glifo está vacío / no soportado.
+   */
+  function buildGlyphEntry(char) {
+    rCtx.clearRect(0, 0, G, G);
+    rCtx.fillStyle = '#000';
+    rCtx.font = FONT;
+    rCtx.textAlign = 'center';
+    rCtx.textBaseline = 'middle';
+    rCtx.fillText(char, G / 2, G / 2);
+
+    var data = rCtx.getImageData(0, 0, G, G).data;
+    var N    = G * G;
+
+    /* ── Detectar emoji con fondo cuadrado opaco ──
+       Si hay contenido tocando los 4 bordes y casi ningún píxel transparente,
+       es un emoji con fondo sólido (⏩⏪⏺🔲…) → descartar. */
+    var borderOpaque = 0, totalBorder = 0, transparent = 0;
+    for (var i = 0; i < N; i++) {
+      var a0 = data[i*4+3];
+      var py = (i/G)|0, px = i%G;
+      if (py < 2 || py > G-3 || px < 2 || px > G-3) {
+        totalBorder++;
+        if (a0 > 200) borderOpaque++;
+      }
+      if (a0 < 20) transparent++;
+    }
+    var isFilledBox = (borderOpaque / totalBorder > 0.55) && (transparent / N < 0.08);
+    if (isFilledBox) return null;
+
+    /* ── Vector: usa solo canal alpha (silueta limpia) ── */
+    var vec  = new Float32Array(N);
+    var norm = 0;
+    var ink  = 0;
+
+    for (var i = 0; i < N; i++) {
+      var a = data[i*4+3];
+      var v = a > 20 ? (a / 255) : 0;
+      vec[i] = v;
+      norm  += v * v;
+      if (v > 0.15) ink++;
+    }
+
+    /* Descartar glifos vacíos o puntos aislados */
+    if (ink < 8 || norm < 0.06) return null;
+
+    return { char: char, vec: vec, norm: Math.sqrt(norm) };
+  }
+
+  /**
+   * Construye la DB en chunks para no bloquear el hilo principal.
+   */
+  function buildDB(onProgress, onDone) {
+    if (DB_READY)    { if (onDone) onDone(DB.length); return; }
+    if (DB_BUILDING) return;
+    DB_BUILDING = true;
+
+    var cps = [];
+    for (var ri = 0; ri < RANGES.length; ri++) {
+      for (var cp = RANGES[ri][0]; cp <= RANGES[ri][1]; cp++) cps.push(cp);
+    }
+
+    var idx   = 0;
+    var CHUNK = 60;  // glifos por tick (~6-10 ms por chunk)
+
+    function step() {
+      var end = Math.min(idx + CHUNK, cps.length);
+      for (; idx < end; idx++) {
+        try {
+          var g = buildGlyphEntry(String.fromCodePoint(cps[idx]));
+          if (g) DB.push(g);
+        } catch (_) {}
+      }
+
+      if (onProgress) onProgress(idx / cps.length, DB.length);
+
+      if (idx < cps.length) {
+        setTimeout(step, 0);
       } else {
-        D += d;
+        DB_READY    = true;
+        DB_BUILDING = false;
+        if (onDone) onDone(DB.length);
       }
     }
-    if (newpoints.length === n-1) newpoints.push(points[points.length-1]);
-    return newpoints;
+    step();
   }
 
-  function IndicativeAngle(points){
-    var c = Centroid(points);
-    return Math.atan2(c.y-points[0].y, c.x-points[0].x);
-  }
+  /* ═══════════════════════════════════════════════════════════════════
+     PROCESADO DEL DIBUJO → VECTOR NORMALIZADO
+  ═══════════════════════════════════════════════════════════════════ */
+  function getQueryVector() {
+    var phW = drawCanvas.width, phH = drawCanvas.height;
+    var px  = drawCtx.getImageData(0, 0, phW, phH).data;
 
-  function RotateBy(points, radians){
-    var c = Centroid(points);
-    var cos = Math.cos(radians), sin = Math.sin(radians);
-    var newpoints = [];
-    for (var i=0; i<points.length; i++){
-      var qx = (points[i].x-c.x)*cos - (points[i].y-c.y)*sin + c.x;
-      var qy = (points[i].x-c.x)*sin + (points[i].y-c.y)*cos + c.y;
-      newpoints.push(Point(qx,qy));
-    }
-    return newpoints;
-  }
-
-  function ScaleTo(points, size){
-    var B = BoundingBox(points);
-    var newpoints = [];
-    for (var i=0; i<points.length; i++){
-      var qx = points[i].x * (size/B.width);
-      var qy = points[i].y * (size/B.height);
-      newpoints.push(Point(qx,qy));
-    }
-    return newpoints;
-  }
-
-  function ScaleToWithAspect(points, size){
-    var B = BoundingBox(points);
-    var uniformScale = Math.min(size/B.width, size/B.height);
-    var newpoints = [];
-    for (var i=0; i<points.length; i++){
-      newpoints.push(Point(points[i].x*uniformScale, points[i].y*uniformScale));
-    }
-    return newpoints;
-  }
-
-  function TranslateTo(points, pt){
-    var c = Centroid(points);
-    var newpoints = [];
-    for (var i=0; i<points.length; i++){
-      newpoints.push(Point(points[i].x + pt.x - c.x, points[i].y + pt.y - c.y));
-    }
-    return newpoints;
-  }
-
-  function Vectorize(points){
-    var sum = 0.0, vector = [];
-    for (var i=0; i<points.length; i++){
-      vector.push(points[i].x);
-      vector.push(points[i].y);
-      sum += points[i].x*points[i].x + points[i].y*points[i].y;
-    }
-    var magnitude = Math.sqrt(sum);
-    for (var i=0; i<vector.length; i++) vector[i] /= magnitude;
-    return vector;
-  }
-
-  /* ── Protractor: fast closed-form matching ── */
-  function OptimalCosineDistance(v1, v2){
-    var a=0.0, b=0.0;
-    for (var i=0; i<v1.length; i+=2){
-      a += v1[i]*v2[i] + v1[i+1]*v2[i+1];
-      b += v1[i]*v2[i+1] - v1[i+1]*v2[i];
-    }
-    var angle = Math.atan(b/a);
-    return Math.acos(a*Math.cos(angle) + b*Math.sin(angle));
-  }
-
-  function DistanceAtBestAngle(points, T, a, b, threshold){
-    var x1 = Phi*a + (1.0-Phi)*b;
-    var f1 = PathDistance(points, RotateBy(T.points, x1));
-    var x2 = (1.0-Phi)*a + Phi*b;
-    var f2 = PathDistance(points, RotateBy(T.points, x2));
-    while (Math.abs(b-a) > threshold){
-      if (f1 < f2){ b = x2; x2 = x1; f2 = f1; x1 = Phi*a+(1.0-Phi)*b; f1 = PathDistance(points,RotateBy(T.points,x1)); }
-      else { a = x1; x1 = x2; f1 = f2; x2 = (1.0-Phi)*a+Phi*b; f2 = PathDistance(points,RotateBy(T.points,x2)); }
-    }
-    return Math.min(f1,f2);
-  }
-
-  function PathDistance(pts1, pts2){
-    var d = 0.0;
-    for (var i=0; i<pts1.length; i++) d += Distance(pts1[i], pts2[i]);
-    return d/pts1.length;
-  }
-
-  function PathLength(points){
-    var d=0.0;
-    for (var i=1; i<points.length; i++) d += Distance(points[i-1],points[i]);
-    return d;
-  }
-
-  function Distance(p1,p2){
-    var dx=p2.x-p1.x, dy=p2.y-p1.y;
-    return Math.sqrt(dx*dx+dy*dy);
-  }
-
-  function Centroid(points){
-    var x=0.0, y=0.0;
-    for (var i=0; i<points.length; i++){ x+=points[i].x; y+=points[i].y; }
-    return Point(x/points.length, y/points.length);
-  }
-
-  function BoundingBox(points){
-    var minX=+Infinity, maxX=-Infinity, minY=+Infinity, maxY=-Infinity;
-    for (var i=0; i<points.length; i++){
-      minX=Math.min(minX,points[i].x); maxX=Math.max(maxX,points[i].x);
-      minY=Math.min(minY,points[i].y); maxY=Math.max(maxY,points[i].y);
-    }
-    return Rectangle(minX,minY,maxX-minX,maxY-minY);
-  }
-
-  /* ── Template preprocessing ── */
-  function processTemplate(rawPoints, useAngle){
-    var pts = rawPoints.map(function(p){ return Point(p[0],p[1]); });
-    pts = Resample(pts, NUM_POINTS);
-    if (useAngle !== false){
-      var radians = IndicativeAngle(pts);
-      pts = RotateBy(pts, -radians);
-    }
-    pts = ScaleTo(pts, SQUARE_SIZE);
-    pts = TranslateTo(pts, ORIGIN);
-    return { points: pts, vector: Vectorize(pts) };
-  }
-
-  /* ── Template generation helpers ── */
-  function makeCircle(n, cx, cy, r, startAngle, dir){
-    n = n || 64; cx=cx||0; cy=cy||0; r=r||100; startAngle=startAngle||0; dir=dir||1;
-    var pts=[];
-    for (var i=0;i<=n;i++){
-      var a = startAngle + dir*(i/n)*2*Math.PI;
-      pts.push([cx+r*Math.cos(a), cy+r*Math.sin(a)]);
-    }
-    return pts;
-  }
-
-  function makeRegularPolygon(sides, cx, cy, r, startAngle){
-    cx=cx||0; cy=cy||0; r=r||100; startAngle=startAngle||-Math.PI/2;
-    var pts=[];
-    for (var i=0;i<=sides;i++){
-      var a = startAngle + (i/sides)*2*Math.PI;
-      pts.push([cx+r*Math.cos(a), cy+r*Math.sin(a)]);
-    }
-    return pts;
-  }
-
-  function makeStar(points5, cx, cy, outerR, innerR, startAngle){
-    cx=cx||0; cy=cy||0; outerR=outerR||100; innerR=innerR||40; startAngle=startAngle||-Math.PI/2;
-    var pts=[];
-    for (var i=0;i<=points5*2;i++){
-      var r = (i%2===0) ? outerR : innerR;
-      var a = startAngle + (i/(points5*2))*2*Math.PI;
-      pts.push([cx+r*Math.cos(a), cy+r*Math.sin(a)]);
-    }
-    return pts;
-  }
-
-  /* ═══════════════════════════════════════════════════════════════
-     TEMPLATES — generados matemáticamente para máxima precisión
-     Cada forma tiene 3-5 variantes para cubrir distintos modos de dibujo
-  ═══════════════════════════════════════════════════════════════ */
-  var RAW_TEMPLATES = [];
-
-  /* CÍRCULO — en sentido horario y antihorario, distintos puntos de inicio */
-  RAW_TEMPLATES.push({name:'círculo', pts: makeCircle(64, 0,0,100, 0, 1)});
-  RAW_TEMPLATES.push({name:'círculo', pts: makeCircle(64, 0,0,100, 0, -1)});
-  RAW_TEMPLATES.push({name:'círculo', pts: makeCircle(64, 0,0,100, Math.PI, 1)});
-  RAW_TEMPLATES.push({name:'círculo', pts: makeCircle(64, 0,0,100, -Math.PI/2, 1)});
-
-  /* ÓVALO — círculo estirado */
-  (function(){
-    function makeOval(n,rx,ry){ var pts=[]; for(var i=0;i<=n;i++){ var a=(i/n)*2*Math.PI; pts.push([rx*Math.cos(a), ry*Math.sin(a)]); } return pts; }
-    RAW_TEMPLATES.push({name:'óvalo', pts: makeOval(64,150,80)});
-    RAW_TEMPLATES.push({name:'óvalo', pts: makeOval(64,80,150)});
-    RAW_TEMPLATES.push({name:'óvalo', pts: makeOval(64,140,75)});
-  })();
-
-  /* TRIÁNGULO — tres variantes de inicio (arriba, izquierda, derecha) */
-  RAW_TEMPLATES.push({name:'triángulo', pts: makeRegularPolygon(3, 0,0,100, -Math.PI/2)});
-  RAW_TEMPLATES.push({name:'triángulo', pts: makeRegularPolygon(3, 0,0,100, Math.PI/6)});
-  RAW_TEMPLATES.push({name:'triángulo', pts: makeRegularPolygon(3, 0,0,100, Math.PI/2)});
-  /* triángulo dibujado de punta a punta (los usuarios no siempre cierran) */
-  (function(){
-    RAW_TEMPLATES.push({name:'triángulo', pts:[
-      [0,-100],[100,80],[-100,80],[0,-100]
-    ]});
-  })();
-
-  /* CUADRADO / RECTÁNGULO */
-  (function(){
-    function makeRect(w,h,startCorner){
-      var corners = [[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2],[-w/2,-h/2]];
-      var s = startCorner||0;
-      var pts = corners.slice(s).concat(corners.slice(1,s+1));
-      // interpolate each edge
-      var result=[];
-      for(var i=0;i<pts.length-1;i++){
-        for(var t=0;t<10;t++) result.push([pts[i][0]+(pts[i+1][0]-pts[i][0])*t/10, pts[i][1]+(pts[i+1][1]-pts[i][1])*t/10]);
-      }
-      result.push(pts[pts.length-1]);
-      return result;
-    }
-    RAW_TEMPLATES.push({name:'cuadrado', pts: makeRect(200,200,0)});
-    RAW_TEMPLATES.push({name:'cuadrado', pts: makeRect(200,200,1)});
-    RAW_TEMPLATES.push({name:'cuadrado', pts: makeRect(200,200,2)});
-    RAW_TEMPLATES.push({name:'cuadrado', pts: makeRect(200,200,3)});
-    RAW_TEMPLATES.push({name:'rectángulo', pts: makeRect(280,160,0)});
-    RAW_TEMPLATES.push({name:'rectángulo', pts: makeRect(160,280,0)});
-    RAW_TEMPLATES.push({name:'rectángulo', pts: makeRect(300,150,0)});
-  })();
-
-  /* DIAMANTE */
-  RAW_TEMPLATES.push({name:'diamante', pts: makeRegularPolygon(4, 0,0,100, 0)});
-  RAW_TEMPLATES.push({name:'diamante', pts: makeRegularPolygon(4, 0,0,100, Math.PI/4)});
-  (function(){
-    RAW_TEMPLATES.push({name:'diamante', pts:[
-      [0,-100],[80,0],[0,100],[-80,0],[0,-100]
-    ]});
-  })();
-
-  /* ESTRELLA */
-  RAW_TEMPLATES.push({name:'estrella', pts: makeStar(5, 0,0,100,42, -Math.PI/2)});
-  RAW_TEMPLATES.push({name:'estrella', pts: makeStar(5, 0,0,100,42, Math.PI/2)});
-  RAW_TEMPLATES.push({name:'estrella', pts: makeStar(6, 0,0,100,50, -Math.PI/2)});
-
-  /* CORAZÓN — trayectoria matemática del corazón */
-  (function(){
-    var pts=[];
-    for(var i=0;i<=80;i++){
-      var t = -Math.PI + (i/80)*2*Math.PI;
-      pts.push([16*Math.pow(Math.sin(t),3)*6, -(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t))*6]);
-    }
-    RAW_TEMPLATES.push({name:'corazón', pts:pts});
-    // variante más simple dibujada a mano
-    RAW_TEMPLATES.push({name:'corazón', pts:[
-      [0,-60],[-50,-100],[-100,-60],[-100,0],[-50,60],[0,100],[50,60],[100,0],[100,-60],[50,-100],[0,-60]
-    ]});
-    // variante comenzando desde abajo
-    RAW_TEMPLATES.push({name:'corazón', pts:[
-      [0,100],[60,40],[100,0],[100,-60],[60,-100],[0,-60],[-60,-100],[-100,-60],[-100,0],[-60,40],[0,100]
-    ]});
-  })();
-
-  /* FLECHA → (horizontal) */
-  (function(){
-    function makeArrow(dx){ return [
-      [-100,0],[80,0], // cuerpo
-      [40,-40],[80,0],[40,40] // punta
-    ];}
-    RAW_TEMPLATES.push({name:'flecha→', pts:[[-100,0],[100,0],[60,-40],[100,0],[60,40]]});
-    RAW_TEMPLATES.push({name:'flecha→', pts:[[100,0],[-100,0],[-60,-40],[-100,0],[-60,40]]});
-    RAW_TEMPLATES.push({name:'flecha→', pts:[[-100,0],[100,0],[50,-50],[100,0],[50,50]]});
-  })();
-
-  /* FLECHA ↗ (diagonal) */
-  (function(){
-    RAW_TEMPLATES.push({name:'flecha↗', pts:[[-100,100],[100,-100],[30,-100],[100,-100],[100,-30]]});
-    RAW_TEMPLATES.push({name:'flecha↗', pts:[[-100,-100],[100,100],[100,30],[100,100],[30,100]]});
-  })();
-
-  /* ZIGZAG / RAYO — forma de Z, relámpago y N — VERSIÓN EXPANDIDA v10 */
-  /* Incluye todas las variantes que un usuario puede dibujar a mano:
-     Z, S, N, zigzag 2-3 picos, rayo ⚡ clásico, variantes oblicuas */
-  (function(){
-    /* ── Z clásica (de izquierda a derecha) ── */
-    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[60,-100],[-60,0],[60,100]]});
-    /* ── Z invertida ── */
-    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[-60,-100],[60,0],[-60,100]]});
-    /* ── Zigzag de 3 picos ── */
-    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[100,-100],[-100,-20],[100,20],[-100,100]]});
-    /* ── Rayo ⚡ clásico (forma de K inclinada, 2 quiebres) ── */
-    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[30,-100],[-20,-10],[20,-10],[-30,100]]});
-    /* ── Rayo más pronunciado, brazos anchos ── */
-    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[50,-100],[-50,-5],[40,-5],[-50,100]]});
-    /* ── Rayo inclinado hacia la derecha ── */
-    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[10,-100],[-60,10],[50,10],[-10,100]]});
-    /* ── Rayo inclinado hacia la izquierda ── */
-    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[-10,-100],[60,10],[-50,10],[10,100]]});
-    /* ── Zigzag con un solo quiebre (V inclinada) ── */
-    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[-80,-100],[80,0],[-40,100]]});
-    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[80,-100],[-80,0],[40,100]]});
-    /* ── N vertical (trazo diagonal + cambio brusco) ── */
-    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[-60,-100],[-60,100],[60,-100],[60,100]]});
-    /* ── Z con muchos puntos intermedios (trazo rápido) ── */
-    (function(){
-      var pts = [];
-      var anchors = [[60,-100],[-60,0],[60,100]];
-      for (var i = 0; i < anchors.length - 1; i++) {
-        for (var t = 0; t <= 10; t++) {
-          pts.push([
-            anchors[i][0] + (anchors[i+1][0]-anchors[i][0])*t/10,
-            anchors[i][1] + (anchors[i+1][1]-anchors[i][1])*t/10
-          ]);
+    /* Bounding-box de píxeles con tinta real */
+    var x0 = phW, x1 = -1, y0 = phH, y1 = -1;
+    for (var y = 0; y < phH; y++) {
+      for (var x = 0; x < phW; x++) {
+        if (px[(y * phW + x) * 4 + 3] > 15) {
+          if (x < x0) x0 = x; if (x > x1) x1 = x;
+          if (y < y0) y0 = y; if (y > y1) y1 = y;
         }
       }
-      RAW_TEMPLATES.push({name:'zigzag/rayo', pts:pts});
-    })();
-    /* ── Rayo muy compacto (dibujado pequeño) ── */
-    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[20,-60],[-15,-5],[15,-5],[-20,60]]});
-    /* ── Rayo estirado horizontalmente ── */
-    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[100,-50],[-100,0],[100,50]]});
-    /* ── Rayo comenzando desde abajo ── */
-    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[-30,100],[20,10],[-20,10],[30,-100]]});
-    /* ── Rayo en S (zigzag suave, 2 inflexiones suaves) ── */
-    (function(){
-      var pts = [];
-      for (var i = 0; i <= 20; i++) {
-        var t = i / 20;
-        pts.push([Math.sin(t * Math.PI) * 70, -100 + t * 200]);
-      }
-      RAW_TEMPLATES.push({name:'zigzag/rayo', pts:pts});
-    })();
-    /* ── Variante con quiebre casi perpendicular ── */
-    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[80,-100],[-80,-20],[-40,-20],[-80,100]]});
-    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[-80,-100],[80,-20],[40,-20],[80,100]]});
-  })();
-
-  /* ESPIRAL */
-  (function(){
-    var pts=[];
-    for(var i=0;i<=120;i++){
-      var a=(i/120)*4*Math.PI;
-      var r=10+80*(i/120);
-      pts.push([r*Math.cos(a), r*Math.sin(a)]);
     }
-    RAW_TEMPLATES.push({name:'espiral', pts:pts});
-    // variante inversa
-    var pts2=[];
-    for(var i=0;i<=120;i++){
-      var a=-(i/120)*4*Math.PI;
-      var r=10+80*(i/120);
-      pts2.push([r*Math.cos(a), r*Math.sin(a)]);
+    if (x1 < 0 || x1 - x0 < 3 || y1 - y0 < 3) return null;
+
+    /* Escalar al cuadrado G×G preservando ratio de aspecto */
+    var bW = x1 - x0 + 1, bH = y1 - y0 + 1;
+    var sc = (G - PAD * 2) / Math.max(bW, bH);
+    var dW = Math.round(bW * sc), dH = Math.round(bH * sc);
+    var dX = Math.round((G - dW) / 2), dY = Math.round((G - dH) / 2);
+
+    var qc   = document.createElement('canvas');
+    qc.width = qc.height = G;
+    var qctx = qc.getContext('2d', { willReadFrequently: true });
+    qctx.drawImage(drawCanvas, x0, y0, bW, bH, dX, dY, dW, dH);
+    var nd = qctx.getImageData(0, 0, G, G).data;
+
+    /* ── Extrae píxeles de tinta en 32×32 ── */
+    var isDark = document.body.classList.contains('dark');
+    var raw = new Float32Array(G * G);
+    for (var i = 0; i < G * G; i++) {
+      var a = nd[i*4+3];
+      if (a < 10) { raw[i] = 0; continue; }
+      var r = nd[i*4], g_ = nd[i*4+1], b = nd[i*4+2];
+      var lum = (r*0.299 + g_*0.587 + b*0.114) / 255;
+      /* En dark: el trazo es CLARO (lum alto) → v = lum.
+         En light: el trazo es OSCURO → v = 1-lum */
+      raw[i] = isDark ? lum : (1 - lum);
     }
-    RAW_TEMPLATES.push({name:'espiral', pts:pts2});
-  })();
 
-  /* LUNA — media luna */
-  (function(){
-    function makeMoon(dir){
-      var pts=[];
-      // arco exterior
-      for(var i=0;i<=40;i++){
-        var a=-Math.PI/2 + (i/40)*Math.PI;
-        pts.push([100*Math.cos(a), 100*Math.sin(a)]);
-      }
-      // arco interior (cóncavo, crea la luna)
-      for(var i=40;i>=0;i--){
-        var a=-Math.PI/2 + (i/40)*Math.PI;
-        pts.push([60*Math.cos(a)+dir*40, 90*Math.sin(a)]);
-      }
-      return pts;
-    }
-    RAW_TEMPLATES.push({name:'luna', pts: makeMoon(1)});
-    RAW_TEMPLATES.push({name:'luna', pts: makeMoon(-1)});
-    // C simple
-    RAW_TEMPLATES.push({name:'luna', pts: makeCircle(48,0,0,100,-Math.PI*0.7,1).slice(0,40)});
-  })();
-
-  /* INFINITO — lemniscata de Bernoulli */
-  (function(){
-    var pts=[];
-    for(var i=0;i<=100;i++){
-      var t=-Math.PI+(i/100)*2*Math.PI;
-      var x=150*Math.cos(t)/(1+Math.sin(t)*Math.sin(t));
-      var y=100*Math.sin(t)*Math.cos(t)/(1+Math.sin(t)*Math.sin(t));
-      pts.push([x,y]);
-    }
-    RAW_TEMPLATES.push({name:'infinito', pts:pts});
-    RAW_TEMPLATES.push({name:'infinito', pts:pts.slice().reverse()});
-  })();
-
-  /* CRUZ / MÁS */
-  (function(){
-    function makeCross(w,h){
-      return [
-        [0,-h],[0,h],  // vertical
-        [-w,0],[w,0]   // horizontal — se concatena como multistroke aplanado
-      ];
-    }
-    // Cruz como un solo trazo en forma de + o x
-    RAW_TEMPLATES.push({name:'cruz/más', pts:[
-      [-100,0],[100,0],[0,0],[0,-100],[0,100]
-    ]});
-    RAW_TEMPLATES.push({name:'cruz/más', pts:[
-      [0,-100],[0,100],[0,0],[-100,0],[100,0]
-    ]});
-    // X
-    RAW_TEMPLATES.push({name:'cruz/más', pts:[
-      [-100,-100],[100,100],[0,0],[-100,100],[100,-100]
-    ]});
-  })();
-
-  /* LÍNEA RECTA */
-  (function(){
-    RAW_TEMPLATES.push({name:'línea', pts:[[-150,0],[150,0]]});
-    RAW_TEMPLATES.push({name:'línea', pts:[[0,-150],[0,150]]});
-    RAW_TEMPLATES.push({name:'línea', pts:[[-150,-150],[150,150]]});
-    RAW_TEMPLATES.push({name:'línea', pts:[[-150,150],[150,-150]]});
-  })();
-
-  /* TIC / CHECK */
-  (function(){
-    RAW_TEMPLATES.push({name:'tic/check', pts:[[-80,0],[0,80],[100,-100]]});
-    RAW_TEMPLATES.push({name:'tic/check', pts:[[-100,-50],[-20,60],[100,-100]]});
-    RAW_TEMPLATES.push({name:'tic/check', pts:[[-80,20],[0,100],[120,-80]]});
-  })();
-
-  /* OLA / CURVA */
-  (function(){
-    var pts=[];
-    for(var i=0;i<=60;i++){
-      var x=-150+(i/60)*300;
-      pts.push([x, 60*Math.sin((i/60)*2*Math.PI)]);
-    }
-    RAW_TEMPLATES.push({name:'ola/curva', pts:pts});
-    var pts2=pts.map(function(p){return [p[0],-p[1]];});
-    RAW_TEMPLATES.push({name:'ola/curva', pts:pts2});
-  })();
-
-  /* ÁNGULO / V */
-  (function(){
-    RAW_TEMPLATES.push({name:'ángulo/v', pts:[[-100,-100],[0,60],[100,-100]]});
-    RAW_TEMPLATES.push({name:'ángulo/v', pts:[[-100,100],[0,-60],[100,100]]});
-    RAW_TEMPLATES.push({name:'ángulo/v', pts:[[-60,-100],[-80,80],[60,-100]]});
-  })();
-
-  /* PENTÁGONO */
-  RAW_TEMPLATES.push({name:'pentágono', pts: makeRegularPolygon(5, 0,0,100, -Math.PI/2)});
-  RAW_TEMPLATES.push({name:'pentágono', pts: makeRegularPolygon(5, 0,0,100, Math.PI/2)});
-
-  /* HEXÁGONO */
-  RAW_TEMPLATES.push({name:'hexágono', pts: makeRegularPolygon(6, 0,0,100, 0)});
-  RAW_TEMPLATES.push({name:'hexágono', pts: makeRegularPolygon(6, 0,0,100, Math.PI/6)});
-
-  /* FLOR — pétalos como círculo distorsionado */
-  (function(){
-    var pts=[];
-    for(var i=0;i<=80;i++){
-      var a=(i/80)*2*Math.PI;
-      var r=80+40*Math.cos(5*a);
-      pts.push([r*Math.cos(a), r*Math.sin(a)]);
-    }
-    RAW_TEMPLATES.push({name:'flor', pts:pts});
-    var pts2=[];
-    for(var i=0;i<=80;i++){
-      var a=(i/80)*2*Math.PI;
-      var r=80+40*Math.cos(6*a);
-      pts2.push([r*Math.cos(a), r*Math.sin(a)]);
-    }
-    RAW_TEMPLATES.push({name:'flor', pts:pts2});
-  })();
-
-  /* SOL — estrella con muchos puntos */
-  RAW_TEMPLATES.push({name:'sol', pts: makeStar(8, 0,0,100,55, -Math.PI/2)});
-  RAW_TEMPLATES.push({name:'sol', pts: makeStar(10,0,0,100,60, -Math.PI/2)});
-  RAW_TEMPLATES.push({name:'sol', pts: makeStar(12,0,0,100,65, -Math.PI/2)});
-
-  /* SIGNO DE INTERROGACIÓN */
-  (function(){
-    var pts=[];
-    // Arco superior
-    for(var i=0;i<=30;i++){
-      var a=Math.PI+(i/30)*Math.PI;
-      pts.push([60*Math.cos(a),60*Math.sin(a)-20]);
-    }
-    // Vertical bajando
-    for(var i=1;i<=20;i++) pts.push([0, i*3]);
-    // Punto
-    pts.push([0, 80]);
-    RAW_TEMPLATES.push({name:'signo de interrogación', pts:pts});
-  })();
-
-  /* ── Procesar todos los templates ── */
-  var TEMPLATES = RAW_TEMPLATES.map(function(t){
-    return { name: t.name, processed: processTemplate(t.pts) };
-  });
-
-  /* ══════════════════════════════════════════════════════════════
-     CAPA 1 — GeoPipeline™: Extractor de características geométricas
-     Produce un vector de features independiente de escala y traslación.
-     Inspirado en IStraw (Sezgin 2005) + descriptores propios DIUSF v10.
-  ══════════════════════════════════════════════════════════════ */
-
-  /* ── Suavizado gaussiano para reducir ruido táctil ── */
-  function gaussianSmooth(pts, sigma) {
-    sigma = sigma || 2;
-    var n = pts.length;
-    var out = [];
-    var radius = Math.ceil(sigma * 2.5);
-    var kernel = [];
-    var ksum = 0;
-    for (var k = -radius; k <= radius; k++) {
-      var w = Math.exp(-(k*k)/(2*sigma*sigma));
-      kernel.push(w); ksum += w;
-    }
-    for (var k = 0; k < kernel.length; k++) kernel[k] /= ksum;
-    for (var i = 0; i < n; i++) {
-      var sx = 0, sy = 0;
-      for (var j = 0; j < kernel.length; j++) {
-        var idx = Math.max(0, Math.min(n-1, i + j - radius));
-        sx += pts[idx].x * kernel[j];
-        sy += pts[idx].y * kernel[j];
-      }
-      out.push(Point(sx, sy));
-    }
-    return out;
-  }
-
-  /* ── Curvatura discreta en cada punto (radio de curvatura inverso) ── */
-  function computeCurvatures(pts, win) {
-    win = win || 5;
-    var n = pts.length;
-    var curvs = new Array(n).fill(0);
-    for (var i = win; i < n - win; i++) {
-      var p0 = pts[i - win], p1 = pts[i], p2 = pts[i + win];
-      // Vector cross product for signed curvature
-      var v1x = p1.x - p0.x, v1y = p1.y - p0.y;
-      var v2x = p2.x - p1.x, v2y = p2.y - p1.y;
-      var cross = v1x * v2y - v1y * v2x;
-      var len1 = Math.sqrt(v1x*v1x + v1y*v1y) + 1e-9;
-      var len2 = Math.sqrt(v2x*v2x + v2y*v2y) + 1e-9;
-      curvs[i] = cross / (len1 * len2);
-    }
-    return curvs;
-  }
-
-  /* ── Ángulo local en cada punto (IStraw-style) ── */
-  function computeLocalAngles(pts, win) {
-    win = win || 6;
-    var n = pts.length;
-    var angles = new Array(n).fill(0);
-    for (var i = win; i < n - win; i++) {
-      var dx1 = pts[i].x - pts[i-win].x, dy1 = pts[i].y - pts[i-win].y;
-      var dx2 = pts[i+win].x - pts[i].x, dy2 = pts[i+win].y - pts[i].y;
-      var dot = dx1*dx2 + dy1*dy2;
-      var cross = dx1*dy2 - dy1*dx2;
-      angles[i] = Math.atan2(Math.abs(cross), dot); // bending angle [0, PI]
-    }
-    return angles;
-  }
-
-  /* ── Detectar esquinas (picos en ángulo local > umbral) ── */
-  function detectCorners(angles, threshold) {
-    threshold = threshold || 0.55; // ~31.5 grados
-    var corners = [];
-    var n = angles.length;
-    var minDist = Math.floor(n * 0.06); // mínima separación entre esquinas
-    for (var i = minDist; i < n - minDist; i++) {
-      if (angles[i] > threshold) {
-        // Verificar que es un máximo local
-        var isMax = true;
-        for (var j = Math.max(0, i-minDist); j < Math.min(n, i+minDist); j++) {
-          if (j !== i && angles[j] >= angles[i]) { isMax = false; break; }
+    /* ── Dilatación morfológica (radio=3) para engrosar el contorno ──
+       Transforma una línea fina dibujada en una banda gruesa.
+       Así un corazón hueco se parece más a un corazón relleno. */
+    var R = 3, W = G;
+    var dil = new Float32Array(W * W);
+    for (var y = 0; y < W; y++) {
+      for (var x = 0; x < W; x++) {
+        var mx = 0;
+        for (var dy = -R; dy <= R; dy++) {
+          for (var dx = -R; dx <= R; dx++) {
+            var ny = y+dy, nx2 = x+dx;
+            if (ny>=0 && ny<W && nx2>=0 && nx2<W) {
+              var v2 = raw[ny*W+nx2];
+              if (v2 > mx) mx = v2;
+            }
+          }
         }
-        if (isMax) corners.push({ idx: i, angle: angles[i] });
-      }
-    }
-    return corners;
-  }
-
-  /* ── Contar cruces de cero en curvatura (inflexiones) ── */
-  function countInflections(curvs) {
-    var count = 0;
-    for (var i = 1; i < curvs.length; i++) {
-      if (curvs[i-1] * curvs[i] < 0) count++;
-    }
-    return count;
-  }
-
-  /* ── Firma radial (16-bin polar histogram) ── */
-  function radialSignature(pts, bins) {
-    bins = bins || 16;
-    var c = Centroid(pts);
-    var hist = new Array(bins).fill(0);
-    for (var i = 0; i < pts.length; i++) {
-      var angle = Math.atan2(pts[i].y - c.y, pts[i].x - c.x);
-      var bin = Math.floor(((angle + Math.PI) / (2 * Math.PI)) * bins);
-      bin = Math.min(bin, bins - 1);
-      var dist = Distance(pts[i], c);
-      hist[bin] += dist;
-    }
-    // Normalizar
-    var maxH = Math.max.apply(null, hist) + 1e-9;
-    return hist.map(function(v){ return v / maxH; });
-  }
-
-  /* ── Ratio de curvatura: longitud del arco / longitud de la cuerda ── */
-  function curvatureRatio(pts) {
-    var arcLen = PathLength(pts);
-    var chord = Distance(pts[0], pts[pts.length-1]);
-    return chord > 1e-9 ? arcLen / chord : 1;
-  }
-
-  /* ── Circularidad: 4π·Area / Perímetro² ── */
-  function circularityScore(pts) {
-    var perimeter = PathLength(pts);
-    // Área aproximada por la fórmula del Shoelace
-    var area = 0;
-    for (var i = 0; i < pts.length - 1; i++) {
-      area += pts[i].x * pts[i+1].y - pts[i+1].x * pts[i].y;
-    }
-    area = Math.abs(area) / 2;
-    if (perimeter < 1e-9) return 0;
-    return (4 * Math.PI * area) / (perimeter * perimeter);
-  }
-
-  /* ── ¿Es el trazo cerrado? ── */
-  function isStrokeClosed(pts, threshold) {
-    threshold = threshold || 0.15;
-    var total = PathLength(pts);
-    var closing = Distance(pts[0], pts[pts.length-1]);
-    return closing / total < threshold;
-  }
-
-  /* ── Dirección dominante del trazo (ángulo del eje principal por PCA) ── */
-  function dominantDirection(pts) {
-    var c = Centroid(pts);
-    var xx = 0, yy = 0, xy = 0;
-    for (var i = 0; i < pts.length; i++) {
-      var dx = pts[i].x - c.x, dy = pts[i].y - c.y;
-      xx += dx * dx; yy += dy * dy; xy += dx * dy;
-    }
-    return Math.atan2(2 * xy, xx - yy) / 2; // eje principal
-  }
-
-  /* ── Ratio de aspecto del bounding box ── */
-  function aspectRatio(pts) {
-    var bb = BoundingBox(pts);
-    var w = bb.width + 1e-9, h = bb.height + 1e-9;
-    return Math.max(w, h) / Math.min(w, h);
-  }
-
-  /* ── Análisis de cambios de dirección horizontal/vertical ── */
-  function directionChanges(pts, win) {
-    win = win || 8;
-    var n = pts.length;
-    var hChanges = 0, vChanges = 0;
-    for (var i = win; i < n - win; i += win) {
-      var prevDx = pts[i].x - pts[i-win].x;
-      var nextDx = pts[i+win].x - pts[i].x;
-      if (prevDx * nextDx < 0) hChanges++;
-      var prevDy = pts[i].y - pts[i-win].y;
-      var nextDy = pts[i+win].y - pts[i].y;
-      if (prevDy * nextDy < 0) vChanges++;
-    }
-    return { h: hChanges, v: vChanges };
-  }
-
-  /* ── Ángulo total de barrido (suma de cambios angulares con signo) ── */
-  function totalAngleSweep(pts) {
-    var total = 0;
-    for (var i = 2; i < pts.length; i++) {
-      var a1 = Math.atan2(pts[i-1].y-pts[i-2].y, pts[i-1].x-pts[i-2].x);
-      var a2 = Math.atan2(pts[i].y-pts[i-1].y, pts[i].x-pts[i-1].x);
-      var da = a2 - a1;
-      // Normalizar al rango [-PI, PI]
-      while (da > Math.PI) da -= 2*Math.PI;
-      while (da < -Math.PI) da += 2*Math.PI;
-      total += da;
-    }
-    return total; // ~2π para círculo, ~0 para línea
-  }
-
-  /* ── Suma de ángulos de esquinas detectadas ── */
-  function totalCornerAngle(corners) {
-    return corners.reduce(function(s, c){ return s + c.angle; }, 0);
-  }
-
-  /* ── Extractor de features completo ── */
-  function extractGeoFeatures(rawPts) {
-    // Resample a 64 puntos para análisis consistente
-    var pts = rawPts.map(function(p){ return Point(p.x, p.y); });
-    if (pts.length < 4) return null;
-    pts = Resample(pts, 64);
-    pts = gaussianSmooth(pts, 1.5);
-
-    var curvs    = computeCurvatures(pts, 5);
-    var angles   = computeLocalAngles(pts, 6);
-    var corners  = detectCorners(angles, 0.5);
-    var inflections = countInflections(curvs);
-    var radSig   = radialSignature(pts, 16);
-    var curRatio = curvatureRatio(pts);
-    var circ     = circularityScore(pts);
-    var closed   = isStrokeClosed(pts) ? 1 : 0;
-    var aspect   = aspectRatio(pts);
-    var sweep    = totalAngleSweep(pts);
-    var dirChg   = directionChanges(pts, 6);
-    var cornN    = corners.length;
-    var cornSum  = totalCornerAngle(corners);
-    var maxCorn  = corners.length > 0 ? Math.max.apply(null, corners.map(function(c){return c.angle;})) : 0;
-    var avgCurv  = curvs.reduce(function(a,b){return a+Math.abs(b);},0) / curvs.length;
-
-    return {
-      corners: cornN,
-      cornerAngleSum: cornSum,
-      maxCornerAngle: maxCorn,
-      inflections: inflections,
-      curvatureRatio: curRatio,
-      circularity: circ,
-      closed: closed,
-      aspect: aspect,
-      sweep: sweep,
-      hDirChanges: dirChg.h,
-      vDirChanges: dirChg.v,
-      avgCurvature: avgCurv,
-      radialSig: radSig
-    };
-  }
-
-  /* ══════════════════════════════════════════════════════════════
-     CAPA 1 — Clasificador geométrico basado en reglas aprendidas
-     Cada forma tiene un "perfil" de características con rangos esperados.
-     Devuelve un mapa nombre→score [0,1].
-  ══════════════════════════════════════════════════════════════ */
-  function geoClassify(f) {
-    if (!f) return {};
-    var scores = {};
-    var n = f.corners, inf = f.inflections, circ = f.circularity;
-    var closed = f.closed, asp = f.aspect, sweep = f.sweep;
-    var crv = f.curvatureRatio, hdc = f.hDirChanges, vdc = f.vDirChanges;
-    var maxCA = f.maxCornerAngle, sumCA = f.cornerAngleSum, avgC = f.avgCurvature;
-
-    /* Función auxiliar: score gaussiano centrado en 'center' con ancho 'sigma' */
-    function gauss(val, center, sigma) {
-      return Math.exp(-0.5 * Math.pow((val - center) / sigma, 2));
-    }
-    /* Score booleano suave */
-    function boolScore(cond, ifTrue, ifFalse) {
-      return cond ? ifTrue : ifFalse;
-    }
-
-    /* ── CÍRCULO ──
-       Cerrado, alta circularidad, sweep ≈ ±2π, pocas esquinas, crv~1 */
-    scores['círculo'] = (
-      gauss(circ, 0.75, 0.2) * 3 +
-      boolScore(closed, 1, 0) * 2 +
-      gauss(Math.abs(sweep), 6.28, 1.5) * 2 +
-      gauss(n, 0, 1) * 1.5 +
-      gauss(crv, 1.05, 0.1) * 1
-    ) / 9.5;
-
-    /* ── ÓVALO ── */
-    scores['óvalo'] = (
-      gauss(circ, 0.6, 0.25) * 2.5 +
-      boolScore(closed, 1, 0) * 2 +
-      gauss(Math.abs(sweep), 6.28, 1.5) * 2 +
-      gauss(asp, 1.8, 0.5) * 2 +
-      gauss(n, 0, 1) * 1
-    ) / 9.5;
-
-    /* ── TRIÁNGULO ── 3 esquinas, cerrado, baja circularidad */
-    scores['triángulo'] = (
-      gauss(n, 3, 1) * 4 +
-      boolScore(closed, 1, 0) * 2 +
-      gauss(circ, 0.2, 0.15) * 2 +
-      gauss(sumCA, 3.14, 1) * 2
-    ) / 10;
-
-    /* ── CUADRADO ── 4 esquinas, cerrado */
-    scores['cuadrado'] = (
-      gauss(n, 4, 1) * 4 +
-      boolScore(closed, 1, 0) * 2 +
-      gauss(asp, 1.0, 0.3) * 2 +
-      gauss(circ, 0.3, 0.15) * 1.5
-    ) / 9.5;
-
-    /* ── RECTÁNGULO ── 4 esquinas, cerrado, asp > 1.5 */
-    scores['rectángulo'] = (
-      gauss(n, 4, 1) * 3.5 +
-      boolScore(closed, 1, 0) * 2 +
-      gauss(asp, 2.0, 0.7) * 2.5 +
-      gauss(circ, 0.2, 0.1) * 1.5
-    ) / 9.5;
-
-    /* ── DIAMANTE ── 4 esquinas, cerrado, orientado 45° */
-    scores['diamante'] = (
-      gauss(n, 4, 1) * 4 +
-      boolScore(closed, 1, 0) * 2 +
-      gauss(circ, 0.25, 0.15) * 2 +
-      gauss(asp, 1.2, 0.4) * 1.5
-    ) / 9.5;
-
-    /* ══ ZIGZAG / RAYO — el core mejorado ══
-       Características clave del rayo ⚡ (forma dibujada a mano):
-       - 1-3 esquinas muy marcadas (>0.8 rad, "quiebres bruscos")
-       - NO cerrado
-       - curvatureRatio alto (trazo largo vs. cuerda directa)
-       - sweep bajo (no da vueltas)
-       - inflexiones 0-2
-       - dirección: principalmente vertical (asp moderado a alto)
-    */
-    var zigCornerScore = gauss(n, 2, 1.2); // 1-3 esquinas óptimo
-    var zigMaxAngle    = gauss(maxCA, 1.5, 0.7); // esquinas agudas
-    var zigNotClosed   = boolScore(!closed, 1, 0.1);
-    var zigSweep       = gauss(Math.abs(sweep), 1.5, 2.0); // sweep moderado
-    var zigInflect     = gauss(inf, 0, 1.5); // pocas inflexiones
-    var zigCrv         = Math.min(crv / 1.5, 1.0); // trazo con recorrido
-
-    scores['zigzag/rayo'] = (
-      zigCornerScore * 3.0 +
-      zigMaxAngle    * 3.5 +
-      zigNotClosed   * 2.0 +
-      zigSweep       * 1.5 +
-      zigInflect     * 1.5 +
-      zigCrv         * 1.0
-    ) / 12.5;
-
-    /* ── ESTRELLA ── múltiples esquinas, cerrado */
-    scores['estrella'] = (
-      gauss(n, 5, 2) * 3.5 +
-      boolScore(closed, 1, 0) * 2 +
-      gauss(circ, 0.15, 0.12) * 2 +
-      gauss(sumCA, 7, 2) * 2
-    ) / 9.5;
-
-    /* ── CORAZÓN ── cerrado, 1 esquina en la parte superior, asimétrico */
-    scores['corazón'] = (
-      boolScore(closed, 1, 0) * 2.5 +
-      gauss(n, 1, 1) * 2.5 +
-      gauss(circ, 0.55, 0.2) * 2 +
-      gauss(Math.abs(sweep), 6.28, 1.5) * 2
-    ) / 9;
-
-    /* ── FLECHA → ── abierta, 1-2 esquinas, horizontal */
-    scores['flecha→'] = (
-      gauss(n, 2, 1) * 3 +
-      boolScore(!closed, 1, 0.2) * 2 +
-      gauss(asp, 2.5, 1) * 2.5 +
-      gauss(hdc, 1, 0.8) * 1.5 +
-      gauss(circ, 0.05, 0.08) * 1
-    ) / 10;
-
-    /* ── FLECHA ↗ ── diagonal */
-    scores['flecha↗'] = (
-      gauss(n, 2, 1) * 3 +
-      boolScore(!closed, 1, 0.2) * 2 +
-      gauss(asp, 1.5, 0.5) * 2 +
-      gauss(circ, 0.05, 0.08) * 1.5
-    ) / 8.5;
-
-    /* ── ESPIRAL ── abierta, sweep muy alto, creciente en distancia al centro */
-    scores['espiral'] = (
-      gauss(Math.abs(sweep), 12, 4) * 3.5 +
-      boolScore(!closed, 1, 0.3) * 1.5 +
-      gauss(crv, 3, 1.5) * 3 +
-      gauss(n, 0, 1.5) * 1.5
-    ) / 9.5;
-
-    /* ── LUNA ── semicírculo, abierto, sweep ~π */
-    scores['luna'] = (
-      boolScore(!closed, 1, 0.3) * 2 +
-      gauss(Math.abs(sweep), 3.14, 1.2) * 3.5 +
-      gauss(n, 0, 1) * 2 +
-      gauss(crv, 1.4, 0.4) * 2
-    ) / 9.5;
-
-    /* ── INFINITO ── figura de 8, cerrado, 2 inflexiones */
-    scores['infinito'] = (
-      gauss(inf, 2, 1) * 3.5 +
-      boolScore(closed, 1, 0.3) * 2 +
-      gauss(Math.abs(sweep), 0, 2) * 2.5 +
-      gauss(n, 0, 1.5) * 1.5
-    ) / 9.5;
-
-    /* ── CRUZ / MÁS ── 2-4 esquinas rectas, abierta o cerrada */
-    scores['cruz/más'] = (
-      gauss(n, 2, 1.5) * 3 +
-      gauss(Math.abs(sweep), 3.14, 1.5) * 2.5 +
-      gauss(asp, 1.0, 0.5) * 2 +
-      gauss(circ, 0.05, 0.07) * 2
-    ) / 9.5;
-
-    /* ── LÍNEA ── abierta, crv bajo, pocas esquinas */
-    scores['línea'] = (
-      boolScore(!closed, 1, 0) * 1.5 +
-      gauss(n, 0, 0.8) * 3 +
-      gauss(crv, 1.0, 0.08) * 4 +
-      gauss(circ, 0.01, 0.04) * 2
-    ) / 10.5;
-
-    /* ── OLA / CURVA ── múltiples inflexiones, sweep bajo, curvs suaves */
-    scores['ola/curva'] = (
-      gauss(inf, 3, 2) * 3 +
-      gauss(n, 0, 1.5) * 2 +
-      gauss(Math.abs(sweep), 0, 3) * 2 +
-      gauss(avgC, 0.06, 0.08) * 2.5
-    ) / 9.5;
-
-    /* ── TIC / CHECK ── abierto, 1 esquina, asimétrico */
-    scores['tic/check'] = (
-      gauss(n, 1, 0.8) * 4 +
-      boolScore(!closed, 1, 0.2) * 2 +
-      gauss(maxCA, 1.2, 0.5) * 2.5 +
-      gauss(circ, 0.05, 0.08) * 1
-    ) / 9.5;
-
-    /* ── ÁNGULO / V ── 1 esquina central muy marcada */
-    scores['ángulo/v'] = (
-      gauss(n, 1, 0.8) * 4.5 +
-      boolScore(!closed, 1, 0.2) * 2 +
-      gauss(maxCA, 1.6, 0.6) * 3
-    ) / 9.5;
-
-    /* ── FLOR ── cerrada, muchas inflexiones ── */
-    scores['flor'] = (
-      boolScore(closed, 1, 0.2) * 2 +
-      gauss(inf, 8, 4) * 3.5 +
-      gauss(n, 0, 2) * 2 +
-      gauss(circ, 0.4, 0.2) * 2
-    ) / 9.5;
-
-    /* ── SOL ── muchas esquinas, cerrado ── */
-    scores['sol'] = (
-      gauss(n, 8, 3) * 3.5 +
-      boolScore(closed, 1, 0.2) * 2 +
-      gauss(circ, 0.2, 0.15) * 2.5 +
-      gauss(sumCA, 10, 4) * 2
-    ) / 10;
-
-    /* ── PENTÁGONO / HEXÁGONO ── */
-    scores['pentágono'] = (
-      gauss(n, 5, 1) * 4 +
-      boolScore(closed, 1, 0) * 2 +
-      gauss(circ, 0.4, 0.15) * 2.5 +
-      gauss(sumCA, 5.24, 1.5) * 1.5
-    ) / 10;
-    scores['hexágono'] = (
-      gauss(n, 6, 1) * 4 +
-      boolScore(closed, 1, 0) * 2 +
-      gauss(circ, 0.5, 0.15) * 2.5 +
-      gauss(sumCA, 6.28, 1.5) * 1.5
-    ) / 10;
-
-    /* ── SIGNO DE INTERROGACIÓN ── */
-    scores['signo de interrogación'] = (
-      gauss(n, 1, 1) * 2.5 +
-      gauss(Math.abs(sweep), 3.14, 1.5) * 3 +
-      gauss(asp, 1.5, 0.5) * 2 +
-      gauss(crv, 1.6, 0.4) * 2
-    ) / 9.5;
-
-    /* ── ESPIRAL ZIG ── */
-    scores['espiral zig'] = scores['espiral'] * 0.85;
-
-    /* ── NOTA MUSICAL ── */
-    scores['nota'] = (
-      gauss(n, 1, 1) * 2.5 +
-      gauss(Math.abs(sweep), 4, 2) * 3 +
-      boolScore(!closed, 1, 0.3) * 2 +
-      gauss(asp, 1.5, 0.6) * 2
-    ) / 9.5;
-
-    /* ── MANO ── */
-    scores['mano'] = (
-      gauss(n, 3, 2) * 3 +
-      boolScore(!closed, 1, 0.3) * 1.5 +
-      gauss(circ, 0.15, 0.15) * 2.5 +
-      gauss(inf, 2, 2) * 2.5
-    ) / 9.5;
-
-    // Clamp todos a [0, 1]
-    Object.keys(scores).forEach(function(k){
-      scores[k] = Math.max(0, Math.min(1, scores[k]));
-    });
-
-    return scores;
-  }
-
-  /* ══════════════════════════════════════════════════════════════
-     CAPA 2 — $1 Protractor (mantenido completo)
-  ══════════════════════════════════════════════════════════════ */
-  function protractorScores(rawPoints) {
-    var pts = rawPoints.map(function(p){ return Point(p.x, p.y); });
-    pts = Resample(pts, NUM_POINTS);
-    var radians = IndicativeAngle(pts);
-    pts = RotateBy(pts, -radians);
-    pts = ScaleTo(pts, SQUARE_SIZE);
-    pts = TranslateTo(pts, ORIGIN);
-    var vector = Vectorize(pts);
-
-    var scores = {};
-    for (var i = 0; i < TEMPLATES.length; i++) {
-      var T = TEMPLATES[i];
-      var d = OptimalCosineDistance(T.processed.vector, vector);
-      var score = 1.0 - d;
-      if (!scores[T.name] || score > scores[T.name]) scores[T.name] = score;
-    }
-    return scores;
-  }
-
-  /* ══════════════════════════════════════════════════════════════
-     CAPA 3 — Fusión bayesiana ponderada
-     Pesos de la CAPA 1 (geo) vs CAPA 2 (protractor) por forma.
-     Las formas con características geométricas fuertes dan más peso
-     al análisis geométrico. Las formas suaves al Protractor.
-  ══════════════════════════════════════════════════════════════ */
-  var GEO_WEIGHTS = {
-    'círculo':       0.20,   // muy suave → Protractor domina
-    'óvalo':         0.20,
-    'triángulo':     0.55,   // esquinas claras → geo fuerte
-    'cuadrado':      0.55,
-    'rectángulo':    0.50,
-    'diamante':      0.55,
-    'estrella':      0.60,
-    'corazón':       0.30,
-    'flecha→':       0.55,
-    'flecha↗':       0.50,
-    'zigzag/rayo':   0.75,   // ¡CLAVE! geo domina para rayo
-    'espiral':       0.15,
-    'luna':          0.30,
-    'infinito':      0.40,
-    'cruz/más':      0.50,
-    'línea':         0.60,
-    'ola/curva':     0.35,
-    'tic/check':     0.65,
-    'flor':          0.25,
-    'sol':           0.45,
-    'espiral zig':   0.20,
-    'ángulo/v':      0.70,   // esquina muy marcada
-    'pentágono':     0.50,
-    'hexágono':      0.50,
-    'signo de interrogación': 0.35,
-    'nota':          0.35,
-    'mano':          0.30,
-  };
-
-  /* ══════════════════════════════════════════════════════════════
-     RECONOCIMIENTO — motor HÍBRIDO final
-  ══════════════════════════════════════════════════════════════ */
-  function recognize(rawPoints) {
-    var allPts = rawPoints.map(function(p){ return Point(p.x, p.y); });
-    if (allPts.length < 6) return [];
-
-    // Capa 2: Protractor
-    var pScores = protractorScores(allPts);
-
-    // Capa 1: GeoPipeline
-    var features = extractGeoFeatures(allPts);
-    var gScores  = features ? geoClassify(features) : {};
-
-    // Capa 3: Fusión
-    var allNames = Object.keys(SHAPE_LIB);
-    var fused = {};
-    allNames.forEach(function(name) {
-      var gw = GEO_WEIGHTS[name] !== undefined ? GEO_WEIGHTS[name] : 0.4;
-      var pw = 1.0 - gw;
-      var gs = gScores[name]  || 0;
-      var ps = pScores[name]  || 0;
-      fused[name] = gw * gs + pw * ps;
-    });
-
-    /* ── Post-procesado: supresión de no-máximos contextuales ──
-       Si rayo gana pero no tiene esquinas marcadas, penalizar.
-       Si círculo gana pero no está cerrado, penalizar. */
-    if (features) {
-      // Rayo necesita esquinas agudas
-      if (fused['zigzag/rayo'] && features.corners === 0 && features.maxCornerAngle < 0.3) {
-        fused['zigzag/rayo'] *= 0.4;
-      }
-      // Círculo necesita estar cerrado y sweep alto
-      if (fused['círculo'] && !features.closed && Math.abs(features.sweep) < 4) {
-        fused['círculo'] *= 0.5;
-      }
-      // Línea no debe tener esquinas
-      if (fused['línea'] && features.corners > 1) {
-        fused['línea'] *= 0.3;
-      }
-      // Espiral necesita sweep alto
-      if (fused['espiral'] && Math.abs(features.sweep) < 6) {
-        fused['espiral'] *= 0.5;
-      }
-      // Ola/curva necesita suavidad (pocas esquinas)
-      if (fused['ola/curva'] && features.corners > 2) {
-        fused['ola/curva'] *= 0.6;
-      }
-      // Triángulo necesita estar cerrado
-      if (fused['triángulo'] && !features.closed && features.corners < 2) {
-        fused['triángulo'] *= 0.5;
+        dil[y*W+x] = mx;
       }
     }
 
-    // Ordenar y devolver top 3
-    var results = Object.keys(fused).map(function(k){
-      return { name: k, score: fused[k] };
-    });
-    results.sort(function(a, b){ return b.score - a.score; });
+    /* ── Flood-fill desde los bordes para encontrar el "exterior" ──
+       Todo lo que NO sea exterior es interior de la forma dibujada.
+       Esto rellena automáticamente formas cerradas (círculos, corazones…) */
+    var outside = new Uint8Array(W * W);
+    var stack = [];
+    function seedBorder(idx) {
+      if (!outside[idx] && dil[idx] < 0.28) { outside[idx] = 1; stack.push(idx); }
+    }
+    for (var k = 0; k < W; k++) {
+      seedBorder(k);             // fila superior
+      seedBorder((W-1)*W + k);   // fila inferior
+      seedBorder(k*W);           // columna izquierda
+      seedBorder(k*W + W-1);     // columna derecha
+    }
+    while (stack.length) {
+      var idx = stack.pop();
+      var py2 = (idx/W)|0, px2 = idx%W;
+      var dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+      for (var d = 0; d < 4; d++) {
+        var ny = py2+dirs[d][0], nx3 = px2+dirs[d][1];
+        if (ny>=0 && ny<W && nx3>=0 && nx3<W) {
+          var ni = ny*W+nx3;
+          if (!outside[ni] && dil[ni] < 0.28) {
+            outside[ni] = 1;
+            stack.push(ni);
+          }
+        }
+      }
+    }
 
-    return results.slice(0, 3).map(function(r) {
-      var lib = SHAPE_LIB[r.name] || { emoji: '◉', syms: ['◉'] };
-      return { name: r.name, score: r.score, emoji: lib.emoji, syms: lib.syms };
-    });
+    /* ── Vector final ──
+       Trazo original = 1.0, interior relleno = 0.75, exterior = 0 */
+    var vec = new Float32Array(W * W);
+    var norm = 0;
+    for (var i = 0; i < W * W; i++) {
+      var v;
+      if (raw[i] > 0.18) {
+        v = 1.0;          // píxel de trazo real
+      } else if (!outside[i]) {
+        v = 0.75;         // interior de la forma (relleno automático)
+      } else {
+        v = 0.0;          // exterior
+      }
+      vec[i] = v;
+      norm  += v * v;
+    }
+
+    if (norm < 0.01) return null;
+    return { vec: vec, norm: Math.sqrt(norm) };
   }
 
-  /* ══════════════════════════════════════════════════════════════
-     CANVAS — dibujo e interacción
-  ══════════════════════════════════════════════════════════════ */
-  function resize(){
-    var parent = canvas.parentElement;
-    var cssW = parent ? parent.offsetWidth : 320;
-    var cssH = Math.round(cssW * 0.60);
-    var dpr = Math.min(window.devicePixelRatio || 1, 3);
-    canvas.style.width  = cssW + 'px';
-    canvas.style.height = cssH + 'px';
-    canvas.width  = Math.round(cssW * dpr);
-    canvas.height = Math.round(cssH * dpr);
-    ctx.scale(dpr, dpr);
+  /* ═══════════════════════════════════════════════════════════════════
+     BÚSQUEDA — similitud del coseno contra toda la DB
+  ═══════════════════════════════════════════════════════════════════ */
+  function findMatches(query, topN) {
+    topN = topN || 30;
+    if (!DB_READY || !DB.length) return [];
+
+    var qv = query.vec, qn = query.norm;
+    var results = [];
+
+    for (var i = 0; i < DB.length; i++) {
+      var glyph = DB[i], gv = glyph.vec;
+      var dot = 0;
+      for (var j = 0; j < qv.length; j++) dot += qv[j] * gv[j];
+      var sim = dot / (qn * glyph.norm + 1e-9);
+      if (sim > 0.04) results.push({ char: glyph.char, score: sim });
+    }
+
+    results.sort(function(a, b) { return b.score - a.score; });
+    return results.slice(0, topN);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     CANVAS — DIBUJO E INTERACCIÓN
+  ═══════════════════════════════════════════════════════════════════ */
+  var drawCanvas = document.getElementById('draw-canvas');
+  if (!drawCanvas) return;
+  var drawCtx = drawCanvas.getContext('2d', { willReadFrequently: true });
+
+  var drawing       = false;
+  var strokes       = [];
+  var currentStroke = [];
+  var recogTimer    = null;
+
+  function getColor() {
+    return document.body.classList.contains('dark') ? '#e5e5ea' : '#1c1c1e';
+  }
+
+  function resize() {
+    var parent = drawCanvas.parentElement;
+    var cssW   = parent ? parent.offsetWidth : 320;
+    var cssH   = Math.round(cssW * 0.60);
+    var dpr    = Math.min(window.devicePixelRatio || 1, 3);
+    drawCanvas.style.width  = cssW + 'px';
+    drawCanvas.style.height = cssH + 'px';
+    drawCanvas.width  = Math.round(cssW * dpr);
+    drawCanvas.height = Math.round(cssH * dpr);
+    drawCtx.scale(dpr, dpr);
     redrawAll();
   }
 
-  function redrawAll(){
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  function redrawAll() {
+    drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
     var all = strokes.concat(currentStroke.length ? [currentStroke] : []);
-    ctx.strokeStyle = getColor();
-    ctx.lineWidth   = 3.5;
-    ctx.lineJoin    = 'round';
-    ctx.lineCap     = 'round';
-    all.forEach(function(pts){
+    drawCtx.strokeStyle = getColor();
+    drawCtx.lineWidth   = 3.5;
+    drawCtx.lineJoin    = 'round';
+    drawCtx.lineCap     = 'round';
+    all.forEach(function(pts) {
       if (pts.length < 2) return;
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x, pts[0].y);
-      for (var i=1; i<pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-      ctx.stroke();
+      drawCtx.beginPath();
+      drawCtx.moveTo(pts[0].x, pts[0].y);
+      for (var i = 1; i < pts.length; i++) drawCtx.lineTo(pts[i].x, pts[i].y);
+      drawCtx.stroke();
     });
   }
 
-  function getXY(e){
-    var r = canvas.getBoundingClientRect();
+  function getXY(e) {
+    var r   = drawCanvas.getBoundingClientRect();
     var src = e.touches ? e.touches[0] : e;
     return { x: src.clientX - r.left, y: src.clientY - r.top };
   }
 
-  canvas.addEventListener('pointerdown', function(e){
-    drawing = true;
+  drawCanvas.addEventListener('pointerdown', function(e) {
+    drawing       = true;
     currentStroke = [getXY(e)];
     e.preventDefault();
     var hint = document.getElementById('draw-hint');
     if (hint) hint.style.opacity = '0';
   });
-  canvas.addEventListener('pointermove', function(e){
+
+  drawCanvas.addEventListener('pointermove', function(e) {
     if (!drawing) return;
     currentStroke.push(getXY(e));
     redrawAll();
     e.preventDefault();
   });
-  canvas.addEventListener('pointerup', function(e){
+
+  drawCanvas.addEventListener('pointerup', function(e) {
     if (!drawing) return;
     drawing = false;
     if (currentStroke.length > 1) strokes.push(currentStroke.slice());
     currentStroke = [];
-    scheduleRecognize();
-  });
-  canvas.addEventListener('pointerleave', function(e){
-    if (!drawing) return;
-    drawing = false;
-    if (currentStroke.length > 1) strokes.push(currentStroke.slice());
-    currentStroke = [];
-    scheduleRecognize();
+    scheduleRecog();
   });
 
-  function scheduleRecognize(){
-    if (recognizeTimer) clearTimeout(recognizeTimer);
-    recognizeTimer = setTimeout(function(){
-      var allPts = [];
-      strokes.forEach(function(s){ allPts = allPts.concat(s); });
-      if (allPts.length >= 6) showResults(recognize(allPts));
-    }, 300);
+  drawCanvas.addEventListener('pointerleave', function(e) {
+    if (!drawing) return;
+    drawing = false;
+    if (currentStroke.length > 1) strokes.push(currentStroke.slice());
+    currentStroke = [];
+    scheduleRecog();
+  });
+
+  function scheduleRecog() {
+    clearTimeout(recogTimer);
+    recogTimer = setTimeout(runRecog, 350);
   }
 
-  /* ── Mostrar resultados — versión mejorada v10 ── */
-  function showResults(matches){
+  function runRecog() {
     var resultEl = document.getElementById('draw-result');
     var chipsEl  = document.getElementById('draw-chips');
     var toastEl  = document.getElementById('draw-toast');
-    if (!matches || !matches.length){ resultEl.style.display='none'; return; }
+    var query    = getQueryVector();
+    if (!query) return;
 
+    resultEl.style.display = 'flex';
+
+    if (!DB_READY) {
+      chipsEl.innerHTML =
+        '<div style="font-size:12px;color:var(--t3);text-align:center;padding:10px 0;">' +
+        '⏳ Cargando glifos\u2026 espera un momento</div>';
+      var wait = setInterval(function() {
+        if (!DB_READY) return;
+        clearInterval(wait);
+        var q2 = getQueryVector();
+        if (q2) showResults(findMatches(q2), chipsEl, toastEl, resultEl);
+      }, 250);
+      return;
+    }
+
+    showResults(findMatches(query), chipsEl, toastEl, resultEl);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     MOSTRAR RESULTADOS
+  ═══════════════════════════════════════════════════════════════════ */
+  function showResults(matches, chipsEl, toastEl, resultEl) {
     chipsEl.innerHTML = '';
-    matches.forEach(function(m, mi){
-      var pct = Math.round(m.score * 100);
-      var barColor = pct > 70 ? 'var(--green)' : pct > 45 ? 'var(--blue)' : 'var(--orange)';
-      var label = document.createElement('div');
-      label.style.cssText = 'width:100%;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin:' + (mi===0?'0':'16px') + ' 0 6px;font-family:var(--sf);display:flex;align-items:center;justify-content:space-between;';
-      var prefix = mi === 0 ? '\u2736 MEJOR COINCIDENCIA' : (mi === 1 ? '\u25E6 Alternativa' : '\u00B7 Otra opci\u00F3n');
-      label.innerHTML = '<span style="color:' + (mi===0?'var(--blue)':'var(--t3)') + '">' + prefix + ' \u2014 ' + m.name + '</span>' +
-        '<span style="font-size:11px;color:' + barColor + ';font-weight:800;">' + pct + '%</span>';
-      chipsEl.appendChild(label);
 
-      /* Barra de confianza animada para cada coincidencia */
-      var bar = document.createElement('div');
-      bar.style.cssText = 'width:100%;height:' + (mi===0?'4':'2') + 'px;background:var(--bg3);border-radius:2px;margin-bottom:' + (mi===0?'10':'8') + 'px;overflow:hidden;';
-      var fill = document.createElement('div');
-      fill.style.cssText = 'height:100%;border-radius:2px;background:' + barColor + ';width:0%;transition:width .5s cubic-bezier(.4,0,.2,1);';
-      bar.appendChild(fill);
-      chipsEl.appendChild(bar);
-      (function(f, p){ setTimeout(function(){ f.style.width = p + '%'; }, 30 + mi * 80); })(fill, pct);
+    if (!matches.length) {
+      chipsEl.innerHTML =
+        '<div style="font-size:12px;color:var(--t3);text-align:center;padding:10px 0;">' +
+        'Sin coincidencias \u2014 intenta dibujar m\u00e1s despacio o con m\u00e1s detalle</div>';
+      resultEl.style.display = 'flex';
+      return;
+    }
 
-      /* Emoji grande */
-      var emojiChip = document.createElement('button');
-      emojiChip.className = 'draw-match-chip';
-      emojiChip.title = 'Copiar: ' + m.emoji;
-      emojiChip.style.cssText = 'font-size:' + (mi===0?'30':'22') + 'px;padding:' + (mi===0?'10px 20px':'7px 14px') + ';';
-      emojiChip.textContent = m.emoji;
-      emojiChip.addEventListener('click', (function(e){ return function(){ doCopy(e, toastEl); }; })(m.emoji));
-      chipsEl.appendChild(emojiChip);
+    var top  = matches[0];
+    var topP = Math.round(top.score * 100);
 
-      /* Símbolos — todos para primera coincidencia, 8 para el resto */
-      var maxSyms = mi === 0 ? m.syms.length : Math.min(m.syms.length, 8);
-      var symWrap = document.createElement('div');
-      symWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:8px;width:100%;box-sizing:border-box;';
-      m.syms.slice(0, maxSyms).forEach(function(s){
-        var sc = document.createElement('button');
-        sc.className = 'draw-match-chip';
-        sc.title = 'Copiar: ' + s;
-        sc.style.cssText = 'font-size:' + (mi===0?'18':'16') + 'px;padding:5px 10px;min-width:38px;justify-content:center;flex-shrink:0;';
-        sc.textContent = s;
-        sc.addEventListener('click', (function(sym){ return function(){ doCopy(sym, toastEl); }; })(s));
-        symWrap.appendChild(sc);
+    /* Mejor coincidencia — cabecera */
+    var header = document.createElement('div');
+    header.style.cssText =
+      'width:100%;display:flex;align-items:center;justify-content:space-between;' +
+      'font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;' +
+      'letter-spacing:.08em;margin-bottom:6px;font-family:var(--sf);';
+    header.innerHTML =
+      '<span>\u2736 Mejor coincidencia</span>' +
+      '<span style="font-size:11px;font-weight:800;">' + topP + '% similitud visual</span>';
+    chipsEl.appendChild(header);
+
+    /* Barra de confianza animada */
+    var barWrap = document.createElement('div');
+    barWrap.style.cssText =
+      'width:100%;height:5px;background:var(--bg3,rgba(0,0,0,.10));' +
+      'border-radius:3px;margin-bottom:12px;overflow:hidden;';
+    var barFill = document.createElement('div');
+    var barColor = topP > 65 ? 'var(--blue)' : topP > 35 ? '#FF9500' : '#FF3B30';
+    barFill.style.cssText =
+      'height:100%;border-radius:3px;background:' + barColor + ';' +
+      'width:0%;transition:width .55s cubic-bezier(.4,0,.2,1);';
+    barWrap.appendChild(barFill);
+    chipsEl.appendChild(barWrap);
+    setTimeout(function() { barFill.style.width = Math.min(topP, 100) + '%'; }, 30);
+
+    /* Chip grande del resultado principal */
+    var topChip = document.createElement('button');
+    topChip.className = 'draw-match-chip';
+    topChip.title =
+      'U+' + top.char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0') +
+      ' \u00b7 Toca para copiar';
+    topChip.style.cssText =
+      'font-size:40px;padding:14px 30px;min-width:90px;justify-content:center;';
+    topChip.textContent = top.char;
+    topChip.addEventListener('click', function() { doCopy(top.char, toastEl); });
+    chipsEl.appendChild(topChip);
+
+    /* Grid de alternativas */
+    if (matches.length > 1) {
+      var altHdr = document.createElement('div');
+      altHdr.style.cssText =
+        'width:100%;font-size:10px;font-weight:700;color:var(--t3);' +
+        'text-transform:uppercase;letter-spacing:.08em;margin:16px 0 8px;font-family:var(--sf);';
+      altHdr.textContent = (matches.length - 1) + ' alternativas visuales similares';
+      chipsEl.appendChild(altHdr);
+
+      var grid = document.createElement('div');
+      grid.style.cssText =
+        'display:flex;flex-wrap:wrap;gap:5px;justify-content:center;' +
+        'width:100%;box-sizing:border-box;';
+
+      matches.slice(1).forEach(function(m) {
+        var pct = Math.round(m.score * 100);
+        var btn = document.createElement('button');
+        btn.className = 'draw-match-chip';
+        btn.title =
+          m.char + '  U+' +
+          m.char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0') +
+          '  (' + pct + '%)  \u00b7 Copiar';
+        btn.style.cssText =
+          'font-size:20px;padding:6px 10px;min-width:40px;' +
+          'justify-content:center;flex-shrink:0;';
+        btn.textContent = m.char;
+        btn.addEventListener('click', (function(ch) {
+          return function() { doCopy(ch, toastEl); };
+        })(m.char));
+        grid.appendChild(btn);
       });
-      chipsEl.appendChild(symWrap);
-    });
+      chipsEl.appendChild(grid);
+    }
 
     resultEl.style.display = 'flex';
   }
 
-  function doCopy(text, toastEl){
-    (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).catch(function(){
+  function doCopy(text, toastEl) {
+    var p = navigator.clipboard
+      ? navigator.clipboard.writeText(text)
+      : Promise.reject();
+    p.catch(function() {
       var ta = document.createElement('textarea');
-      ta.value = text; ta.style.cssText='position:fixed;opacity:0;';
-      document.body.appendChild(ta); ta.select();
-      document.execCommand('copy'); document.body.removeChild(ta);
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;opacity:0;top:-9999px;';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
     });
-    if (toastEl){
-      toastEl.textContent = '¡Copiado! ' + text;
+    if (toastEl) {
+      toastEl.textContent = '\u00a1Copiado! ' + text;
       toastEl.classList.add('show');
-      setTimeout(function(){ toastEl.classList.remove('show'); }, 1800);
+      setTimeout(function() { toastEl.classList.remove('show'); }, 1800);
     }
   }
 
-  /* ── Borrar ── */
-  document.getElementById('draw-clear-btn').addEventListener('click', function(){
-    strokes = []; currentStroke = [];
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    document.getElementById('draw-result').style.display = 'none';
-    var hint = document.getElementById('draw-hint');
-    if (hint) hint.style.opacity = '.5';
-    if (recognizeTimer) clearTimeout(recognizeTimer);
-  });
+  /* ── Botón Borrar ── */
+  var clearBtn = document.getElementById('draw-clear-btn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function() {
+      strokes = []; currentStroke = [];
+      drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+      document.getElementById('draw-result').style.display = 'none';
+      var hint = document.getElementById('draw-hint');
+      if (hint) hint.style.opacity = '.5';
+      clearTimeout(recogTimer);
+    });
+  }
+
+  /* ── Actualizar indicador de estado de la DB ── */
+  function updateStatus(pct, count) {
+    var el = document.getElementById('draw-db-status');
+    if (!el) return;
+    if (pct < 1) {
+      el.textContent = 'Cargando ' + count + ' glifos\u2026 ' + Math.round(pct * 100) + '%';
+      el.style.display = 'inline';
+      el.style.color = 'var(--t4)';
+    } else {
+      el.textContent = '\u2713 ' + count.toLocaleString('es') + ' glifos listos';
+      el.style.color = 'var(--green,#34c759)';
+      var countEl = document.getElementById('draw-db-count');
+      if (countEl) countEl.textContent = count.toLocaleString('es');
+      setTimeout(function() { el.style.display = 'none'; }, 2500);
+    }
+  }
+
+  /* ── Iniciar construcción de la DB ── */
+  function startDB() {
+    buildDB(updateStatus, function(n) { updateStatus(1, n); });
+  }
+
+  /* Iniciar construcción de la DB en cuanto el DOM esté listo */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(startDB, 300); });
+  } else {
+    setTimeout(startDB, 300);
+  }
+
+  /* También iniciar si el usuario abre la sección antes de que idle dispare */
+  var drawToggle = document.getElementById('draw-toggle');
+  if (drawToggle) {
+    drawToggle.addEventListener('click', function() {
+      if (!DB_BUILDING && !DB_READY) startDB();
+      /* El canvas estaba en display:none — recalcular tamaño al abrir */
+      setTimeout(resize, 30);
+    });
+  }
 
   /* ── Init ── */
   window.addEventListener('resize', resize);
   resize();
-  new MutationObserver(function(){ redrawAll(); })
-    .observe(document.body, { attributes:true, attributeFilter:['class'] });
+  new MutationObserver(function() { redrawAll(); })
+    .observe(document.body, { attributes: true, attributeFilter: ['class'] });
 })();
 
 /* ──────────────── SÍMBOLOS ──────────────── */
