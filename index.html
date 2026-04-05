@@ -629,6 +629,12 @@ body.dark .bio-add-line { border-color:rgba(255,255,255,.15); }
   </div>
 </header>
 
+<!-- T10 — Theme picker -->
+<div class="theme-picker-row" role="group" aria-label="Tema visual">
+  <span class="theme-picker-label">Tema</span>
+  <div id="theme-picker"></div>
+</div>
+
 <!-- AD TOP -->
 <div class="page" style="padding-top:14px;padding-bottom:0">
   <div class="ad-slot" role="complementary" aria-label="Publicidad"><!-- AdSense aquí --></div>
@@ -2348,5 +2354,23 @@ document.addEventListener('keydown', function(e){
 })();
 </script>
 
+
+<!-- T13 — Modal vista previa en contexto -->
+<div id="ctx-modal" role="dialog" aria-modal="true" aria-label="Vista previa en plataforma">
+  <div class="ctx-sheet">
+    <div class="ctx-header">
+      <div class="ctx-header-title">Vista en plataforma — <span id="ctx-style-name" class="ctx-style-badge"></span></div>
+      <button class="ctx-copy-btn" aria-label="Copiar este estilo">Copiar</button>
+      <button class="ctx-close" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="ctx-tabs" role="tablist" aria-label="Plataformas">
+      <button class="ctx-tab" data-platform="discord" role="tab">💬 Discord</button>
+      <button class="ctx-tab" data-platform="instagram" role="tab">📸 Instagram</button>
+      <button class="ctx-tab" data-platform="tiktok" role="tab">🎵 TikTok</button>
+      <button class="ctx-tab" data-platform="twitter" role="tab">🐦 Twitter/X</button>
+    </div>
+    <div class="ctx-body" id="ctx-body"></div>
+  </div>
+</div>
 </body>
 </html>
