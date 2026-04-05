@@ -62,33 +62,71 @@ body {
 .nav-bar {
   position:sticky; top:0; z-index:200;
   padding:max(env(safe-area-inset-top),0px) 0 0;
-  background:rgba(245,245,247,.90);
-  backdrop-filter:blur(28px) saturate(1.8);
-  -webkit-backdrop-filter:blur(28px) saturate(1.8);
-  border-bottom:1px solid rgba(0,0,0,.08);
+  background:rgba(255,255,255,.82);
+  backdrop-filter:blur(32px) saturate(2);
+  -webkit-backdrop-filter:blur(32px) saturate(2);
+  border-bottom:1px solid rgba(0,0,0,.07);
   will-change:opacity; transform:translateZ(0);
+  box-shadow:0 1px 0 rgba(255,255,255,.9) inset, 0 2px 16px rgba(0,0,0,.06);
 }
-.nav-inner { max-width:var(--max-w); margin:0 auto; padding:10px var(--px); display:flex; flex-direction:column; align-items:center; gap:6px; }
-.nav-top-row { display:flex; align-items:center; gap:14px; width:100%; justify-content:center; }
+.nav-inner {
+  max-width:var(--max-w); margin:0 auto;
+  padding:0 var(--px);
+  display:flex; align-items:center; justify-content:space-between;
+  height:56px; gap:12px;
+}
+
+/* ── Logo / Brand ── */
+.app-title {
+  font-size:22px; font-weight:900; letter-spacing:-1.2px; line-height:1;
+  color:transparent;
+  background:linear-gradient(125deg,#007AFF 0%,#AF52DE 55%,#FF2D55 100%);
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  flex-shrink:0;
+}
+
+/* ── Status pill ── */
+.di-pill {
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(52,199,89,.10);
+  border:1px solid rgba(52,199,89,.25);
+  border-radius:var(--pill); padding:4px 11px;
+  animation:pillDrop .55s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes pillDrop { from{transform:translateY(-20px) scale(.88);opacity:0} to{transform:translateY(0) scale(1);opacity:1} }
+.di-dot {
+  width:6px; height:6px; border-radius:50%;
+  background:var(--green); box-shadow:0 0 6px var(--green);
+  animation:dotPulse 2.8s ease-in-out infinite; flex-shrink:0;
+}
+@keyframes dotPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.35;transform:scale(.6)} }
+.di-label { font-size:10px; font-weight:700; color:var(--green); letter-spacing:.3px; text-transform:uppercase; }
+
+/* ── Nav right side ── */
+.nav-right { display:flex; align-items:center; gap:6px; }
 
 /* ── Quick nav links ── */
-.nav-quick-links { display:flex; gap:8px; align-items:center; }
+.nav-quick-links { display:flex; gap:6px; align-items:center; }
 .nav-quick-link {
-  font-size:12px; font-weight:600; color:var(--t3);
-  text-decoration:none; padding:4px 12px; border-radius:var(--pill);
+  font-size:12px; font-weight:600; color:var(--t2);
+  text-decoration:none; padding:6px 13px; border-radius:var(--pill);
   background:var(--bg2); border:1px solid rgba(0,0,0,.07);
-  transition:background .15s, color .15s, border-color .15s;
-  white-space:nowrap;
+  transition:background .15s, color .15s, border-color .15s, transform .12s;
+  white-space:nowrap; letter-spacing:-.1px;
 }
-.nav-quick-link:hover { background:var(--bg3); color:var(--blue); border-color:rgba(10,132,255,.25); }
-body.dark .nav-quick-link { border-color:rgba(255,255,255,.08); }
-body.dark .nav-quick-link:hover { background:var(--bg3); border-color:rgba(10,132,255,.35); }
-.di-pill { display:inline-flex; align-items:center; gap:7px; background:var(--bg2); border-radius:var(--pill); padding:5px 14px; box-shadow:0 0 0 1px rgba(0,0,0,.07),0 2px 10px rgba(0,0,0,.07); animation:pillDrop .55s cubic-bezier(.34,1.56,.64,1) both; }
-@keyframes pillDrop { from{transform:translateY(-20px) scale(.88);opacity:0} to{transform:translateY(0) scale(1);opacity:1} }
-.di-dot { width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:dotPulse 2.8s ease-in-out infinite;flex-shrink:0; }
-@keyframes dotPulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.65)} }
-.di-label { font-size:10px;font-weight:600;color:var(--t3);letter-spacing:.2px; }
-.app-title { font-size:clamp(24px,5.5vw,40px);font-weight:900;letter-spacing:-2px;line-height:1;color:transparent;background:linear-gradient(125deg,#007AFF 0%,#AF52DE 52%,#FF2D55 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent; }
+.nav-quick-link:hover { background:var(--blue-lo); color:var(--blue); border-color:rgba(10,132,255,.25); transform:translateY(-1px); }
+.nav-quick-link:active { transform:translateY(0) scale(.97); }
+body.dark .nav-quick-link { background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.09); color:var(--t2); }
+body.dark .nav-quick-link:hover { background:var(--blue-lo); border-color:rgba(10,132,255,.35); color:var(--blue); }
+
+/* dark mode nav */
+body.dark .nav-bar {
+  background:rgba(18,18,20,.88);
+  border-bottom-color:rgba(255,255,255,.07);
+  box-shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 2px 20px rgba(0,0,0,.35);
+}
+body.dark .di-pill { background:rgba(52,199,89,.12); border-color:rgba(52,199,89,.3); }
+
 
 /* ═══════════════════════ MAIN LAYOUT ═══════════════════════ */
 .page { position:relative;z-index:1;max-width:var(--max-w);margin:0 auto;padding:24px var(--px) max(env(safe-area-inset-bottom),40px); }
@@ -300,8 +338,8 @@ body.dark .nav-quick-link:hover { background:var(--bg3); border-color:rgba(10,13
   .card-actions { align-self:flex-end; }
 }
 @media (max-width:360px) {
-  .nav-top-row { flex-direction:column;gap:8px;align-items:center; }
-  .di-label { font-size:9px; }
+  .di-label { display:none; }
+  .nav-inner { gap:8px; }
 }
 
 /* ═══════════════════════ DARK MODE ═══════════════════════ */
@@ -336,8 +374,7 @@ body.dark {
   --glass-border-dark:  rgba(255,255,255,.05);
 }
 body.dark { background: var(--bg); color: var(--t1); }
-body.dark .nav-bar { background: rgba(0,0,0,.80); border-bottom-color: rgba(255,255,255,.07); }
-body.dark .di-pill { background: #1c1c1e; box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 4px 20px rgba(0,0,0,.5); }
+body.dark .di-pill { background: rgba(52,199,89,.12); border-color: rgba(52,199,89,.28); box-shadow:none; }
 body.dark .card { box-shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 3px 14px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.04); }
 body.dark .card:hover { box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 8px 28px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06); }
 body.dark .card.faved { box-shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 2px 10px rgba(0,0,0,.4), 0 0 0 2px rgba(255,214,10,.3); }
