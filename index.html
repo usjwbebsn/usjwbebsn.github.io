@@ -342,8 +342,65 @@ body.dark .search-clear { background:rgba(255,255,255,.22); }
 .bio-section.open .section-body { display:block; }
 .symbols-section.open .section-arrow,
 .decorator-section.open .section-arrow,
-.bio-section.open .section-arrow { transform:rotate(90deg); }
+.bio-section.open .section-arrow,
+.draw-section.open .section-arrow { transform:rotate(90deg); }
+.symbols-section.open .section-body,
+.decorator-section.open .section-body,
+.bio-section.open .section-body,
+.draw-section.open .section-body { display:block; }
 .section-desc { font-size:12px; color:var(--t3); margin-bottom:12px; line-height:1.5; }
+
+/* ── DIBUJADOR DE FORMAS ── */
+.draw-section {
+  background:var(--bg1); border-radius:var(--r3); border:1px solid rgba(0,0,0,.07);
+  box-shadow:0 1px 4px rgba(0,0,0,.04); margin-bottom:12px; overflow:hidden;
+  animation:fadeUp .4s .18s ease both;
+}
+#draw-canvas {
+  border-radius:12px; background:#f9f9fb; border:1.5px solid rgba(0,0,0,.1);
+  touch-action:none; cursor:crosshair; display:block; max-width:100%;
+}
+body.dark #draw-canvas { background:#1c1c1e; border-color:rgba(255,255,255,.12); }
+.draw-controls { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; align-items:center; margin-top:10px; }
+.draw-btn {
+  background:var(--bg2); border:1px solid rgba(0,0,0,.09); border-radius:8px;
+  padding:7px 14px; font-size:12px; font-weight:700; font-family:var(--sf);
+  color:var(--t2); cursor:pointer;
+  transition:all .18s cubic-bezier(.34,1.56,.64,1);
+  -webkit-tap-highlight-color:transparent;
+}
+.draw-btn:hover { background:var(--blue-lo); border-color:rgba(0,122,255,.3); color:var(--blue); transform:translateY(-1px); }
+.draw-btn:active { transform:scale(.91); }
+.draw-btn.danger:hover { background:rgba(255,59,48,.10); border-color:rgba(255,59,48,.3); color:#ff3b30; }
+.draw-result {
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  padding:12px 14px 12px; width:100%; box-sizing:border-box;
+  max-height:320px; overflow-y:auto; -webkit-overflow-scrolling:touch;
+}
+.draw-result-label { font-size:11px; color:var(--t4); font-weight:600; text-transform:uppercase; letter-spacing:.07em; }
+.draw-result-row {
+  display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:center;
+  width:100%; box-sizing:border-box;
+}
+.draw-match-chip {
+  display:inline-flex; align-items:center; gap:5px;
+  background:var(--bg2); border:1.5px solid rgba(0,0,0,.08); border-radius:var(--pill);
+  padding:5px 12px; font-size:15px; font-weight:500; color:var(--t2);
+  cursor:pointer; transition:all .18s cubic-bezier(.34,1.56,.64,1);
+  -webkit-tap-highlight-color:transparent; box-sizing:border-box;
+  max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.draw-match-chip:hover { background:var(--blue-lo); border-color:rgba(0,122,255,.3); color:var(--blue); transform:scale(1.05); }
+.draw-match-chip:active { transform:scale(.91); }
+.draw-match-chip span.chip-name { font-size:11px; color:var(--t4); font-weight:600; }
+.draw-toast {
+  font-size:12px; color:var(--blue); font-weight:600; opacity:0;
+  transition:opacity .25s; text-align:center; min-height:18px;
+  position:sticky; bottom:0; background:var(--bg1); padding:4px 0;
+  width:100%;
+}
+.draw-toast.show { opacity:1; }
+#draw-chips { display:flex; flex-direction:column; align-items:center; gap:0; width:100%; box-sizing:border-box; }
 
 /* ── SÍMBOLOS ── */
 .sym-cats { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
@@ -502,7 +559,7 @@ body.dark .bio-add-line { border-color:rgba(255,255,255,.15); }
     </div>
     <nav class="nav-quick-links" aria-label="Navegación rápida">
       <a href="caja.html" class="nav-quick-link">📦 Caja</a>
-      <a href="simbolos.html" class="nav-quick-link">∞ Símbolos</a>
+      <a href="caja.html" class="nav-quick-link">∞ Símbolos</a>
     </nav>
   </div>
 </header>
@@ -802,6 +859,28 @@ body.dark .bio-add-line { border-color:rgba(255,255,255,.15); }
     </div>
   </section>
 
+  <!-- ── DIBUJADOR DE FORMAS ── -->
+  <section class="draw-section" id="draw-section" aria-label="Dibujador de formas">
+    <div class="section-header" id="draw-toggle" role="button" tabindex="0" aria-expanded="false" aria-controls="draw-body">
+      <span class="section-header-left"><span aria-hidden="true">✏️</span> Dibuja una forma</span>
+      <span class="section-arrow">›</span>
+    </div>
+    <div class="section-body" id="draw-body">
+      <p class="section-desc">Dibuja con el dedo o el ratón y te diremos qué símbolo o emoji se parece más. ¡Toca el resultado para copiarlo!</p>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0;width:100%;box-sizing:border-box;">
+        <canvas id="draw-canvas" width="280" height="200" style="max-width:100%;"></canvas>
+        <div class="draw-controls" style="justify-content:space-between;width:100%;padding:0 2px;">
+          <span style="font-size:11px;color:var(--t4);font-weight:500;">Reconocimiento automático ✦</span>
+          <button class="draw-btn danger" id="draw-clear-btn">🗑 Borrar</button>
+        </div>
+        <div class="draw-result" id="draw-result" style="display:none;border-top:1px solid rgba(0,0,0,.06);margin-top:10px;padding-top:10px;width:100%;box-sizing:border-box;">
+          <div id="draw-chips"></div>
+          <div class="draw-toast" id="draw-toast"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="seo-block" aria-label="Información sobre DIUSF">
     <h2>¿Qué es DIUSF y cómo funciona?</h2>
     <p>DIUSF convierte tu texto a caracteres Unicode reales —no fuentes tipográficas— por lo que los estilos generados (negrita matemática, cursiva, fraktur, texto circulado y muchos más) funcionan en cualquier plataforma: Discord, Instagram, TikTok, Twitter/X, Steam, WhatsApp, Telegram y LinkedIn, sin instalar nada ni crear una cuenta.</p>
@@ -820,7 +899,7 @@ body.dark .bio-add-line { border-color:rgba(255,255,255,.15); }
   <div class="ad-slot" style="margin-top:16px" role="complementary" aria-label="Publicidad"><!-- AdSense aquí --></div>
 
   <footer class="footer">
-    <p>DIUSF · <span id="footer-count">0</span> estilos Unicode · Gratis para siempre · <a href="caja.html">📦 Caja</a> · <a href="simbolos.html">∞ Símbolos</a> · <a href="privacy.html">Privacidad</a> · <a href="terms.html">Términos</a></p>
+    <p>DIUSF · <span id="footer-count">0</span> estilos Unicode · Gratis para siempre · <a href="caja.html">📦 Caja</a> · <a href="caja.html">∞ Símbolos</a> · <a href="privacy.html">Privacidad</a> · <a href="terms.html">Términos</a></p>
     <p style="margin-top:6px;"><a href="https://tiktok.com/@neravdz" target="_blank" rel="noopener">🎵 TikTok @neravdz</a> · v6</p>
   </footer>
 
@@ -1305,8 +1384,467 @@ document.addEventListener('keydown', function(e){
   initCollapsible('symbols-toggle',   'symbols-section');
   initCollapsible('decorator-toggle', 'decorator-section');
   initCollapsible('bio-toggle',       'bio-section');
+  initCollapsible('draw-toggle',      'draw-section');
 })();
 
+/* ──────────────── DIBUJADOR DE FORMAS ──────────────── */
+(function(){
+  var canvas = document.getElementById('draw-canvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var drawing = false;
+  var strokes = []; // array of arrays of points (multi-stroke)
+  var currentStroke = [];
+  var recognizeTimer = null;
+
+  /* ── Colores ── */
+  function getColor(){ return document.body.classList.contains('dark') ? '#e5e5ea' : '#1c1c1e'; }
+
+  /* ── Resize ── */
+  function resize(){
+    var parent = canvas.parentElement;
+    var w = Math.min(parent ? parent.offsetWidth - 24 : 300, 340);
+    var h = Math.round(w * 0.65);
+    // save strokes before resize
+    var saved = strokes.slice();
+    canvas.width = w; canvas.height = h;
+    strokes = saved;
+    redrawAll();
+  }
+
+  function redrawAll(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    var allStrokes = strokes.concat(currentStroke.length ? [currentStroke] : []);
+    ctx.strokeStyle = getColor();
+    ctx.lineWidth = 3.5;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    allStrokes.forEach(function(pts){
+      if (pts.length < 2) return;
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.stroke();
+    });
+  }
+
+  /* ── Input ── */
+  function getXY(e){
+    var r = canvas.getBoundingClientRect();
+    var src = e.touches ? e.touches[0] : e;
+    return { x: src.clientX - r.left, y: src.clientY - r.top };
+  }
+
+  canvas.addEventListener('pointerdown', function(e){
+    drawing = true; currentStroke = [getXY(e)]; e.preventDefault();
+  });
+  canvas.addEventListener('pointermove', function(e){
+    if (!drawing) return; currentStroke.push(getXY(e)); redrawAll(); e.preventDefault();
+  });
+  canvas.addEventListener('pointerup', function(e){
+    if (!drawing) return; drawing = false;
+    if (currentStroke.length > 1) strokes.push(currentStroke);
+    currentStroke = [];
+    scheduleRecognize();
+  });
+  canvas.addEventListener('pointerleave', function(e){
+    if (!drawing) return; drawing = false;
+    if (currentStroke.length > 1) strokes.push(currentStroke);
+    currentStroke = [];
+    scheduleRecognize();
+  });
+
+  /* ── Auto-recognize with short delay ── */
+  function scheduleRecognize(){
+    if (recognizeTimer) clearTimeout(recognizeTimer);
+    recognizeTimer = setTimeout(function(){
+      var allPts = [];
+      strokes.forEach(function(s){ allPts = allPts.concat(s); });
+      if (allPts.length >= 8) showResults(recognize(allPts));
+    }, 350);
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     RECOGNITION ENGINE — complete rewrite
+     ═══════════════════════════════════════════════════════ */
+
+  /* Resample to N evenly-spaced points */
+  function resample(pts, n){
+    if (pts.length < 2) return pts;
+    var totalLen = 0;
+    var lens = [0];
+    for (var i = 1; i < pts.length; i++){
+      var d = Math.hypot(pts[i].x-pts[i-1].x, pts[i].y-pts[i-1].y);
+      totalLen += d; lens.push(totalLen);
+    }
+    var interval = totalLen / (n - 1);
+    var result = [pts[0]];
+    var j = 1;
+    for (var k = 1; k < n; k++){
+      var target = k * interval;
+      while (j < pts.length - 1 && lens[j] < target) j++;
+      var t = (target - lens[j-1]) / (lens[j] - lens[j-1] || 1);
+      result.push({
+        x: pts[j-1].x + t * (pts[j].x - pts[j-1].x),
+        y: pts[j-1].y + t * (pts[j].y - pts[j-1].y)
+      });
+    }
+    return result;
+  }
+
+  /* Normalize to unit square centered at centroid */
+  function normalizeToUnit(pts){
+    var cx = 0, cy = 0;
+    pts.forEach(function(p){ cx += p.x; cy += p.y; });
+    cx /= pts.length; cy /= pts.length;
+    var maxD = 0;
+    pts.forEach(function(p){ maxD = Math.max(maxD, Math.hypot(p.x-cx, p.y-cy)); });
+    if (maxD === 0) maxD = 1;
+    return pts.map(function(p){ return { x:(p.x-cx)/maxD, y:(p.y-cy)/maxD }; });
+  }
+
+  /* Rotate to indicative angle */
+  function rotateToZero(pts){
+    var cx = 0, cy = 0;
+    pts.forEach(function(p){ cx+=p.x; cy+=p.y; });
+    cx/=pts.length; cy/=pts.length;
+    var ang = Math.atan2(pts[0].y-cy, pts[0].x-cx);
+    var cos = Math.cos(-ang), sin = Math.sin(-ang);
+    return pts.map(function(p){
+      var x=p.x-cx, y=p.y-cy;
+      return { x: x*cos - y*sin, y: x*sin + y*cos };
+    });
+  }
+
+  /* Feature extraction */
+  function extractFeatures(pts){
+    var xs = pts.map(function(p){ return p.x; });
+    var ys = pts.map(function(p){ return p.y; });
+    var minX=Math.min.apply(null,xs), maxX=Math.max.apply(null,xs);
+    var minY=Math.min.apply(null,ys), maxY=Math.max.apply(null,ys);
+    var W = maxX-minX || 1, H = maxY-minY || 1;
+    var cx = (minX+maxX)/2, cy = (minY+maxY)/2;
+    var aspect = W/H;
+
+    /* Closedness */
+    var dx0 = pts[0].x-pts[pts.length-1].x, dy0 = pts[0].y-pts[pts.length-1].y;
+    var closeDist = Math.hypot(dx0, dy0);
+    var diag = Math.hypot(W, H);
+    var closedness = 1 - Math.min(closeDist / (diag*0.6), 1); // 0=open, 1=closed
+
+    /* Radii stats */
+    var radii = pts.map(function(p){ return Math.hypot(p.x-cx, p.y-cy); });
+    var meanR = radii.reduce(function(a,b){return a+b;},0)/radii.length;
+    var varR  = radii.reduce(function(a,r){return a+(r-meanR)*(r-meanR);},0)/radii.length;
+    var cvR   = Math.sqrt(varR)/(meanR||1); // coefficient of variation — 0=circle, high=jagged
+
+    /* Winding number */
+    var winding = 0;
+    for (var i=1; i<pts.length-1; i++){
+      var a1 = Math.atan2(pts[i].y-pts[i-1].y, pts[i].x-pts[i-1].x);
+      var a2 = Math.atan2(pts[i+1].y-pts[i].y, pts[i+1].x-pts[i].x);
+      var da = a2-a1;
+      while(da>Math.PI) da-=2*Math.PI;
+      while(da<-Math.PI) da+=2*Math.PI;
+      winding += da;
+    }
+    var windingTurns = Math.abs(winding)/(2*Math.PI);
+
+    /* Sharp corners — count direction changes > threshold */
+    var corners = 0;
+    var SMOOTH = 5; // smoothing window
+    for (var i=SMOOTH; i<pts.length-SMOOTH; i++){
+      var dx1=pts[i].x-pts[i-SMOOTH].x, dy1=pts[i].y-pts[i-SMOOTH].y;
+      var dx2=pts[i+SMOOTH].x-pts[i].x, dy2=pts[i+SMOOTH].y-pts[i].y;
+      if (Math.hypot(dx1,dy1)<2 || Math.hypot(dx2,dy2)<2) continue;
+      var ang = Math.atan2(dy1,dx1)-Math.atan2(dy2,dx2);
+      while(ang>Math.PI) ang-=2*Math.PI;
+      while(ang<-Math.PI) ang+=2*Math.PI;
+      if (Math.abs(ang)>0.8) corners++;
+    }
+    // Deduplicate close corners
+    var cornerDensity = corners / (pts.length || 1);
+
+    /* Convexity: ratio of bbox area to bounding hull area approx */
+    var bboxArea = W*H;
+    var pathLen = 0;
+    for (var i=1;i<pts.length;i++) pathLen+=Math.hypot(pts[i].x-pts[i-1].x, pts[i].y-pts[i-1].y);
+    var compactness = (4*Math.PI*(bboxArea)) / (pathLen*pathLen || 1); // ~1 for circle
+
+    /* Direction histogram (8 bins) for arrow/line detection */
+    var dirHist = new Array(8).fill(0);
+    for (var i=1;i<pts.length;i++){
+      var ang = Math.atan2(pts[i].y-pts[i-1].y, pts[i].x-pts[i-1].x);
+      var bin = Math.floor(((ang+Math.PI)/(2*Math.PI))*8) % 8;
+      dirHist[bin]++;
+    }
+    var maxDir = Math.max.apply(null, dirHist);
+    var dirDominance = maxDir / (pts.length || 1); // high = mostly one direction (arrow/line)
+
+    /* Vertical symmetry check */
+    var leftPts  = pts.filter(function(p){return p.x < cx;}).length;
+    var rightPts = pts.filter(function(p){return p.x >= cx;}).length;
+    var hSymmetry = 1 - Math.abs(leftPts-rightPts)/(pts.length||1);
+
+    /* Horizontal symmetry */
+    var topPts    = pts.filter(function(p){return p.y < cy;}).length;
+    var botPts    = pts.filter(function(p){return p.y >= cy;}).length;
+    var vSymmetry = 1 - Math.abs(topPts-botPts)/(pts.length||1);
+
+    /* Arc length in top half vs bottom half (for heart/luna distinction) */
+    var topLen=0, botLen=0;
+    for(var i=1;i<pts.length;i++){
+      var d=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
+      if(pts[i].y<cy) topLen+=d; else botLen+=d;
+    }
+    var topBotRatio = topLen/(botLen||1);
+
+    return {
+      aspect, closedness, cvR, windingTurns, corners, cornerDensity,
+      compactness, dirDominance, hSymmetry, vSymmetry, topBotRatio,
+      W, H, pathLen, meanR, bboxArea
+    };
+  }
+
+  /* ── Classifier ── */
+  function recognize(rawPts){
+    var pts = resample(rawPts, 128);
+    var f   = extractFeatures(pts);
+
+    /* Score each shape with a detailed model */
+    var scores = [];
+
+    /* CÍRCULO: closed, low cvR (smooth), winding ~1, symmetric */
+    scores.push({ idx:4, name:'círculo', s:
+      f.closedness * 0.30 +
+      Math.max(0, 0.30 - f.cvR * 1.5) +
+      Math.max(0, 0.25 - Math.abs(f.windingTurns-1)*0.5) +
+      f.hSymmetry * 0.075 +
+      f.vSymmetry * 0.075
+    });
+
+    /* CUADRADO/RECT: closed, 4 sharp corners (cornerDensity peak around 4), aspect flexible, cvR moderate */
+    var cornerScore4 = Math.max(0, 1 - Math.abs(f.corners - 4) * 0.18);
+    scores.push({ idx:8, name:'cuadrado', s:
+      f.closedness * 0.30 +
+      cornerScore4  * 0.40 +
+      Math.max(0, 0.15 - f.cvR * 0.5) +
+      (f.aspect > 0.4 && f.aspect < 2.5 ? 0.15 : 0)
+    });
+
+    /* TRIÁNGULO: closed, ~3 corners, aspect variable, cvR high */
+    var cornerScore3 = Math.max(0, 1 - Math.abs(f.corners - 3) * 0.25);
+    scores.push({ idx:6, name:'triángulo', s:
+      f.closedness * 0.28 +
+      cornerScore3  * 0.40 +
+      (f.cvR > 0.2 ? 0.12 : 0) +
+      (f.windingTurns > 0.5 && f.windingTurns < 1.3 ? 0.10 : 0) +
+      (f.vSymmetry < 0.6 ? 0.10 : 0) // triangles often asymmetric vertically
+    });
+
+    /* ESTRELLA: closed, many corners, cvR HIGH (spiky radii), winding ~1 */
+    scores.push({ idx:0, name:'estrella', s:
+      f.closedness * 0.20 +
+      Math.min(f.cvR * 0.8, 0.35) +
+      (f.corners >= 8 ? 0.25 : f.corners >= 5 ? 0.15 : 0) +
+      (f.windingTurns > 0.7 && f.windingTurns < 1.5 ? 0.10 : 0) +
+      f.hSymmetry * 0.05 + f.vSymmetry * 0.05
+    });
+
+    /* CORAZÓN: closed, cvR moderate, taller or equal aspect, top heavier arc,
+       bottom comes to point (vSymmetry low), hSymmetry high */
+    scores.push({ idx:2, name:'corazón', s:
+      f.closedness * 0.22 +
+      (f.cvR > 0.1 && f.cvR < 0.5 ? 0.15 : 0) +
+      (f.aspect < 1.2 ? 0.10 : 0) +
+      f.hSymmetry * 0.18 +
+      (f.topBotRatio > 1.2 ? 0.15 : 0) + // more arc on top
+      (f.vSymmetry < 0.75 ? 0.10 : 0) +   // asymmetric top/bottom
+      (f.corners >= 1 && f.corners <= 6 ? 0.10 : 0)
+    });
+
+    /* DIAMANTE/ROMBO: closed, ~4 corners, cvR moderate, aspect ~1, symmetric */
+    var cornerScore4d = Math.max(0, 1 - Math.abs(f.corners - 4) * 0.22);
+    scores.push({ idx:22, name:'diamante', s:
+      f.closedness * 0.25 +
+      cornerScore4d * 0.30 +
+      f.hSymmetry   * 0.15 +
+      f.vSymmetry   * 0.15 +
+      (f.cvR > 0.1 && f.cvR < 0.35 ? 0.10 : 0) +
+      (f.aspect > 0.5 && f.aspect < 2.0 ? 0.05 : 0)
+    });
+
+    /* LUNA: closed or open, cvR low-moderate, concave, few corners, NOT symmetric */
+    scores.push({ idx:12, name:'luna', s:
+      (f.closedness > 0.4 ? 0.15 : 0.05) +
+      (f.cvR > 0.05 && f.cvR < 0.3 ? 0.20 : 0) +
+      (f.corners <= 3 ? 0.20 : 0) +
+      (f.hSymmetry < 0.6 ? 0.20 : 0) + // moons are horizontally asymmetric
+      (f.windingTurns > 0.3 && f.windingTurns < 1.0 ? 0.15 : 0) +
+      (f.aspect > 0.5 && f.aspect < 2.0 ? 0.10 : 0)
+    });
+
+    /* FLECHA: open, directionally dominant, few corners */
+    scores.push({ idx:16, name:'flecha', s:
+      (1 - f.closedness) * 0.25 +
+      f.dirDominance    * 0.35 +
+      (f.corners <= 4   ? 0.20 : 0) +
+      (f.windingTurns < 0.5 ? 0.10 : 0) +
+      (f.aspect > 1.5 || f.aspect < 0.66 ? 0.10 : 0) // elongated
+    });
+
+    /* RAYO/ZIG-ZAG: open, few corners but sharp, directionally mixed, tall */
+    scores.push({ idx:10, name:'rayo', s:
+      (1 - f.closedness) * 0.20 +
+      (f.corners >= 2 && f.corners <= 6 ? 0.25 : 0) +
+      (f.dirDominance < 0.2 ? 0.15 : 0) + // mixed directions
+      (f.aspect < 0.9 ? 0.20 : 0) + // taller than wide
+      (f.cvR > 0.15 ? 0.10 : 0) +
+      (f.windingTurns < 0.6 ? 0.10 : 0)
+    });
+
+    /* INFINITO: closed, winding ~2, wide aspect */
+    scores.push({ idx:18, name:'infinito', s:
+      f.closedness * 0.20 +
+      Math.max(0, 0.35 - Math.abs(f.windingTurns-2)*0.4) +
+      (f.aspect > 1.4 ? 0.25 : 0) +
+      f.hSymmetry * 0.10 +
+      f.vSymmetry * 0.10
+    });
+
+    /* ESPIRAL: open (or loosely closed), winding > 1.5, increasing radii */
+    scores.push({ idx:20, name:'espiral', s:
+      (1-f.closedness) * 0.15 +
+      (f.windingTurns > 1.5 ? 0.40 : f.windingTurns > 1.0 ? 0.20 : 0) +
+      (f.cvR > 0.15 ? 0.20 : 0) +
+      (f.corners < 4 ? 0.15 : 0) +
+      (f.hSymmetry < 0.8 ? 0.10 : 0)
+    });
+
+    /* CRUZ: closed or open, corners ~4 in + shape, symmetric, aspect ~1 */
+    scores.push({ idx:14, name:'cruz', s:
+      (f.corners >= 4 && f.corners <= 8 ? 0.30 : 0) +
+      f.hSymmetry * 0.20 +
+      f.vSymmetry * 0.20 +
+      (f.aspect > 0.6 && f.aspect < 1.6 ? 0.15 : 0) +
+      (f.cvR > 0.1 ? 0.10 : 0) +
+      f.closedness * 0.05
+    });
+
+    /* FLOR: closed, many corners, cvR high AND winding ~1, symmetric */
+    scores.push({ idx:24, name:'flor', s:
+      f.closedness * 0.15 +
+      (f.corners >= 8 ? 0.30 : f.corners >= 5 ? 0.15 : 0) +
+      (f.windingTurns > 0.8 && f.windingTurns < 1.4 ? 0.15 : 0) +
+      f.hSymmetry * 0.15 +
+      f.vSymmetry * 0.15 +
+      Math.min(f.cvR, 0.1) * 1.0
+    });
+
+    /* SOL: closed, many corners, cvR high (rays), symmetric */
+    scores.push({ idx:26, name:'sol', s:
+      f.closedness * 0.15 +
+      (f.corners >= 10 ? 0.30 : f.corners >= 7 ? 0.20 : 0) +
+      Math.min(f.cvR * 1.2, 0.25) +
+      f.hSymmetry * 0.15 +
+      f.vSymmetry * 0.15
+    });
+
+    /* NOTA MUSICAL: open, tall aspect, few corners, NOT directionally dominant */
+    scores.push({ idx:28, name:'nota musical', s:
+      (1-f.closedness) * 0.25 +
+      (f.aspect < 0.8 ? 0.20 : 0) +
+      (f.corners >= 1 && f.corners <= 4 ? 0.20 : 0) +
+      (f.dirDominance < 0.15 ? 0.15 : 0) +
+      (f.windingTurns > 0.3 && f.windingTurns < 1.0 ? 0.10 : 0) +
+      (f.cvR > 0.1 && f.cvR < 0.5 ? 0.10 : 0)
+    });
+
+    /* MANO: open, tall, moderate corners, NOT directionally dominant */
+    scores.push({ idx:30, name:'mano', s:
+      (1-f.closedness) * 0.20 +
+      (f.aspect < 0.85 ? 0.20 : 0) +
+      (f.corners >= 3 && f.corners <= 10 ? 0.25 : 0) +
+      (f.dirDominance < 0.12 ? 0.15 : 0) +
+      (f.cvR > 0.1 ? 0.10 : 0) +
+      f.vSymmetry * 0.10
+    });
+
+    /* Sort and pick top 3 unique */
+    scores.sort(function(a,b){ return b.s - a.s; });
+    var seen = {}, result = [];
+    for (var i = 0; i < scores.length && result.length < 3; i++){
+      var sh = SHAPES[scores[i].idx];
+      if (sh && !seen[sh.name]){ seen[sh.name]=1; result.push(sh); }
+    }
+    return result;
+  }
+
+  /* ── Render results ── */
+  function showResults(matches){
+    var resultEl = document.getElementById('draw-result');
+    var chipsEl  = document.getElementById('draw-chips');
+    var toastEl  = document.getElementById('draw-toast');
+    if (!matches || !matches.length){ resultEl.style.display='none'; return; }
+    chipsEl.innerHTML = '';
+    matches.forEach(function(m, mi){
+      var label = document.createElement('div');
+      label.style.cssText = 'width:100%;font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.08em;margin:' + (mi===0?'0':'14px') + ' 0 7px;';
+      label.textContent = (mi===0 ? '✦ Mejor coincidencia' : '◦ Alternativa') + ' — ' + m.name;
+      chipsEl.appendChild(label);
+
+      /* Big emoji chip */
+      var emojiChip = document.createElement('button');
+      emojiChip.className = 'draw-match-chip';
+      emojiChip.title = 'Copiar: ' + m.emoji;
+      emojiChip.style.cssText = 'font-size:26px;padding:8px 16px;';
+      emojiChip.textContent = m.emoji;
+      emojiChip.addEventListener('click', function(){ doCopy(m.emoji, toastEl); });
+      chipsEl.appendChild(emojiChip);
+
+      /* All syms */
+      var symWrap = document.createElement('div');
+      symWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:6px;width:100%;box-sizing:border-box;';
+      m.syms.forEach(function(s){
+        var sc = document.createElement('button');
+        sc.className = 'draw-match-chip';
+        sc.title = 'Copiar: ' + s;
+        sc.style.cssText = 'font-size:17px;padding:5px 9px;min-width:36px;justify-content:center;flex-shrink:0;';
+        sc.textContent = s;
+        sc.addEventListener('click', function(){ doCopy(s, toastEl); });
+        symWrap.appendChild(sc);
+      });
+      chipsEl.appendChild(symWrap);
+    });
+    resultEl.style.display = 'flex';
+  }
+
+  function doCopy(text, toastEl){
+    (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).catch(function(){
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.cssText='position:fixed;opacity:0;';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    });
+    toastEl.textContent = '¡Copiado! ' + text;
+    toastEl.classList.add('show');
+    setTimeout(function(){ toastEl.classList.remove('show'); }, 2000);
+  }
+
+  /* ── Clear ── */
+  document.getElementById('draw-clear-btn').addEventListener('click', function(){
+    strokes = []; currentStroke = [];
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    document.getElementById('draw-result').style.display = 'none';
+    if (recognizeTimer) clearTimeout(recognizeTimer);
+  });
+
+  /* ── Resize & dark mode ── */
+  window.addEventListener('resize', resize);
+  resize();
+  new MutationObserver(function(){ redrawAll(); })
+    .observe(document.body, { attributes:true, attributeFilter:['class'] });
+})();
 /* ──────────────── SÍMBOLOS ──────────────── */
 (function(){
   var SYMBOLS = {

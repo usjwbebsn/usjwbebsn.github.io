@@ -5,992 +5,401 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#f5f5f7" id="meta-theme" />
-  <meta name="robots" content="index, follow" />
-  <title>Caja de Herramientas — DIUSF</title>
-  <meta name="description" content="Emojis para copiar, cajita de texto con transformaciones, mixeador y contador de caracteres. Herramientas extra de DIUSF." />
+  <title>Caja — DIUSF</title>
+  <meta name="description" content="Compone textos con emojis, símbolos, fuentes Unicode y bordes decorativos." />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="css/caja.css" />
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8694387925136120"
-     crossorigin="anonymous"></script>
+  <script>
+    (function(){
+      try {
+        var s = localStorage.getItem('diusf_theme');
+        var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (s === 'dark' || (!s && d)) document.documentElement.classList.add('dark-early');
+      } catch(_){}
+    })();
+  </script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8694387925136120" crossorigin="anonymous"></script>
 </head>
 <body>
 
-<!-- BACKGROUND BLOBS -->
 <div class="bg-canvas" aria-hidden="true">
-  <div class="blob blob-a"></div>
-  <div class="blob blob-b"></div>
-  <div class="blob blob-c"></div>
+  <div class="blob blob-a"></div><div class="blob blob-b"></div><div class="blob blob-c"></div>
 </div>
 
-<!-- NAV -->
 <header class="nav-bar" role="banner">
   <div class="nav-inner">
-    <a class="nav-back" href="index.html" aria-label="Volver a DIUSF">‹ DIUSF</a>
+    <a class="nav-back" href="index.html">‹ DIUSF</a>
     <span class="nav-title">📦 Caja</span>
-    <button class="theme-toggle" id="theme-toggle" aria-label="Cambiar modo claro/oscuro">
+    <button class="theme-toggle" id="theme-toggle" aria-label="Modo oscuro/claro">
       <span id="theme-icon">☀️</span>
     </button>
   </div>
 </header>
 
-<main class="page" role="main">
+<main class="caja-main">
 
-  <!-- TABS -->
-  <div class="tabs-wrap" role="tablist" aria-label="Herramientas">
-    <button class="tab-btn active" data-tab="emojis" role="tab" aria-selected="true">
-      <span class="tab-icon">😄</span> Emojis
-    </button>
-    <button class="tab-btn" data-tab="simbolos" role="tab" aria-selected="false">
-      <span class="tab-icon">∞</span> Símbolos
-    </button>
-    <button class="tab-btn" data-tab="cajita" role="tab" aria-selected="false">
-      <span class="tab-icon">✏️</span> Cajita
-    </button>
-    <button class="tab-btn" data-tab="mixer" role="tab" aria-selected="false">
-      <span class="tab-icon">🔀</span> Mixer
-    </button>
-    <button class="tab-btn" data-tab="contador" role="tab" aria-selected="false">
-      <span class="tab-icon">📊</span> Stats
-    </button>
-  </div>
+  <!-- ═══ PICKER ═══ -->
+  <section class="picker-section">
+    <div class="picker-tabs" role="tablist">
+      <button class="ptab active" data-ptab="emojis">😄 Emojis</button>
+      <button class="ptab" data-ptab="simbolos">✦ Símbolos</button>
+      <button class="ptab" data-ptab="fuentes">𝔸 Fuentes</button>
+      <button class="ptab" data-ptab="bordes">▬ Bordes</button>
+    </div>
 
-  <!-- ══════════════════ PANEL: EMOJIS ══════════════════ -->
-  <div class="panel active" id="panel-emojis" role="tabpanel">
+    <!-- EMOJIS -->
+    <div class="ppanel active" id="ppanel-emojis">
+      <div class="picker-search-wrap">
+        <input class="picker-search" id="emoji-search" type="search" placeholder="Buscar emoji…" autocomplete="off" />
+        <span class="psicon">🔍</span>
+      </div>
+      <div class="cats-scroll" id="emoji-cats"></div>
+      <div class="picker-grid" id="emoji-grid"></div>
+    </div>
 
-    <div class="caja-card">
-      <div class="caja-card-header">Buscar emoji</div>
-      <div class="caja-card-body">
-        <div class="emoji-search-wrap">
-          <input
-            class="emoji-search" id="emoji-search"
-            type="search" placeholder="ej: fuego, corazón, perro…"
-            autocomplete="off" spellcheck="false"
-            aria-label="Buscar emoji por nombre"
-          />
-          <span class="emoji-search-icon">🔍</span>
-        </div>
-        <div class="emoji-name-result" id="emoji-name-result" role="list" aria-live="polite"></div>
+    <!-- SÍMBOLOS -->
+    <div class="ppanel" id="ppanel-simbolos">
+      <div class="picker-search-wrap">
+        <input class="picker-search" id="sym-search" type="search" placeholder="Buscar símbolo…" autocomplete="off" />
+        <span class="psicon">🔍</span>
+      </div>
+      <div class="cats-scroll" id="sym-cats"></div>
+      <div class="picker-grid sym" id="sym-grid"></div>
+    </div>
+
+    <!-- FUENTES -->
+    <div class="ppanel" id="ppanel-fuentes">
+      <div class="picker-search-wrap">
+        <input class="picker-search" id="fuentes-input" type="text" placeholder="Escribe texto para previsualizar fuentes…" autocomplete="off" />
+      </div>
+      <div class="fuentes-grid" id="fuentes-grid"></div>
+    </div>
+
+    <!-- BORDES -->
+    <div class="ppanel" id="ppanel-bordes">
+      <p class="picker-hint">Toca una línea para insertarla en el canvas ↓</p>
+      <div class="bordes-list" id="bordes-list"></div>
+    </div>
+
+  </section>
+
+  <!-- ═══ CANVAS ═══ -->
+  <section class="canvas-section">
+    <div class="canvas-header">
+      <span class="canvas-label">✏️ Tu composición</span>
+      <div class="canvas-btns">
+        <button class="cbtn primary" id="canvas-copy">📋 Copiar</button>
+        <button class="cbtn" id="canvas-clear">🗑</button>
       </div>
     </div>
-
-    <div class="caja-card">
-      <div class="caja-card-header">Explorar por categoría</div>
-      <div class="caja-card-body">
-        <div class="emoji-cats" id="emoji-cats" role="group" aria-label="Categoría de emojis"></div>
-        <div class="emoji-grid" id="emoji-grid" role="list" aria-label="Emojis"></div>
-        <p class="emoji-hint">Toca un emoji para copiarlo al portapapeles</p>
-      </div>
+    <textarea
+      id="canvas"
+      class="canvas-area"
+      placeholder="Toca un emoji, símbolo, fuente o borde de arriba para insertarlo aquí…&#10;&#10;También puedes escribir libremente 👇"
+      autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+    ></textarea>
+    <div class="canvas-footer">
+      <span id="canvas-chars">0 caracteres</span>
+      <span id="canvas-lines">0 líneas</span>
     </div>
-
-  </div>
-
-  <!-- ══════════════════ PANEL: SÍMBOLOS ══════════════════ -->
-  <div class="panel" id="panel-simbolos" role="tabpanel">
-
-    <div class="caja-card">
-      <div class="caja-card-header">Buscar símbolo</div>
-      <div class="caja-card-body">
-        <div class="emoji-search-wrap">
-          <input class="emoji-search" id="sym-search" type="search"
-            placeholder="ej: flecha, suma, estrella, corazón…"
-            autocomplete="off" spellcheck="false"
-            aria-label="Buscar símbolo" />
-          <span class="emoji-search-icon">🔍</span>
-        </div>
-        <div class="emoji-name-result" id="sym-search-result" role="list" aria-live="polite"></div>
-      </div>
-    </div>
-
-    <div class="caja-card">
-      <div class="caja-card-header">Explorar por categoría</div>
-      <div class="caja-card-body">
-        <div class="emoji-cats" id="sym-cats" role="group" aria-label="Categoría de símbolos"></div>
-        <div class="sym-grid" id="sym-grid" role="list" aria-label="Símbolos"></div>
-        <p class="emoji-hint">Toca un símbolo para copiarlo · <span id="sym-count">0</span> símbolos disponibles</p>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ══════════════════ PANEL: CAJITA DE TEXTO ══════════════════ -->
-  <div class="panel" id="panel-cajita" role="tabpanel">
-
-    <div class="caja-card">
-      <div class="caja-card-header">Tu texto</div>
-      <div class="caja-card-body">
-        <div class="textbox-wrap">
-          <textarea
-            class="textbox-area" id="cajita-input"
-            placeholder="Escribe o pega tu texto aquí…"
-            maxlength="500" rows="4"
-            autocomplete="off" autocorrect="off" spellcheck="false"
-            aria-label="Texto de entrada"
-          ></textarea>
-        </div>
-        <div class="textbox-stats" id="cajita-stats" aria-live="polite">
-          <span>· <strong id="st-chars">0</strong> caracteres</span>
-          <span>· <strong id="st-words">0</strong> palabras</span>
-          <span>· <strong id="st-lines">0</strong> líneas</span>
-          <span>· <strong id="st-emoji">0</strong> emojis</span>
-        </div>
-        <div class="textbox-actions">
-          <button class="tx-btn" id="tx-upper">AA Mayúsculas</button>
-          <button class="tx-btn" id="tx-lower">aa minúsculas</button>
-          <button class="tx-btn" id="tx-title">Aa Título</button>
-          <button class="tx-btn" id="tx-sentence">A. Oración</button>
-          <button class="tx-btn" id="tx-camel">camelCase</button>
-          <button class="tx-btn" id="tx-snake">snake_case</button>
-          <button class="tx-btn" id="tx-kebab">kebab-case</button>
-          <button class="tx-btn" id="tx-reverse">⇄ Invertir</button>
-          <button class="tx-btn" id="tx-nosp">· Sin espacios</button>
-          <button class="tx-btn" id="tx-trim">✂ Limpiar</button>
-          <button class="tx-btn" id="tx-noaccent">á→a Sin acentos</button>
-          <button class="tx-btn" id="tx-rot13">ROT13</button>
-          <button class="tx-btn" id="tx-repeat">× Repetir</button>
-          <button class="tx-btn" id="tx-slug">🔗 Slug URL</button>
-          <button class="tx-btn success" id="tx-copy">⎘ Copiar</button>
-          <button class="tx-btn danger" id="tx-clear">✕ Borrar</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="caja-card">
-      <div class="caja-card-header">Resultado</div>
-      <div class="caja-card-body">
-        <div class="textbox-result" id="cajita-result" aria-live="polite" tabindex="0"></div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ══════════════════ PANEL: MIXER DE EMOJIS ══════════════════ -->
-  <div class="panel" id="panel-mixer" role="tabpanel">
-
-    <div class="caja-card">
-      <div class="caja-card-header">Combinador de emojis</div>
-      <div class="caja-card-body">
-        <p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.5;">Ingresa dos emojis y genera una secuencia mezclada. Algunos pares producen un emoji fusión (ej: 👁️ + 🫦 → 👁️‍🗨️) vía Google Emoji Kitchen.</p>
-        <div class="mixer-row">
-          <input class="mixer-pick" id="mix-a" type="text" maxlength="4" placeholder="😀" value="😀" aria-label="Primer emoji" />
-          <span class="mixer-plus">＋</span>
-          <input class="mixer-pick" id="mix-b" type="text" maxlength="4" placeholder="🔥" value="🔥" aria-label="Segundo emoji" />
-        </div>
-        <div class="mixer-result-wrap" id="mixer-result-wrap">
-          <span class="mixer-result-emoji" id="mixer-result-emoji">😀🔥</span>
-          <span class="mixer-result-label" id="mixer-result-label">COMBINACIÓN</span>
-        </div>
-        <button class="mixer-copy-btn" id="mixer-copy">⎘ Copiar combinación</button>
-        <p class="mixer-hint">Cambia los emojis para actualizar el resultado</p>
-      </div>
-    </div>
-
-    <div class="caja-card">
-      <div class="caja-card-header">Secuencias rápidas</div>
-      <div class="caja-card-body">
-        <div class="emoji-grid" id="sequences-grid" role="list" style="max-height:200px"></div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ══════════════════ PANEL: STATS / CONTADOR ══════════════════ -->
-  <div class="panel" id="panel-contador" role="tabpanel">
-
-    <div class="caja-card">
-      <div class="caja-card-header">Analizar texto</div>
-      <div class="caja-card-body">
-        <div class="textbox-wrap">
-          <textarea
-            class="textbox-area" id="stats-input"
-            placeholder="Pega aquí el texto que quieres analizar…"
-            rows="5" autocomplete="off" spellcheck="false"
-            aria-label="Texto para analizar"
-          ></textarea>
-        </div>
-      </div>
-    </div>
-
-    <div class="stat-cards" id="stat-cards" aria-live="polite">
-      <div class="stat-card"><div class="stat-card-num" id="s-chars">0</div><div class="stat-card-label">Caracteres</div></div>
-      <div class="stat-card"><div class="stat-card-num" id="s-no-sp">0</div><div class="stat-card-label">Sin espacios</div></div>
-      <div class="stat-card"><div class="stat-card-num" id="s-words">0</div><div class="stat-card-label">Palabras</div></div>
-      <div class="stat-card"><div class="stat-card-num" id="s-lines">0</div><div class="stat-card-label">Líneas</div></div>
-      <div class="stat-card"><div class="stat-card-num" id="s-sents">0</div><div class="stat-card-label">Oraciones</div></div>
-      <div class="stat-card"><div class="stat-card-num" id="s-emoji">0</div><div class="stat-card-label">Emojis</div></div>
-      <div class="stat-card"><div class="stat-card-num" id="s-twitter">0</div><div class="stat-card-label">Chars Twitter</div></div>
-      <div class="stat-card"><div class="stat-card-num" id="s-read">0s</div><div class="stat-card-label">Lectura ~</div></div>
-    </div>
-
-    <div class="caja-card" id="top-chars-card" style="display:none">
-      <div class="caja-card-header">Caracteres más frecuentes</div>
-      <div class="caja-card-body">
-        <div id="top-chars-list" style="font-size:13px;color:var(--t2);line-height:1.9;word-break:break-all;"></div>
-      </div>
-    </div>
-
-  </div>
+  </section>
 
 </main>
 
-<!-- TOAST -->
 <div class="caja-toast" id="caja-toast" role="status" aria-live="polite"></div>
 
+<script src="js/unicode.js"></script>
 <script>
-/* ═══════════════════════════════════════════════════════
-   CAJA.JS — Lógica completa
-═══════════════════════════════════════════════════════ */
+'use strict';
 
-/* ── THEME (igual que index.html) ── */
+/* ── THEME ── */
 (function(){
-  var themeIcon = document.getElementById('theme-icon');
-  var metaTheme = document.getElementById('meta-theme');
-  function applyTheme(dark) {
+  var icon = document.getElementById('theme-icon');
+  var meta = document.getElementById('meta-theme');
+  function apply(dark) {
     document.body.classList.toggle('dark', dark);
-    if (themeIcon) themeIcon.textContent = dark ? '☀️' : '🌙';
-    if (metaTheme) metaTheme.content = dark ? '#000000' : '#f5f5f7';
-    try { localStorage.setItem('diusf_theme', dark ? 'dark' : 'light'); } catch(_) {}
+    document.documentElement.classList.remove('dark-early');
+    if (icon) icon.textContent = dark ? '☀️' : '🌙';
+    if (meta) meta.content = dark ? '#000' : '#f5f5f7';
+    try { localStorage.setItem('diusf_theme', dark ? 'dark' : 'light'); } catch(_){}
   }
-  var saved = localStorage.getItem('diusf_theme');
-  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  applyTheme(saved ? saved === 'dark' : prefersDark);
+  try {
+    var s = localStorage.getItem('diusf_theme');
+    apply(s ? s==='dark' : window.matchMedia('(prefers-color-scheme: dark)').matches);
+  } catch(_){ apply(false); }
   var btn = document.getElementById('theme-toggle');
-  if (btn) btn.addEventListener('click', function(){
-    applyTheme(!document.body.classList.contains('dark'));
-  });
+  if (btn) btn.addEventListener('click', function(){ apply(!document.body.classList.contains('dark')); });
 })();
 
 /* ── TOAST ── */
-var toastTimer;
+var _tt;
 function toast(msg) {
   var el = document.getElementById('caja-toast');
   if (!el) return;
   el.textContent = msg;
   el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2000);
+  clearTimeout(_tt);
+  _tt = setTimeout(function(){ el.classList.remove('show'); }, 1800);
 }
 
-/* ── TABS ── */
+/* ── CANVAS INSERT ── */
+function insertIntoCanvas(text) {
+  var ta = document.getElementById('canvas');
+  if (!ta) return;
+  var s = ta.selectionStart, e = ta.selectionEnd, v = ta.value;
+  ta.value = v.slice(0, s) + text + v.slice(e);
+  ta.selectionStart = ta.selectionEnd = s + text.length;
+  ta.focus();
+  updateStats();
+}
+
+function updateStats() {
+  var ta = document.getElementById('canvas');
+  var cc = document.getElementById('canvas-chars');
+  var cl = document.getElementById('canvas-lines');
+  if (!ta) return;
+  var v = ta.value;
+  if (cc) cc.textContent = [...v].length + ' caracteres';
+  if (cl) cl.textContent = v ? v.split('\n').length + ' líneas' : '0 líneas';
+}
+
+document.getElementById('canvas').addEventListener('input', updateStats);
+
+document.getElementById('canvas-copy').addEventListener('click', function(){
+  var text = document.getElementById('canvas').value;
+  if (!text) { toast('Canvas vacío'); return; }
+  navigator.clipboard.writeText(text).then(function(){ toast('¡Copiado! ✓'); }).catch(function(){});
+});
+
+document.getElementById('canvas-clear').addEventListener('click', function(){
+  var ta = document.getElementById('canvas');
+  if (!ta.value) return;
+  if (confirm('¿Limpiar el canvas?')) { ta.value = ''; updateStats(); }
+});
+
+/* ── PICKER TABS ── */
 (function(){
-  var btns = document.querySelectorAll('.tab-btn');
-  var panels = document.querySelectorAll('.panel');
-  btns.forEach(function(btn){
-    btn.addEventListener('click', function(){
-      btns.forEach(function(b){ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
-      panels.forEach(function(p){ p.classList.remove('active'); });
-      btn.classList.add('active');
-      btn.setAttribute('aria-selected','true');
-      var target = document.getElementById('panel-' + btn.dataset.tab);
-      if (target) target.classList.add('active');
+  document.querySelectorAll('.ptab').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      document.querySelectorAll('.ptab').forEach(function(t){ t.classList.remove('active'); });
+      document.querySelectorAll('.ppanel').forEach(function(p){ p.classList.remove('active'); });
+      tab.classList.add('active');
+      var p = document.getElementById('ppanel-' + tab.dataset.ptab);
+      if (p) p.classList.add('active');
     });
   });
 })();
 
-/* ══════════════════════════════════════
-   EMOJI DATA
-══════════════════════════════════════ */
+/* ══ EMOJI DATA ══ */
 var EMOJI_DB = {
-  'Caras': ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🥴','😑','😶','😐','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🥵','🥶','🥳','🤯','😤','😠','😡','🤬','😈','👿'],
-  'Gestos': ['👋','🤚','🖐','✋','🖖','👌','🤌','🤏','✌','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝','👍','👎','✊','👊','🤛','🤜','👏','🙌','🤲','🙏','✍','💅','🤳','💪','🦾'],
-  'Corazones': ['❤','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣','💕','💞','💓','💗','💖','💘','💝','💟','❤‍🔥','❤‍🩹','🫀','💌','💋'],
-  'Animales': ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🙈','🙉','🙊','🐔','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐜','🦟','🦗','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐈','🐓','🦃','🦤','🦚','🦜','🦢','🦩'],
-  'Comida': ['🍎','🍊','🍋','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🧄','🧅','🥔','🌽','🌶','🫑','🥕','🧆','🧇','🥞','🧈','🍳','🥚','🧀','🥩','🍗','🍖','🌭','🍔','🍟','🍕','🥪','🥙','🧆','🌮','🌯','🫔','🥗','🍝','🍜','🍲','🍛','🍣','🍱','🥟','🦪','🍤','🍙','🍚','🍘','🍥','🥮','🍢','🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🌰','🥜','🍯','🍺','🍻','🥂','🍷','🥃','🍸','🍹','🧃','🥤','🧋','☕','🍵','🧉'],
-  'Naturaleza': ['🌸','💐','🌹','🥀','🌺','🌻','🌼','🌷','🌱','🌲','🌳','🌴','🌵','🌾','🍀','🍁','🍂','🍃','🍄','🌍','🌎','🌏','🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘','🌙','🌚','🌛','🌜','🌝','🌞','⭐','🌟','💫','✨','⚡','🌤','⛅','🌥','🌦','🌧','⛈','🌩','🌨','❄','💧','💦','🌊','🌈','☀','🔥','🌪','🌫'],
-  'Viaje': ['🚗','🚕','🚙','🚌','🚎','🏎','🚓','🚑','🚒','🚐','🛻','🚚','🚛','🚜','🏍','🛵','🛺','🚲','🛴','🛹','🛼','🚏','🛣','🛤','⛽','🚦','🚥','✈','🛫','🛬','🛩','💺','🚁','🛸','🚀','⛵','🚤','🛥','🛳','⛴','🚢','⚓','🗺','🗾','🏔','⛰','🌋','🗻','🏕','🏖','🏜','🏝','🏞','🏟','🏛','🏗','🧱','🏘','🏚','🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏩','🏪','🏫','🏬','🏭','🏯','🏰','💒','🗼','🗽','⛪','🕌','🛕','🕍','⛩','🕋'],
-  'Objetos': ['📱','💻','⌨','🖥','🖨','🖱','🖲','💾','💿','📀','📷','📸','📹','🎥','📽','🎞','📞','☎','📟','📠','📺','📻','🧭','⏱','⏲','⏰','🕰','⌛','⏳','📡','🔋','🔌','💡','🔦','🕯','🪔','🧯','🛢','💰','💴','💵','💶','💷','💸','💳','🪙','💹','📈','📉','📊','📋','📁','📂','🗂','📅','📆','🗒','🗓','📇','📌','📍','📎','🖇','📏','📐','✂','🗃','🗄','🗑','🔒','🔓','🔏','🔐','🔑','🗝','🔨','🪓','⛏','⚒','🛠','🗡','⚔','🔫','🏹','🛡','🔧','🔩','⚙','🗜','🔗','⛓','🪝'],
-  'Símbolos': ['❤','✅','❌','⚠','ℹ','✨','🔥','💯','❓','❗','💤','♻','🆕','🆒','🆓','🆙','🆗','🔝','🆘','🚫','🔞','📵','🚷','🔕','♻','✔','☑','🔘','🔲','🔳','▪','▫','◾','◽','◼','◻','🟥','🟧','🟨','🟩','🟦','🟪','⬛','⬜','🔶','🔷','🔸','🔹','🔺','🔻','💠','🔘'],
+  'Caras':    ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','🥲','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🥴','😑','😶','😐','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🥵','🥶','🥳','🤯','😤','😠','😡','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖'],
+  'Gestos':   ['👋','🤚','🖐','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','🤲','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃'],
+  'Corazones':['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','❤️‍🔥','❤️‍🩹','💌','💋'],
+  'Animales': ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🙈','🙉','🙊','🐧','🐦','🐤','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🦋','🐌','🐞','🐜','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦀','🐡','🐠','🐟','🐬','🐳','🦈','🦭'],
+  'Comida':   ['🍎','🍊','🍋','🍇','🍓','🫐','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🫒','🥑','🍆','🌽','🌶️','🥦','🍞','🥐','🥖','🧀','🥚','🍳','🥞','🧇','🥓','🌮','🌯','🥗','🍿','🍱','🍣','🍜','🍔','🍟','🍕','🌭','🧁','🎂','🍰','🍩','🍪','🍫','🍬','🍭','🍦','🍧','🍨'],
+  'Naturaleza':['🌸','🌺','🌻','🌹','🌷','🌼','🌱','🌿','🍀','🍁','🍂','🍃','🪴','🌾','🌵','🎄','🌴','🌳','🌲','🍄','🌊','🌋','⛰️','🏔️','🌅','🌄','🌠','🌌','☁️','🌤️','⛅','🌦️','🌧️','⛈️','🌩️','🌨️','❄️','☃️','⛄','💧','💦','☔','⚡','🌈','☀️','🌙','⭐','🌟','💫','✨'],
+  'Estrellas':['⭐','🌟','💫','✨','🌠','🏅','🥇','🥈','🥉','🏆','🎖️','🎯','🎳','🎲','🎭','🎨','🎬','🎤','🎧','🎼','🎸','🎺','🎻'],
+  'Deportes': ['⚽','🏀','🏈','⚾','🎾','🏐','🏉','🎱','🏓','🏸','🥊','🏋️','🤼','🤺','🏌️','🧘','🛹','🎿','⛸️','🎯','🎳','🎮','🕹️'],
+  'Objetos':  ['📱','💻','🖥️','⌨️','🖱️','📸','📷','📹','🎥','📞','☎️','📺','📻','⌚','🔋','🔌','💡','🔦','💰','💳','💎','⚖️','🔧','🔨','⚙️','🔩','🔑','🗝️','🔒','🔓','🚪','🛋️','🛏️'],
+  'Signos':   ['❗','❓','‼️','⁉️','🔅','🔆','📶','🔇','🔕','🔊','🔉','🔈','📢','📣','🔔','🔕','🎵','🎶','✅','❌','⛔','🚫','🔴','🟡','🟢','🔵','🟣','⚫','⚪','🟤'],
 };
 
-/* Mapa keyword → lista de emojis */
-var EMOJI_SEARCH_MAP = {
-  'fuego':['🔥'],'fire':['🔥'],'flame':['🔥'],'calor':['🔥','🌡️'],
-  'corazon':['❤','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💕','💞','💓','💗','💖','💘','💝','❤‍🔥'],
-  'corazón':['❤','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💕','💞','💓','💗','💖','💘','💝','❤‍🔥'],
-  'heart':['❤','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💕','💞','💓','💗','💖','💘','💝'],
-  'amor':['❤','💕','💞','💓','💗','💖','💘','💝','😍','🥰','💋'],
-  'love':['❤','💕','💞','💓','💗','💖','💘','💝','😍','🥰','💋'],
-  'risa':['😂','🤣','😆','😅','😁','😄','😃'],'jaja':['😂','🤣','😆'],'lol':['😂','🤣'],
-  'carcajada':['😂','🤣'],'gracioso':['😂','🤣','😆','🤪'],
-  'perro':['🐶','🐕','🦮','🐩'],'dog':['🐶','🐕','🦮','🐩'],'cachorro':['🐶','🐕'],
-  'gato':['🐱','🐈'],'cat':['🐱','🐈'],'gatito':['🐱'],
-  'sol':['☀','🌞','🌤','⛅'],'sun':['☀','🌞'],'soleado':['☀','🌞'],
-  'luna':['🌙','🌑','🌒','🌓','🌔','🌕','🌖','🌗','🌘','🌚','🌛','🌜','🌝'],
-  'moon':['🌙','🌕','🌚'],'noche':['🌙','🌃','⭐','🌌'],
-  'lluvia':['🌧','⛈','🌩','☔','💧'],'rain':['🌧','⛈','☔'],'agua':['💧','🌊','💦'],
-  'nieve':['❄','🌨','⛄','☃','🏔'],'snow':['❄','🌨','⛄'],'frio':['🥶','❄','🧊'],'frío':['🥶','❄','🧊'],
-  'estrella':['⭐','🌟','💫','✨','🌠','⚡'],'star':['⭐','🌟','💫','✨'],'brillar':['✨','💫','⭐'],
-  'pizza':['🍕'],'hamburguesa':['🍔'],'burger':['🍔'],'comida':['🍕','🍔','🌮','🍣','🍜','🍛','🍱'],
-  'fiesta':['🎉','🎊','🥳','🎈','🎁','🎂'],'party':['🎉','🎊','🥳','🎈'],
-  'cumpleanos':['🎂','🎉','🎁','🎈'],'cumpleaños':['🎂','🎉','🎁','🎈'],'birthday':['🎂','🎉','🎁'],
-  'musica':['🎵','🎶','🎸','🎹','🥁','🎺','🎻'],'música':['🎵','🎶','🎸','🎹'],
-  'music':['🎵','🎶','🎸','🎹'],'nota':['🎵','🎶'],
-  'mano':['👋','🤚','🖐','✋','👌','✌','👍','👎','✊','👊','👏','🙌','🤲','🙏'],
-  'hand':['👋','🤚','🖐','✋'],'hola':['👋','😊'],'hello':['👋'],'bye':['👋'],
-  'dinero':['💰','💵','💴','💶','💷','💸','💳','🪙','💹'],'money':['💰','💵','💸','💳'],
-  'plata':['💵','💰','🪙'],'dolar':['💵','💰'],'bitcoin':['₿','🪙'],
-  'ok':['👍','✅','👌'],'bien':['👍','✅','😊'],'like':['👍'],
-  'mal':['👎','❌','😠'],'dislike':['👎'],'no':['👎','❌','🚫'],
-  'casa':['🏠','🏡','🏘'],'home':['🏠','🏡'],'house':['🏠','🏡'],
-  'coche':['🚗','🚕','🏎','🚙'],'auto':['🚗','🚕','🏎'],'car':['🚗','🚕','🏎'],
-  'avion':['✈','🛫','🛬','🛩'],'avión':['✈','🛫','🛬'],'volar':['✈','🦅'],'plane':['✈','🛫'],
-  'cafe':['☕','🧋','🫖'],'café':['☕','🧋'],'coffee':['☕'],'taza':['☕','🍵','🧋'],
-  'cerveza':['🍺','🍻'],'beer':['🍺','🍻'],'birra':['🍺','🍻'],
-  'vino':['🍷','🥂','🍾'],'wine':['🍷','🥂'],'copa':['🥂','🍷','🍸'],
-  'libro':['📖','📚','📕','📗','📘'],'book':['📖','📚'],'leer':['📖','📚'],
-  'telefono':['📱','☎','📞','📟'],'teléfono':['📱','☎','📞'],'phone':['📱','☎'],'movil':['📱'],
-  'flor':['🌸','🌹','🌺','🌻','🌼','🌷','💐','🌼'],'flower':['🌸','🌹','🌺','🌻','🌼','🌷'],
-  'rosa':['🌹'],'rose':['🌹'],
-  'arbol':['🌳','🌲','🌴','🌵','🌾'],'árbol':['🌳','🌲','🌴'],'tree':['🌳','🌲','🌴'],
-  'musculo':['💪','🦾'],'músculo':['💪'],'fuerza':['💪','⚡'],'strong':['💪','🦾'],
-  'mundo':['🌍','🌎','🌏','🗺'],'earth':['🌍','🌎','🌏'],'tierra':['🌍','🌎','🌏'],
-  'cohete':['🚀','🛸'],'rocket':['🚀','🛸'],'espacio':['🚀','🌌','⭐','🛸','🌙'],
-  'diamante':['💎'],'diamond':['💎'],'joya':['💎','💍','👑'],
-  'celebrar':['🎉','🎊','🥳'],'alegria':['🎊','😄','🥳'],'alegría':['🎊','😄','🥳'],
-  'beso':['💋','😘','😗','😙'],'kiss':['💋','😘'],
-  'caca':['💩'],'poop':['💩'],
-  'unicornio':['🦄'],'unicorn':['🦄'],
-  'dragon':['🐲','🐉'],'dragón':['🐲','🐉'],
-  'tiburon':['🦈'],'tiburón':['🦈'],'shark':['🦈'],
-  'taco':['🌮'],'burrito':['🌯'],'sushi':['🍣'],'ramen':['🍜'],
-  'helado':['🍦','🍧','🍨'],'paleta':['🍧'],'dulce':['🍬','🍭','🍫','🍩','🍪'],
-  'palmas':['👏'],'aplausos':['👏'],'clap':['👏'],
-  'sorpresa':['😱','😮','🤯'],'shock':['😱','🤯'],'wtf':['😱','🤯'],
-  'llorar':['😢','😭','🥺'],'triste':['😢','😭','🥺'],'sad':['😢','😭','🥺'],
-  'enojado':['😡','😠','🤬'],'angry':['😡','😠','🤬'],'bravo':['😡','😤'],
-  'dormir':['😴','😪','🥱'],'sleep':['😴','😪'],'somnoliento':['😪','🥱'],
-  'enfermo':['🤒','🤢','🤮','😷'],'sick':['🤒','🤢','😷'],
-  'guino':['😉'],'guiño':['😉'],'wink':['😉'],
-  'enamorado':['😍','🥰','💕'],'crush':['😍','🥰'],
-  'fuerte':['💪','🦾','⚡'],'rapido':['⚡','💨','🏃'],'rápido':['⚡','💨','🏃'],
-  'peligro':['⚠','💀','☠','🚨'],'warning':['⚠','🚨'],
-  'ok':['👍','✅','☑'],'check':['✅','✔','☑'],
-  'error':['❌','✖','🚫'],'equivocado':['❌','🚫'],
-  'feliz':['😊','😄','😃','🥰','😁','😆'],'happy':['😊','😄','😃','🥰'],
-  'contento':['😊','😁','😄'],'alegre':['😊','😄','🎉'],
-  'pensar':['🤔','💭','🧠'],'think':['🤔','💭'],'idea':['💡','🤔','🧠'],
-  'fuerte':['💪','🦾'],'debil':['😔','💔'],'débil':['😔','💔'],
-  'musico':['🎸','🎹','🥁','🎺','🎻','🎤','🎧'],'músico':['🎸','🎹','🥁'],
-  'pelota':['⚽','🏀','🏈','⚾','🎾','🏐','🏉'],'ball':['⚽','🏀','🏈'],
-  'futbol':['⚽','🏟'],'fútbol':['⚽'],'soccer':['⚽'],
-  'baloncesto':['🏀'],'basketball':['🏀'],
-  'corona':['👑'],'rey':['👑','🤴'],'king':['👑','🤴'],
-  'bruja':['🧙','🧟','👻'],'fantasma':['👻'],'ghost':['👻'],
-  'robot':['🤖'],'alien':['👽','🛸'],'zombie':['🧟'],
-  'angel':['👼','😇'],'diablo':['😈','👿'],'devil':['😈','👿'],
-  'mago':['🧙','✨','🎩'],'magic':['✨','🪄','🎩'],
-  'regalo':['🎁','🎀'],'gift':['🎁'],'present':['🎁'],
-  'globo':['🎈','🌍'],'balloon':['🎈'],
-  'camara':['📷','📸','🎥'],'cámara':['📷','📸'],'foto':['📷','📸'],
-  'computadora':['💻','🖥','⌨'],'laptop':['💻'],'pc':['💻','🖥'],
-  'reloj':['⏰','⌚','🕐'],'clock':['⏰','⌚'],'tiempo':['⏰','⌛','⏳'],
-  'llave':['🔑','🗝'],'key':['🔑','🗝'],'candado':['🔒','🔓'],'lock':['🔒','🔓'],
-  'cuchillo':['🔪'],'espada':['⚔'],'arma':['🔫','⚔','🏹'],
-  'medicina':['💊','🩺','🏥'],'pastilla':['💊'],'hospital':['🏥','🩺'],
-  'cocinero':['👨‍🍳','🍳'],'cocina':['🍳','🥘'],'chef':['👨‍🍳'],
-  'planta':['🌱','🌿','🍀','🌾','🌵'],'hoja':['🍀','🍁','🍂','🌿'],
-  'hongo':['🍄'],'mushroom':['🍄'],
-  'arana':['🕷'],'araña':['🕷'],'insecto':['🐛','🦋','🐝','🐞','🕷'],
-  'mariposa':['🦋'],'butterfly':['🦋'],'abeja':['🐝'],'bee':['🐝'],
-  'pajaro':['🐦','🦅','🦉','🦆'],'pájaro':['🐦','🦅','🦉'],'bird':['🐦','🦅','🦉','🦆'],
-  'aguila':['🦅'],'águila':['🦅'],'eagle':['🦅'],'buho':['🦉'],'búho':['🦉'],'owl':['🦉'],
-  'pez':['🐟','🐠','🐡','🦈'],'fish':['🐟','🐠','🐡'],'tilapia':['🐟'],
-  'delfin':['🐬'],'delfín':['🐬'],'dolphin':['🐬'],'ballena':['🐳','🐋'],'whale':['🐳','🐋'],
-  'pulpo':['🐙'],'octopus':['🐙'],'cangrejo':['🦀'],'crab':['🦀'],
-  'caballo':['🐴','🦄'],'horse':['🐴'],'toro':['🐂','🐃'],'vaca':['🐄'],
-  'elefante':['🐘'],'elephant':['🐘'],'jirafa':['🦒'],'giraffe':['🦒'],
-  'mono':['🐵','🙈','🙉','🙊'],'monkey':['🐵','🙈','🙉','🙊'],
-  'oso':['🐻','🐼','🧸'],'bear':['🐻','🐼'],'panda':['🐼'],
-  'leon':['🦁'],'león':['🦁'],'lion':['🦁'],'tigre':['🐯'],'tiger':['🐯'],
-  'serpiente':['🐍'],'snake':['🐍'],'tortuga':['🐢'],'turtle':['🐢'],
-  'conejo':['🐰'],'rabbit':['🐰'],'bunny':['🐰'],'zorro':['🦊'],'fox':['🦊'],
-  'lobo':['🐺'],'wolf':['🐺'],'ciervo':['🦌'],'deer':['🦌'],
-  'gallina':['🐔','🐣'],'pollo':['🍗','🐔'],'pato':['🦆'],'duck':['🦆'],
-  'manzana':['🍎','🍏'],'apple':['🍎'],'naranja':['🍊'],'orange':['🍊'],
-  'limon':['🍋'],'limón':['🍋'],'lemon':['🍋'],'uva':['🍇'],'grape':['🍇'],
-  'sandia':['🍉'],'sandía':['🍉'],'watermelon':['🍉'],'fresa':['🍓'],'strawberry':['🍓'],
-  'platano':['🍌'],'plátano':['🍌'],'banana':['🍌'],'pina':['🍍'],'piña':['🍍'],'pineapple':['🍍'],
-  'aguacate':['🥑'],'avocado':['🥑'],'brocoli':['🥦'],'brócoli':['🥦'],'broccoli':['🥦'],
-  'zanahoria':['🥕'],'carrot':['🥕'],'maiz':['🌽'],'maíz':['🌽'],'corn':['🌽'],
-  'pan':['🍞','🥐','🥖'],'bread':['🍞'],'croissant':['🥐'],
-  'queso':['🧀'],'cheese':['🧀'],'huevo':['🥚','🍳'],'egg':['🥚','🍳'],
-  'popcorn':['🍿'],'palomitas':['🍿'],'dona':['🍩'],'donut':['🍩'],
-  'chocolate':['🍫'],'candy':['🍬'],'caramelo':['🍬'],'torta':['🎂','🍰'],
-  'cake':['🎂','🍰'],'pastel':['🎂','🍰'],
-  'barco':['⛵','🚢','🛥'],'boat':['⛵','🚢'],'ship':['🚢'],
-  'tren':['🚂','🚃','🚆'],'train':['🚂','🚃','🚆'],'metro':['🚇'],
-  'bicicleta':['🚲'],'bike':['🚲'],'bicycle':['🚲'],
-  'moto':['🏍','🛵'],'motorcycle':['🏍'],
-  'helicoptero':['🚁'],'helicóptero':['🚁'],'helicopter':['🚁'],
-  'bandera':['🏁','🚩','🏳'],'flag':['🏁','🚩'],
-  'montana':['🏔','⛰','🌋'],'montaña':['🏔','⛰','🌋'],'mountain':['🏔','⛰'],
-  'playa':['🏖','🌊','🏄'],'beach':['🏖','🌊'],'mar':['🌊','🏖','🐚'],
-  'desierto':['🏜','🌵'],'desert':['🏜','🌵'],
-  'ciudad':['🏙','🌆','🌇'],'city':['🏙','🌆'],'edificio':['🏢','🏬'],
-  'arcoiris':['🌈'],'arcoíris':['🌈'],'rainbow':['🌈'],
-  'nube':['☁','⛅','🌥'],'cloud':['☁','⛅'],'tormenta':['⛈','🌩','🌪'],
-  'rayo':['⚡','🌩'],'lightning':['⚡','🌩'],'trueno':['⛈','🌩'],
-  'viento':['💨','🌪'],'wind':['💨'],'tornado':['🌪'],
-  'cielo':['☀','🌤','⛅','🌥','☁','🌦'],'sky':['☀','🌤','⛅'],
-  'frio':['🥶','❄','🌨','⛄'],'caliente':['🌡','☀','🔥'],
-  'felicitaciones':['🎉','🥳','👏','🎊'],'congrats':['🎉','🥳','👏'],
-  'ganar':['🏆','🥇','🎖','🏅'],'win':['🏆','🥇'],'trofeo':['🏆'],'trophy':['🏆'],
-  'medalla':['🏅','🥇','🥈','🥉'],'medal':['🏅','🥇'],
-  'deporte':['⚽','🏀','🏈','⚾','🎾','🏐','🏊','🚴'],'sport':['⚽','🏀','🏈'],
-  'nadar':['🏊','🏄'],'swim':['🏊'],'correr':['🏃'],'run':['🏃'],
-  'pesas':['🏋'],'gym':['🏋','💪'],'ejercicio':['🏋','💪','🏃'],
-  'bailar':['💃','🕺'],'dance':['💃','🕺'],'baile':['💃','🕺'],
-  'cantar':['🎤','🎶','🎵'],'sing':['🎤'],'microfono':['🎤'],'micrófono':['🎤'],
-  'auricular':['🎧'],'headphones':['🎧'],'radio':['📻'],
-  'television':['📺'],'televisión':['📺'],'tv':['📺'],
-  'juego':['🎮','🕹','🎲'],'game':['🎮','🕹'],'videojuego':['🎮','🕹'],
-  'dado':['🎲'],'dice':['🎲'],'cartas':['🃏','🀄'],
-  'arte':['🎨','🖌','✏'],'art':['🎨','🖌'],'pintura':['🎨','🖌'],
-  'foto':['📷','📸','🖼'],'picture':['📷','🖼'],
-  'escritura':['✏','📝','📖'],'write':['✏','📝'],'lapiz':['✏','🖊'],'lápiz':['✏','🖊'],
-  'papel':['📄','📃','📋'],'paper':['📄','📃'],
-  'sobre':['✉','📧','📨'],'email':['📧','✉'],'carta':['✉','📨'],
-  'banano':['🍌'],'mango':['🥭'],'coco':['🥥'],'coconut':['🥥'],
-  'calabaza':['🎃'],'halloween':['🎃','👻','🦇'],
-  'navidad':['🎄','🎅','🎁','❄','⛄'],'christmas':['🎄','🎅','🎁'],
-  'ano nuevo':['🎆','🎇','🥂'],'año nuevo':['🎆','🎇','🥂'],'new year':['🎆','🎇'],
-  'ciencia':['🔬','🧪','⚗','🧫'],'science':['🔬','🧪'],'laboratorio':['🔬','🧪','⚗'],
-  'quimica':['⚗','🧪'],'química':['⚗','🧪'],'chemistry':['⚗','🧪'],
-  'matematicas':['📐','📏','🔢'],'matemáticas':['📐','📏'],'math':['📐','📏'],
-  'tierra':['🌍','🌎','🌏','🌱'],'planet':['🌍','🌍','🪐'],'planeta':['🌍','🌎','🪐'],
-  'satelite':['🛰','📡'],'satélite':['🛰','📡'],
-  'explosion':['💥'],'explosión':['💥'],'boom':['💥'],
-  'magia':['✨','🪄','🎩','🌟'],'magic':['✨','🪄','🎩'],
-  'brillo':['✨','💫','⭐','🌟'],'shine':['✨','💫','⭐'],
-  'cristal':['💎','🔮'],'crystal':['💎','🔮'],'bola':['🔮','⚽'],
-  'cocinero':['👨‍🍳'],'cocinar':['🍳','👨‍🍳'],'receta':['📖','🍳'],
-  'familia':['👨‍👩‍👧','👨‍👩‍👦','👪'],'family':['👨‍👩‍👧','👪'],
-  'bebe':['👶','🍼'],'bebé':['👶','🍼'],'baby':['👶','🍼'],
-  'nino':['👦','🧒'],'niño':['👦','🧒'],'nina':['👧','🧒'],'niña':['👧','🧒'],
-  'hombre':['👨','🧑','👱'],'man':['👨','🧑'],'mujer':['👩','🧕'],'woman':['👩','🧕'],
-  'abuelo':['👴'],'abuela':['👵'],'viejo':['👴','👵'],
-  'medico':['👨‍⚕','🩺','🏥'],'médico':['👨‍⚕','🩺'],'doctor':['👨‍⚕','🩺'],
-  'policia':['👮'],'policía':['👮'],'police':['👮'],'bombero':['👨‍🚒'],'firefighter':['👨‍🚒'],
-  'maestro':['👨‍🏫','📚'],'teacher':['👨‍🏫','📚'],'estudiante':['👨‍🎓','📚'],
-  'trabajar':['💼','👔','🖥'],'work':['💼','🖥'],'oficina':['💼','🏢','🖥'],
-  'vacaciones':['🌴','✈','🏖'],'vacation':['🌴','✈','🏖'],'viaje':['✈','🧳','🗺'],
-  'mochila':['🎒'],'backpack':['🎒'],'maleta':['🧳'],'suitcase':['🧳'],
-  'mapa':['🗺','🗾'],'map':['🗺'],'brujula':['🧭'],'brújula':['🧭'],'compass':['🧭'],
-  'ancla':['⚓'],'anchor':['⚓'],'barco':['⛵','🚢'],
-  'herramienta':['🔧','🔨','⚙','🪛'],'tool':['🔧','🔨','⚙'],
-  'martillo':['🔨','⚒'],'hammer':['🔨'],'llave inglesa':['🔧'],'wrench':['🔧'],
-  'engranaje':['⚙'],'gear':['⚙'],'tornillo':['🪛','🔩'],
-  'basura':['🗑','♻'],'trash':['🗑'],'reciclaje':['♻'],'recycle':['♻'],
-  'dinero':['💰','💵','💸','💳','🪙'],'cash':['💰','💵'],
-  'banco':['🏦','💳'],'bank':['🏦','💳'],'tarjeta':['💳'],
-  'gracias':['🙏','❤','😊'],'thanks':['🙏','❤'],'perdon':['🙏','😔'],'perdón':['🙏','😔'],
-  'sorry':['🙏','😔'],'disculpa':['🙏','😔'],
-  'si':['✅','👍','🙌'],'yes':['✅','👍'],'no':['❌','👎','🚫'],
-  'pregunta':['❓','🤔'],'question':['❓','🤔'],'respuesta':['💬','✅'],
-  'chat':['💬','🗨','💭'],'mensaje':['💬','📱','✉'],'message':['💬','📱','✉'],
-  'llamada':['📞','☎','📱'],'call':['📞','☎'],'telefono':['📞','☎','📱'],
-  'wifi':['📶'],'internet':['📶','🌐','💻'],'web':['🌐','💻'],
-  'seguridad':['🔒','🛡','🔐'],'security':['🔒','🛡'],'privado':['🔒','🤫'],
-  'secreto':['🤫','🔒','🔐'],'secret':['🤫','🔒'],
-  'nuevo':['🆕','✨'],'new':['🆕','✨'],'gratis':['🆓','✅'],'free':['🆓'],
-  'venta':['🏷','💰'],'sale':['🏷','💰'],'descuento':['🏷','💸'],
-  'favorito':['⭐','❤','🌟'],'favorite':['⭐','❤','🌟'],
-  'buscar':['🔍','🔎'],'search':['🔍','🔎'],'lupa':['🔍','🔎'],
-  'alerta':['⚠','🚨','🔔'],'alert':['⚠','🚨'],'notificacion':['🔔','📢'],'notificación':['🔔','📢'],
-  'silencio':['🤫','🔕','😶'],'silence':['🤫','🔕'],'mudo':['🔕','😶'],
-  'fuerte':['💪','🔊','⚡'],'loud':['🔊','📢'],
+var EMOJI_MAP = {
+  'fuego':['🔥'],'fire':['🔥'],'calor':['🔥','☀️'],
+  'corazon':['❤️','🧡','💛','💚','💙','💜'],'corazón':['❤️','💕','💞'],'love':['❤️','💕'],
+  'cara':['😀','😊','😍','😎'],'feliz':['😀','😄','😊'],'happy':['😀','😄'],
+  'risa':['😂','🤣','😆'],'laugh':['😂','🤣'],
+  'ok':['👍','✅','👌'],'bien':['👍','✅','😊'],
+  'star':['⭐','🌟','💫','✨'],'estrella':['⭐','🌟','✨'],
+  'corona':['👑'],'crown':['👑'],'rey':['👑'],
+  'diamante':['💎'],'diamond':['💎'],'joya':['💎'],
+  'fuerte':['💪','🔥','⚡'],'strong':['💪'],
+  'dinero':['💰','💵','💸'],'money':['💰','💵'],
+  'musica':['🎵','🎶','🎸','🎤'],'música':['🎵','🎶'],
+  'vip':['👑','💎','⭐'],'pro':['💎','🏆','⭐'],
+  'animal':['🐶','🐱','🦁','🐸'],'perro':['🐶'],'gato':['🐱'],
+  'comida':['🍕','🍔','🍜','🍣','🍰'],'pizza':['🍕'],
 };
 
-var SEQUENCES = [
-  '🎉🎊🎈','❤🔥💯','😍🥰💕','💪🔥⚡','🤣😂💀',
-  '✨💫⭐','🌙⭐✨','🌈☀🌸','🎵🎶🎸','🍕🍔🌮',
-  '🚀💫🌌','🐶🐱🐹','🌺🌸🌻','🦁🐯🐆','🍎🍊🍋',
-  '👑💎✨','🎮🕹👾','📚✏🎓','🏋💪🔥','🌊🏄⛵',
-];
-
-/* ══════════════════════════════════════
-   PANEL EMOJIS
-══════════════════════════════════════ */
 (function(){
-  var cats  = document.getElementById('emoji-cats');
-  var grid  = document.getElementById('emoji-grid');
-  var searchInput = document.getElementById('emoji-search');
-  var nameResult  = document.getElementById('emoji-name-result');
+  var cats = document.getElementById('emoji-cats');
+  var grid = document.getElementById('emoji-grid');
+  var srch = document.getElementById('emoji-search');
+  if (!cats) return;
 
-  // Build category buttons
-  Object.keys(EMOJI_DB).forEach(function(cat, i){
-    var btn = document.createElement('button');
-    btn.className = 'emoji-cat' + (i === 0 ? ' active' : '');
-    btn.textContent = cat;
-    btn.dataset.cat = cat;
-    btn.addEventListener('click', function(){
-      document.querySelectorAll('.emoji-cat').forEach(function(b){ b.classList.remove('active'); });
-      btn.classList.add('active');
-      renderGrid(cat);
+  function tile(em, cont) {
+    var b = document.createElement('button');
+    b.className = 'ptile'; b.textContent = em;
+    b.addEventListener('click', function(){ insertIntoCanvas(em); });
+    cont.appendChild(b);
+  }
+
+  function renderCat(cat) {
+    grid.innerHTML = '';
+    (EMOJI_DB[cat]||[]).forEach(function(e){ tile(e,grid); });
+  }
+
+  Object.keys(EMOJI_DB).forEach(function(cat,i){
+    var b = document.createElement('button');
+    b.className='catbtn'+(i===0?' active':''); b.textContent=cat;
+    b.addEventListener('click',function(){
+      document.querySelectorAll('#emoji-cats .catbtn').forEach(function(x){x.classList.remove('active');});
+      b.classList.add('active'); renderCat(cat); srch.value='';
     });
-    cats.appendChild(btn);
+    cats.appendChild(b);
   });
 
-  function makeTile(em, container) {
-    var tile = document.createElement('button');
-    tile.className = 'emoji-tile';
-    tile.setAttribute('role','listitem');
-    tile.setAttribute('title','Copiar ' + em);
-    tile.textContent = em;
-    tile.addEventListener('click', function(){
-      navigator.clipboard.writeText(em).then(function(){
-        tile.classList.add('copied');
-        setTimeout(function(){ tile.classList.remove('copied'); }, 800);
-        toast('Copiado: ' + em);
-      }).catch(function(){});
+  srch.addEventListener('input',function(){
+    var q=srch.value.toLowerCase().trim();
+    if(!q){renderCat(Object.keys(EMOJI_DB)[0]);return;}
+    var r=[];
+    Object.keys(EMOJI_MAP).forEach(function(k){
+      if(k.includes(q)||q.includes(k)){(EMOJI_MAP[k]||[]).forEach(function(e){if(!r.includes(e))r.push(e);});}
     });
-    container.appendChild(tile);
-  }
+    Object.values(EMOJI_DB).forEach(function(a){a.forEach(function(e){if(!r.includes(e))r.push(e);});});
+    grid.innerHTML=''; r.slice(0,80).forEach(function(e){tile(e,grid);});
+  });
 
-  function renderGrid(cat) {
-    grid.innerHTML = '';
-    (EMOJI_DB[cat] || []).forEach(function(em){ makeTile(em, grid); });
-  }
-
-  // Search
-  function renderSearch(query) {
-    nameResult.innerHTML = '';
-    var q = (query || '').toLowerCase().trim();
-
-    if (!q) {
-      var activeBtn = cats.querySelector('.emoji-cat.active');
-      renderGrid(activeBtn ? activeBtn.dataset.cat : Object.keys(EMOJI_DB)[0]);
-      return;
-    }
-
-    var results = [];
-
-    // keyword map (array values)
-    Object.keys(EMOJI_SEARCH_MAP).forEach(function(key){
-      if (key.includes(q) || q.includes(key)) {
-        var val = EMOJI_SEARCH_MAP[key];
-        var arr = Array.isArray(val) ? val : [val];
-        arr.forEach(function(em){ if (!results.includes(em)) results.push(em); });
-      }
-    });
-
-    // scan all categories for partial text match
-    Object.values(EMOJI_DB).forEach(function(arr){
-      arr.forEach(function(em){
-        if (!results.includes(em) && em.toLowerCase().includes(q)) results.push(em);
-      });
-    });
-
-    // show results in the MAIN GRID (big and visible)
-    grid.innerHTML = '';
-    if (results.length === 0) {
-      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">🔍</div>Sin resultados para "' + query + '"</div>';
-      return;
-    }
-    results.forEach(function(em){ makeTile(em, grid); });
-    nameResult.innerHTML = '<span style="font-size:11px;color:var(--t4)">' + results.length + ' resultado' + (results.length !== 1 ? 's' : '') + '</span>';
-  }
-
-  searchInput.addEventListener('input', function(){ renderSearch(searchInput.value); });
-
-  renderGrid(Object.keys(EMOJI_DB)[0]);
+  renderCat(Object.keys(EMOJI_DB)[0]);
 })();
 
-/* ══════════════════════════════════════
-   PANEL SÍMBOLOS
-══════════════════════════════════════ */
+/* ══ SYMBOLS ══ */
+var SYMBOLS = {
+  'Flechas':      ['←','→','↑','↓','↔','↕','↖','↗','↘','↙','↩','↪','⇐','⇒','⇑','⇓','⇔','⇕','➔','➘','➙','➚','➛','➜','➝','➞','➟','➠','➡','➢','➤','➥','➦','➧','➨','➩','➪','➫','➬','➭','➮','➯','➱','➲','➳','➴','➵','➶','➷','➸','➹','➺','➻','➼','➽','➾'],
+  'Matemáticas':  ['+','−','×','÷','=','≠','<','>','≤','≥','±','∓','∞','∝','∂','∇','∆','∑','∏','∫','∬','∭','∮','∴','∵','∼','≅','≈','≡','⊂','⊃','⊆','⊇','⊕','⊖','⊗','⊘','⊙','√','∛','∜','∥','∦','∧','∨','∩','∪','∈','∉','∅','ℕ','ℤ','ℚ','ℝ','ℂ','°','′','″','‴','‰','№'],
+  'Geométricos':  ['■','□','▢','▣','▤','▥','▦','▧','▨','▩','▪','▫','▬','▭','▮','▯','▲','△','▴','▵','▶','▷','▸','▹','►','▻','▼','▽','▾','▿','◀','◁','◂','◃','◄','◅','◆','◇','◈','◉','◊','○','◌','◍','◎','●','◐','◑','◒','◓','◔','◕','◢','◣','◤','◥','⬛','⬜','⬟','⬠','⬡','⬢','⬣','⭐','⬤','⭕'],
+  'Estrellas':    ['★','☆','✦','✧','✨','✩','✪','✫','✬','✭','✮','✯','✰','✱','✲','✳','✴','✵','✶','✷','✸','✹','✺','✻','✼','✽','✾','✿','❀','❁','❂','❃','❄','❅','❆','❇','❈','❉','❊','❋','⁂','⁎','⁑','☽','☾','☀','☁','☂','☃','☄'],
+  'Monedas':      ['$','€','£','¥','¢','₤','₦','₩','₪','₫','₭','₮','₱','₲','₳','₴','₵','₹','₺','₼','₽','₾','₿','¤','฿'],
+  'Puntuación':   ['«','»','‹','›','„','\u201C','\u201D','‚','\u2018','\u2019','‐','‑','‒','–','—','―','‖','‗','†','‡','•','‣','‥','…','‰','′','″','‴','※','‼','⁇','⁈','⁉','¡','¿','¦','§','©','®','°','²','³','µ','¶','¼','½','¾','×','÷'],
+  'Griegas':      ['Α','Β','Γ','Δ','Ε','Ζ','Η','Θ','Ι','Κ','Λ','Μ','Ν','Ξ','Ο','Π','Ρ','Σ','Τ','Υ','Φ','Χ','Ψ','Ω','α','β','γ','δ','ε','ζ','η','θ','ι','κ','λ','μ','ν','ξ','ο','π','ρ','ς','σ','τ','υ','φ','χ','ψ','ω'],
+  'Cajas/Líneas': ['─','━','│','┃','┄','┅','┆','┇','┈','┉','┊','┋','┌','┍','┎','┏','┐','┑','┒','┓','└','┕','┖','┗','┘','┙','┚','┛','├','┤','┬','┴','┼','╔','╗','╚','╝','╠','╣','╦','╩','╬','═','║','╒','╓','╕','╖','╘','╙','╛','╜','╭','╮','╯','╰','╱','╲','╳'],
+  'Música/Juego': ['♩','♪','♫','♬','♭','♮','♯','♔','♕','♖','♗','♘','♙','♚','♛','♜','♝','♞','♟','♠','♡','♢','♣','♤','♥','♦','♧','⚀','⚁','⚂','⚃','⚄','⚅','✓','✔','✕','✖','✗','✘'],
+};
+
 (function(){
-  var SYMBOLS = {
-    'Flechas': ['←','→','↑','↓','↔','↕','↖','↗','↘','↙','↚','↛','↜','↝','↞','↟','↠','↡','↢','↣','↤','↥','↦','↧','↨','↩','↪','↫','↬','↭','↮','↯','↰','↱','↲','↳','↴','↵','↶','↷','↸','↹','↺','↻','⇐','⇒','⇑','⇓','⇔','⇕','⇖','⇗','⇘','⇙','⇚','⇛','⇜','⇝','⇞','⇟','⇠','⇡','⇢','⇣','⇤','⇥','⇦','⇧','⇨','⇩','⇪','⇫','⇬','⇭','⇮','⇯','⇰','⇱','⇲','⇳','⇴','⇵','⇶','⇷','⇸','⇹','⇺','⇻','⇼','⇽','⇾','⇿','➔','➘','➙','➚','➛','➜','➝','➞','➟','➠','➡','➢','➣','➤','➥','➦','➧','➨','➩','➪','➫','➬','➭','➮','➯','➱','➲','➳','➴','➵','➶','➷','➸','➹','➺','➻','➼','➽','➾'],
-    'Matemáticas': ['+','−','×','÷','=','≠','<','>','≤','≥','±','∓','∞','∝','∂','∇','∆','∑','∏','∐','∫','∬','∭','∮','∯','∰','∴','∵','∶','∷','∼','≅','≈','≡','≢','≣','≤','≥','≦','≧','≨','≩','≪','≫','≬','≭','≮','≯','≰','≱','≲','≳','≴','≵','≶','≷','≸','≹','≺','≻','≼','≽','≾','≿','⊀','⊁','⊂','⊃','⊄','⊅','⊆','⊇','⊈','⊉','⊊','⊋','⊌','⊍','⊎','⊏','⊐','⊑','⊒','⊓','⊔','⊕','⊖','⊗','⊘','⊙','⊚','⊛','⊜','⊝','⊞','⊟','⊠','⊡','⊢','⊣','⊤','⊥','⊦','⊧','⊨','⊩','⊪','⊫','√','∛','∜','∥','∦','∧','∨','∩','∪','∈','∉','∊','∋','∌','∍','∎','∏','∅','ℕ','ℤ','ℚ','ℝ','ℂ','ℙ','⌀','°','′','″','‴','‰','‱','№'],
-    'Geométricos': ['■','□','▢','▣','▤','▥','▦','▧','▨','▩','▪','▫','▬','▭','▮','▯','▰','▱','▲','△','▴','▵','▶','▷','▸','▹','►','▻','▼','▽','▾','▿','◀','◁','◂','◃','◄','◅','◆','◇','◈','◉','◊','○','◌','◍','◎','●','◐','◑','◒','◓','◔','◕','◖','◗','◘','◙','◚','◛','◜','◝','◞','◟','◠','◡','◢','◣','◤','◥','◦','◧','◨','◩','◪','◫','◬','◭','◮','◯','⬛','⬜','⬝','⬞','⬟','⬠','⬡','⬢','⬣','⭐','⬤','⬥','⬦','⬧','⬨','⬩','⬪','⬫','⬬','⬭','⬮','⬯','⭓','⭔','⭕','⭖','⭗','⭘','⭙','⬰','⬱','⬲','⬳','⬴','⬵','⬶','⬷','⬸','⬹','⬺','⬻','⬼','⬽','⬾','⬿'],
-    'Estrellas': ['★','☆','✦','✧','✨','✩','✪','✫','✬','✭','✮','✯','✰','✱','✲','✳','✴','✵','✶','✷','✸','✹','✺','✻','✼','✽','✾','✿','❀','❁','❂','❃','❄','❅','❆','❇','❈','❉','❊','❋','⁂','⁎','⁑','☽','☾','☀','☁','☂','☃','☄','☇','☈','☉','☊','☋','☌','☍','☎','☏','☐','☑','☒','☓','☔','☕','☖','☗','☘','☙','☚','☛','☜','☝','☞','☟','☠','☡','☢','☣','☤','☥','☦','☧','☨','☩','☪','☫','☬','☭','☮','☯','☰','☱','☲','☳','☴','☵','☶','☷','☸','☹','☺','☻','☼','☽','☾','☿'],
-    'Monedas': ['$','€','£','¥','¢','₣','₤','₥','₦','₧','₨','₩','₪','₫','₭','₮','₯','₰','₱','₲','₳','₴','₵','₶','₷','₸','₹','₺','₻','₼','₽','₾','₿','¤','฿','﹩','＄','￠','￡','￢','￣','￤','￥','￦'],
-    'Puntuación deco': ['«','»','‹','›','„','"','"','‚',''',''','‐','‑','‒','–','—','―','‖','‗','†','‡','•','‣','‥','…','‧','‰','‱','′','″','‴','‵','‶','‷','‸','‹','›','※','‼','⁃','⁄','⁅','⁆','⁇','⁈','⁉','⁊','⁋','⁌','⁍','⁎','⁏','⁐','⁑','⁒','⁓','⁔','⁕','⁖','⁗','⁘','⁙','⁚','⁛','⁜','⁝','⁞','¡','¿','¦','§','¨','©','ª','¬','®','¯','°','²','³','µ','¶','¹','º','¼','½','¾','×','÷','æ','ø','þ'],
-    'Letras griegas': ['Α','Β','Γ','Δ','Ε','Ζ','Η','Θ','Ι','Κ','Λ','Μ','Ν','Ξ','Ο','Π','Ρ','Σ','Τ','Υ','Φ','Χ','Ψ','Ω','α','β','γ','δ','ε','ζ','η','θ','ι','κ','λ','μ','ν','ξ','ο','π','ρ','ς','σ','τ','υ','φ','χ','ψ','ω','ϐ','ϑ','ϒ','ϓ','ϔ','ϕ','ϖ','ϗ','Ϙ','ϙ','Ϛ','ϛ','Ϝ','ϝ','Ϟ','ϟ','Ϡ','ϡ','ϰ','ϱ','ϲ','ϳ','ϴ','ϵ','϶','Ͱ','ͱ','Ͳ','ͳ','ʹ','͵','Ͷ','ͷ','ͺ','ͻ','ͼ','ͽ',';','΄','΅','Ά','·','Έ','Ή','Ί','Ό','Ύ','Ώ'],
-    'Cajas y líneas': ['─','━','│','┃','┄','┅','┆','┇','┈','┉','┊','┋','┌','┍','┎','┏','┐','┑','┒','┓','└','┕','┖','┗','┘','┙','┚','┛','├','┝','┞','┟','┠','┡','┢','┣','┤','┥','┦','┧','┨','┩','┪','┫','┬','┭','┮','┯','┰','┱','┲','┳','┴','┵','┶','┷','┸','┹','┺','┻','┼','┽','┾','┿','╀','╁','╂','╃','╄','╅','╆','╇','╈','╉','╊','╋','╌','╍','╎','╏','═','║','╒','╓','╔','╕','╖','╗','╘','╙','╚','╛','╜','╝','╞','╟','╠','╡','╢','╣','╤','╥','╦','╧','╨','╩','╪','╫','╬','╭','╮','╯','╰','╱','╲','╳','╴','╵','╶','╷','╸','╹','╺','╻','╼','╽','╾','╿'],
-    'Música y más': ['♩','♪','♫','♬','♭','♮','♯','𝄞','𝄟','𝄠','𝄡','𝄢','𝄣','𝄤','𝄥','𝄦','♔','♕','♖','♗','♘','♙','♚','♛','♜','♝','♞','♟','♠','♡','♢','♣','♤','♥','♦','♧','⚀','⚁','⚂','⚃','⚄','⚅','✉','✊','✋','✌','✍','✎','✏','✐','✑','✒','✓','✔','✕','✖','✗','✘','✙','✚','✛','✜','✝','✞','✟','✠','✡','✢','✣','✤','✥','✦','⌚','⌛','⌜','⌝','⌞','⌟','⌠','⌡','⌢','⌣','⌤','⌥','⌦','⌧','⌨','⌫','⌬','⌭','⌮','⌯','⌰','⌱','⌲','⌳','⌴','⌵','⌶','⌷','⌸','⌹','⌺','⌻','⌼','⌽','⌾','⌿'],
-  };
+  var cats=document.getElementById('sym-cats');
+  var grid=document.getElementById('sym-grid');
+  var srch=document.getElementById('sym-search');
+  if(!cats)return;
 
-  var totalSyms = Object.values(SYMBOLS).reduce(function(acc,arr){ return acc+arr.length; }, 0);
-  var countEl = document.getElementById('sym-count');
-  if (countEl) countEl.textContent = totalSyms;
+  function tile(sym,cont){
+    var b=document.createElement('button');
+    b.className='ptile sym'; b.textContent=sym;
+    b.addEventListener('click',function(){insertIntoCanvas(sym);});
+    cont.appendChild(b);
+  }
 
-  var symCats = document.getElementById('sym-cats');
-  var symGrid = document.getElementById('sym-grid');
-  var symSearch = document.getElementById('sym-search');
-  var symResult = document.getElementById('sym-search-result');
+  function renderSym(cat){
+    grid.innerHTML='';
+    (SYMBOLS[cat]||[]).forEach(function(s){tile(s,grid);});
+  }
 
-  if (!symCats) return;
-
-  Object.keys(SYMBOLS).forEach(function(cat, i){
-    var btn = document.createElement('button');
-    btn.className = 'emoji-cat' + (i === 0 ? ' active' : '');
-    btn.textContent = cat;
-    btn.dataset.cat = cat;
-    btn.addEventListener('click', function(){
-      document.querySelectorAll('#sym-cats .emoji-cat').forEach(function(b){ b.classList.remove('active'); });
-      btn.classList.add('active');
-      renderSymGrid(cat);
+  Object.keys(SYMBOLS).forEach(function(cat,i){
+    var b=document.createElement('button');
+    b.className='catbtn'+(i===0?' active':''); b.textContent=cat;
+    b.addEventListener('click',function(){
+      document.querySelectorAll('#sym-cats .catbtn').forEach(function(x){x.classList.remove('active');});
+      b.classList.add('active'); renderSym(cat); srch.value='';
     });
-    symCats.appendChild(btn);
+    cats.appendChild(b);
   });
 
-  function makeSymTile(sym, container){
-    var tile = document.createElement('button');
-    tile.className = 'sym-tile';
-    tile.setAttribute('role','listitem');
-    tile.setAttribute('title', 'Copiar: ' + sym + '  U+' + sym.codePointAt(0).toString(16).toUpperCase().padStart(4,'0'));
-    tile.textContent = sym;
-    tile.addEventListener('click', function(){
-      navigator.clipboard.writeText(sym).then(function(){
-        tile.classList.add('copied');
-        setTimeout(function(){ tile.classList.remove('copied'); }, 700);
-        toast('Copiado: ' + sym);
-      }).catch(function(){ toast('Copia manual: ' + sym); });
-    });
-    container.appendChild(tile);
-  }
-
-  function renderSymGrid(cat){
-    symGrid.innerHTML = '';
-    (SYMBOLS[cat] || []).forEach(function(s){ makeSymTile(s, symGrid); });
-  }
-
-  function renderSymSearch(q){
-    symResult.innerHTML = '';
-    if (!q) return;
-    q = q.toLowerCase().trim();
-    var results = [];
-    var CAT_KEYWORDS = {
-      'Flechas':['flecha','arrow','arriba','abajo','izquierda','derecha','left','right','up','down'],
-      'Matemáticas':['mate','math','suma','resta','mult','divis','igual','mayor','menor','infinito','integral','raiz'],
-      'Geométricos':['cuadrado','circulo','triángulo','rombo','hexagono','forma','shape','punto'],
-      'Estrellas':['estrella','star','flor','snow','nieve','cruz'],
-      'Monedas':['moneda','dinero','currency','euro','dolar','libra','yen','peso','bitcoin'],
-      'Puntuación deco':['punto','coma','guion','comilla','virgulilla','tilde','marca'],
-      'Letras griegas':['griego','greek','alfa','beta','gamma','delta','pi','omega','theta','sigma'],
-      'Cajas y líneas':['caja','linea','box','line','borde','cuadro','tabla'],
-      'Música y más':['musica','nota','chess','ajedrez','dado','dado','baraja','musica'],
-    };
+  srch.addEventListener('input',function(){
+    var q=srch.value.toLowerCase().trim();
+    if(!q){renderSym(Object.keys(SYMBOLS)[0]);return;}
+    var r=[];
+    var KW={'Flechas':['flecha','arrow'],'Matemáticas':['mate','math','suma','infinito'],'Geométricos':['cuadrado','circulo','triangulo'],'Estrellas':['estrella','star','flor','nieve'],'Monedas':['dinero','euro','dolar','peso'],'Puntuación':['punto','coma','guion'],'Griegas':['griego','alfa','beta','pi'],'Cajas/Líneas':['caja','linea','borde'],'Música/Juego':['musica','nota','chess','dado']};
     Object.keys(SYMBOLS).forEach(function(cat){
-      var kws = CAT_KEYWORDS[cat] || [];
-      var match = kws.some(function(k){ return k.includes(q) || q.includes(k.slice(0,4)); });
-      if (match) {
-        SYMBOLS[cat].forEach(function(s){ if (!results.includes(s)) results.push(s); });
+      var kws=KW[cat]||[];
+      if(kws.some(function(k){return k.includes(q)||q.includes(k.slice(0,4));})){
+        SYMBOLS[cat].forEach(function(s){if(!r.includes(s))r.push(s);});
       }
     });
-    // direct Unicode name/category match by description
-    if (results.length === 0) {
-      Object.values(SYMBOLS).forEach(function(arr){
-        arr.forEach(function(s){ if (!results.includes(s)) results.push(s); });
-      });
-      results = results.slice(0, 40);
-    }
-    if (results.length === 0){
-      symResult.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div>Sin resultados</div>';
-      return;
-    }
-    results.slice(0,60).forEach(function(s){ makeSymTile(s, symResult); });
-  }
+    if(!r.length){Object.values(SYMBOLS).forEach(function(a){a.forEach(function(s){if(!r.includes(s))r.push(s);});});}
+    grid.innerHTML=''; r.slice(0,80).forEach(function(s){tile(s,grid);});
+  });
 
-  symSearch.addEventListener('input', function(){ renderSymSearch(symSearch.value); });
-  renderSymGrid(Object.keys(SYMBOLS)[0]);
+  renderSym(Object.keys(SYMBOLS)[0]);
 })();
 
-/* ══════════════════════════════════════
-   PANEL CAJITA
-══════════════════════════════════════ */
+/* ══ FUENTES ══ */
 (function(){
-  var input  = document.getElementById('cajita-input');
-  var result = document.getElementById('cajita-result');
+  var input=document.getElementById('fuentes-input');
+  var grid=document.getElementById('fuentes-grid');
+  if(!input||!grid||!window.DIUSF)return;
+  var convert=window.DIUSF.convert;
+  var STYLES=window.DIUSF.STYLES;
 
-  var stChars = document.getElementById('st-chars');
-  var stWords = document.getElementById('st-words');
-  var stLines = document.getElementById('st-lines');
-  var stEmoji = document.getElementById('st-emoji');
-
-  var EMOJI_RE = /\p{Emoji_Presentation}/gu;
-
-  function countEmoji(s){ return (s.match(EMOJI_RE) || []).length; }
-
-  function updateStats(val) {
-    stChars.textContent = [...val].length;
-    stWords.textContent = val.trim() ? val.trim().split(/\s+/).length : 0;
-    stLines.textContent = val ? val.split('\n').length : 0;
-    stEmoji.textContent = countEmoji(val);
-  }
-
-  /* ── Unicode-aware normalizer: strip math/bold/italic Unicode to ASCII ── */
-  function unicodeToASCII(str) {
-    // Map Unicode math block chars back to ASCII (covers Bold, Italic, Script, etc.)
-    return [...str].map(function(ch) {
-      var cp = ch.codePointAt(0);
-      // Math Bold Uppercase A-Z: U+1D400–U+1D419
-      if (cp >= 0x1D400 && cp <= 0x1D419) return String.fromCharCode(cp - 0x1D400 + 65);
-      // Math Bold Lowercase a-z: U+1D41A–U+1D433
-      if (cp >= 0x1D41A && cp <= 0x1D433) return String.fromCharCode(cp - 0x1D41A + 97);
-      // Math Italic Uppercase A-Z: U+1D434–U+1D44D (skip H=210C,I=2111,…)
-      if (cp >= 0x1D434 && cp <= 0x1D44D) return String.fromCharCode(cp - 0x1D434 + 65);
-      // Math Italic Lowercase: U+1D44E–U+1D467
-      if (cp >= 0x1D44E && cp <= 0x1D467) return String.fromCharCode(cp - 0x1D44E + 97);
-      // Math Bold Italic Upper: U+1D468–U+1D481
-      if (cp >= 0x1D468 && cp <= 0x1D481) return String.fromCharCode(cp - 0x1D468 + 65);
-      // Math Bold Italic Lower: U+1D482–U+1D49B
-      if (cp >= 0x1D482 && cp <= 0x1D49B) return String.fromCharCode(cp - 0x1D482 + 97);
-      // Script Upper: U+1D49C–U+1D4B5
-      if (cp >= 0x1D49C && cp <= 0x1D4B5) return String.fromCharCode(cp - 0x1D49C + 65);
-      // Script Lower: U+1D4B6–U+1D4CF
-      if (cp >= 0x1D4B6 && cp <= 0x1D4CF) return String.fromCharCode(cp - 0x1D4B6 + 97);
-      // Bold Script Upper: U+1D4D0–U+1D4E9
-      if (cp >= 0x1D4D0 && cp <= 0x1D4E9) return String.fromCharCode(cp - 0x1D4D0 + 65);
-      // Bold Script Lower: U+1D4EA–U+1D503
-      if (cp >= 0x1D4EA && cp <= 0x1D503) return String.fromCharCode(cp - 0x1D4EA + 97);
-      // Fraktur / Double-Struck Upper: U+1D504–U+1D56B
-      if (cp >= 0x1D504 && cp <= 0x1D51D) return String.fromCharCode(cp - 0x1D504 + 65);
-      if (cp >= 0x1D51E && cp <= 0x1D537) return String.fromCharCode(cp - 0x1D51E + 97);
-      if (cp >= 0x1D538 && cp <= 0x1D551) return String.fromCharCode(cp - 0x1D538 + 65);
-      if (cp >= 0x1D552 && cp <= 0x1D56B) return String.fromCharCode(cp - 0x1D552 + 97);
-      // Bold Fraktur Upper/Lower
-      if (cp >= 0x1D56C && cp <= 0x1D585) return String.fromCharCode(cp - 0x1D56C + 65);
-      if (cp >= 0x1D586 && cp <= 0x1D59F) return String.fromCharCode(cp - 0x1D586 + 97);
-      // Sans Upper/Lower
-      if (cp >= 0x1D5A0 && cp <= 0x1D5B9) return String.fromCharCode(cp - 0x1D5A0 + 65);
-      if (cp >= 0x1D5BA && cp <= 0x1D5D3) return String.fromCharCode(cp - 0x1D5BA + 97);
-      // Sans Bold/Italic Upper/Lower
-      if (cp >= 0x1D5D4 && cp <= 0x1D5ED) return String.fromCharCode(cp - 0x1D5D4 + 65);
-      if (cp >= 0x1D5EE && cp <= 0x1D607) return String.fromCharCode(cp - 0x1D5EE + 97);
-      if (cp >= 0x1D608 && cp <= 0x1D621) return String.fromCharCode(cp - 0x1D608 + 65);
-      if (cp >= 0x1D622 && cp <= 0x1D63B) return String.fromCharCode(cp - 0x1D622 + 97);
-      if (cp >= 0x1D63C && cp <= 0x1D655) return String.fromCharCode(cp - 0x1D63C + 65);
-      if (cp >= 0x1D656 && cp <= 0x1D66F) return String.fromCharCode(cp - 0x1D656 + 97);
-      if (cp >= 0x1D670 && cp <= 0x1D689) return String.fromCharCode(cp - 0x1D670 + 65);
-      if (cp >= 0x1D68A && cp <= 0x1D6A3) return String.fromCharCode(cp - 0x1D68A + 97);
-      // Math Bold digits: U+1D7CE–U+1D7D7
-      if (cp >= 0x1D7CE && cp <= 0x1D7D7) return String.fromCharCode(cp - 0x1D7CE + 48);
-      // Double-struck digits: U+1D7D8–U+1D7E1
-      if (cp >= 0x1D7D8 && cp <= 0x1D7E1) return String.fromCharCode(cp - 0x1D7D8 + 48);
-      // Sans digits, Mono digits
-      if (cp >= 0x1D7E2 && cp <= 0x1D7EB) return String.fromCharCode(cp - 0x1D7E2 + 48);
-      if (cp >= 0x1D7EC && cp <= 0x1D7F5) return String.fromCharCode(cp - 0x1D7EC + 48);
-      if (cp >= 0x1D7F6 && cp <= 0x1D7FF) return String.fromCharCode(cp - 0x1D7F6 + 48);
-      // Fullwidth A-Z: U+FF21–U+FF3A
-      if (cp >= 0xFF21 && cp <= 0xFF3A) return String.fromCharCode(cp - 0xFF21 + 65);
-      // Fullwidth a-z: U+FF41–U+FF5A
-      if (cp >= 0xFF41 && cp <= 0xFF5A) return String.fromCharCode(cp - 0xFF41 + 97);
-      // Fullwidth 0-9: U+FF10–U+FF19
-      if (cp >= 0xFF10 && cp <= 0xFF19) return String.fromCharCode(cp - 0xFF10 + 48);
-      // Circled Latin Upper: U+24B6–U+24CF
-      if (cp >= 0x24B6 && cp <= 0x24CF) return String.fromCharCode(cp - 0x24B6 + 65);
-      // Circled Latin Lower: U+24D0–U+24E9
-      if (cp >= 0x24D0 && cp <= 0x24E9) return String.fromCharCode(cp - 0x24D0 + 97);
-      // Squared Latin Upper: U+1F130–U+1F149
-      if (cp >= 0x1F130 && cp <= 0x1F149) return String.fromCharCode(cp - 0x1F130 + 65);
-      // Regional indicator symbols: U+1F1E6–U+1F1FF (leave as-is)
-      return ch;
-    }).join('');
-  }
-
-  function normalize(v){ return unicodeToASCII(v); }
-
-  function applyAndUpdate(fn) {
-    var val = input.value;
-    result.textContent = fn(val);
-  }
-
-  /* Title case helper */
-  function toTitleCase(v) {
-    return normalize(v).replace(/\S+/g, function(w){ return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); });
-  }
-
-  /* ROT13 */
-  function rot13(v) {
-    return normalize(v).replace(/[a-zA-Z]/g, function(c){
-      var base = c <= 'Z' ? 65 : 97;
-      return String.fromCharCode(((c.charCodeAt(0) - base + 13) % 26) + base);
+  function render(){
+    var txt=input.value||'Texto';
+    grid.innerHTML='';
+    STYLES.forEach(function(style){
+      var out=convert(txt,style);
+      var card=document.createElement('button');
+      card.className='fuente-card';
+      card.innerHTML='<span class="fn">'+style.name+'</span><span class="fp">'+out+'</span>';
+      card.addEventListener('click',function(){insertIntoCanvas(out);toast('Fuente insertada ✓');});
+      grid.appendChild(card);
     });
   }
 
-  /* Remove accents */
-  function removeAccents(v){
-    return normalize(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').normalize('NFC');
-  }
-
-  /* Slug */
-  function toSlug(v){
-    return removeAccents(v).toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9\-]/g,'').replace(/-+/g,'-').replace(/^-|-$/g,'');
-  }
-
-  /* camelCase */
-  function toCamel(v){
-    var words = removeAccents(normalize(v)).toLowerCase().split(/[\s_\-]+/).filter(Boolean);
-    return words.map(function(w,i){ return i===0 ? w : w.charAt(0).toUpperCase()+w.slice(1); }).join('');
-  }
-
-  /* snake_case */
-  function toSnake(v){
-    return removeAccents(normalize(v)).toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'').replace(/_+/g,'_').replace(/^_|_$/g,'');
-  }
-
-  /* kebab-case */
-  function toKebab(v){
-    return removeAccents(normalize(v)).toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9\-]/g,'').replace(/-+/g,'-').replace(/^-|-$/g,'');
-  }
-
-  /* Sentence case */
-  function toSentence(v){
-    var s = normalize(v).toLowerCase().trim();
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
-
-  input.addEventListener('input', function(){
-    updateStats(input.value);
-    result.textContent = '';
-  });
-
-  function getBtn(id){ return document.getElementById(id); }
-
-  getBtn('tx-upper').addEventListener('click',    function(){ applyAndUpdate(function(v){ return normalize(v).toUpperCase(); }); });
-  getBtn('tx-lower').addEventListener('click',    function(){ applyAndUpdate(function(v){ return normalize(v).toLowerCase(); }); });
-  getBtn('tx-title').addEventListener('click',    function(){ applyAndUpdate(toTitleCase); });
-  getBtn('tx-sentence').addEventListener('click', function(){ applyAndUpdate(toSentence); });
-  getBtn('tx-camel').addEventListener('click',    function(){ applyAndUpdate(toCamel); });
-  getBtn('tx-snake').addEventListener('click',    function(){ applyAndUpdate(toSnake); });
-  getBtn('tx-kebab').addEventListener('click',    function(){ applyAndUpdate(toKebab); });
-  getBtn('tx-reverse').addEventListener('click',  function(){ applyAndUpdate(function(v){ return [...v].reverse().join(''); }); });
-  getBtn('tx-nosp').addEventListener('click',     function(){ applyAndUpdate(function(v){ return v.replace(/\s+/g,''); }); });
-  getBtn('tx-trim').addEventListener('click',     function(){ applyAndUpdate(function(v){ return v.replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim(); }); });
-  getBtn('tx-noaccent').addEventListener('click', function(){ applyAndUpdate(removeAccents); });
-  getBtn('tx-rot13').addEventListener('click',    function(){ applyAndUpdate(rot13); });
-  getBtn('tx-slug').addEventListener('click',     function(){ applyAndUpdate(toSlug); });
-  getBtn('tx-repeat').addEventListener('click',   function(){
-    applyAndUpdate(function(v){
-      var times = parseInt(prompt('¿Cuántas veces repetir?','3') || '3', 10);
-      return isNaN(times) || times < 1 ? v : v.repeat(Math.min(times,50));
-    });
-  });
-  getBtn('tx-copy').addEventListener('click', function(){
-    var text = result.textContent || input.value;
-    navigator.clipboard.writeText(text).then(function(){ toast('¡Copiado!'); }).catch(function(){});
-  });
-  getBtn('tx-clear').addEventListener('click', function(){
-    input.value = '';
-    result.textContent = '';
-    updateStats('');
-  });
-
-  updateStats('');
+  input.addEventListener('input',render);
+  render();
 })();
 
-/* ══════════════════════════════════════
-   PANEL MIXER
-══════════════════════════════════════ */
+/* ══ BORDES ══ */
 (function(){
-  var mixA = document.getElementById('mix-a');
-  var mixB = document.getElementById('mix-b');
-  var resultEmoji = document.getElementById('mixer-result-emoji');
-  var resultLabel = document.getElementById('mixer-result-label');
-  var copyBtn = document.getElementById('mixer-copy');
-  var seqGrid = document.getElementById('sequences-grid');
+  var list=document.getElementById('bordes-list');
+  if(!list)return;
 
-  function update(){
-    var a = mixA.value.trim() || '😀';
-    var b = mixB.value.trim() || '🔥';
-    resultEmoji.textContent = a + b;
-    resultLabel.textContent = 'COMBINACIÓN · toca para copiar';
-  }
+  var BORDES=[
+    '▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬',
+    '══════════════════════',
+    '──────────────────────',
+    '━━━━━━━━━━━━━━━━━━━━━━',
+    '• • • • • • • • • • •',
+    '· · · · · · · · · · ·',
+    '◆◆◆◆◆◆◆◆◆◆◆◆◆◆◆◆◆◆◆◆',
+    '★★★★★★★★★★★★★★★★★★★★',
+    '✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦',
+    '❖ ❖ ❖ ❖ ❖ ❖ ❖ ❖ ❖ ❖',
+    '░░░░░░░░░░░░░░░░░░░░░░',
+    '▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒',
+    '▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓',
+    '█████████████████████',
+    '~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~',
+    '= = = = = = = = = = =',
+    '- - - - - - - - - - -',
+    '♦ ♦ ♦ ♦ ♦ ♦ ♦ ♦ ♦ ♦',
+    '❋ ❋ ❋ ❋ ❋ ❋ ❋ ❋ ❋ ❋',
+    '✿ ✿ ✿ ✿ ✿ ✿ ✿ ✿ ✿ ✿',
+    '🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥',
+    '⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐',
+    '💎💎💎💎💎💎💎💎💎💎',
+    '👑👑👑👑👑👑👑👑👑👑',
+    '✨✨✨✨✨✨✨✨✨✨',
+    '💫💫💫💫💫💫💫💫💫💫',
+    '╔══════════════════╗\n║                  ║\n╚══════════════════╝',
+    '┌──────────────────┐\n│                  │\n└──────────────────┘',
+    '╭──────────────────╮\n│                  │\n╰──────────────────╯',
+    '▛▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▜\n▌                  ▐\n▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟',
+  ];
 
-  mixA.addEventListener('input', update);
-  mixB.addEventListener('input', update);
-
-  copyBtn.addEventListener('click', function(){
-    var text = resultEmoji.textContent;
-    navigator.clipboard.writeText(text).then(function(){ toast('Copiado: ' + text); }).catch(function(){});
+  BORDES.forEach(function(b){
+    var btn=document.createElement('button');
+    btn.className='borde-btn';
+    var pre=document.createElement('pre');
+    pre.className='borde-pre'; pre.textContent=b;
+    btn.appendChild(pre);
+    btn.addEventListener('click',function(){insertIntoCanvas(b+'\n');toast('Insertado ✓');});
+    list.appendChild(btn);
   });
-
-  // Sequences grid
-  SEQUENCES.forEach(function(seq){
-    var tile = document.createElement('button');
-    tile.className = 'emoji-tile';
-    tile.setAttribute('role','listitem');
-    tile.setAttribute('title', 'Copiar ' + seq);
-    tile.textContent = seq;
-    tile.style.width = 'auto';
-    tile.style.padding = '6px 12px';
-    tile.style.fontSize = '20px';
-    tile.style.borderRadius = '10px';
-    tile.style.cursor = 'pointer';
-    tile.style.transition = 'transform .18s';
-    tile.addEventListener('click', function(){
-      navigator.clipboard.writeText(seq).then(function(){
-        tile.classList.add('copied');
-        setTimeout(function(){ tile.classList.remove('copied'); }, 800);
-        toast('Copiado: ' + seq);
-      }).catch(function(){});
-    });
-    seqGrid.appendChild(tile);
-  });
-
-  update();
-})();
-
-/* ══════════════════════════════════════
-   PANEL STATS
-══════════════════════════════════════ */
-(function(){
-  var input = document.getElementById('stats-input');
-  var topCard = document.getElementById('top-chars-card');
-  var topList = document.getElementById('top-chars-list');
-
-  var EMOJI_RE = /\p{Emoji}/gu;
-
-  function twitterLen(s){
-    // surrogate pairs (SMP chars) count 2 in older Twitter; approximation
-    var count = 0;
-    for (var i = 0; i < s.length; i++) {
-      var code = s.codePointAt(i);
-      if (code > 0xFFFF) { count += 2; i++; } else { count++; }
-    }
-    return count;
-  }
-
-  function update(){
-    var v = input.value;
-    document.getElementById('s-chars').textContent = v.length;
-    document.getElementById('s-no-sp').textContent = v.replace(/\s/g,'').length;
-    document.getElementById('s-words').textContent = v.trim() ? v.trim().split(/\s+/).length : 0;
-    document.getElementById('s-lines').textContent = v ? v.split('\n').length : 0;
-    document.getElementById('s-sents').textContent = v.trim() ? v.split(/[.!?]+/).filter(function(s){ return s.trim(); }).length : 0;
-    document.getElementById('s-emoji').textContent = (v.match(EMOJI_RE) || []).length;
-    document.getElementById('s-twitter').textContent = twitterLen(v);
-    var words = v.trim() ? v.trim().split(/\s+/).length : 0;
-    var secs = Math.round(words / 3.5);
-    document.getElementById('s-read').textContent = secs >= 60 ? Math.round(secs/60) + 'm' : secs + 's';
-
-    if (v.length > 0) {
-      var freq = {};
-      v.toLowerCase().replace(/\s/g,'').split('').forEach(function(c){
-        freq[c] = (freq[c] || 0) + 1;
-      });
-      var sorted = Object.entries(freq).sort(function(a,b){ return b[1]-a[1]; }).slice(0,10);
-      topList.innerHTML = sorted.map(function(e){
-        return '<span style="margin-right:12px;font-weight:600;color:var(--t1)">' +
-          e[0] + '</span><span style="color:var(--t3)">× ' + e[1] + '</span>';
-      }).join('&nbsp;&nbsp;&nbsp;');
-      topCard.style.display = '';
-    } else {
-      topCard.style.display = 'none';
-    }
-  }
-
-  input.addEventListener('input', update);
-  update();
 })();
 </script>
 
 <footer>
-  <p>DIUSF · <a href="index.html">Fuentes Unicode</a> · <a href="simbolos.html">∞ Símbolos</a> · <a href="privacy.html">Privacidad</a> · <a href="terms.html">Términos</a></p>
-  <p style="margin-top:5px"><a href="https://tiktok.com/@neravdz" target="_blank" rel="noopener">🎵 TikTok @neravdz</a></p>
+  <p>DIUSF · <a href="index.html">Fuentes Unicode</a> · <a href="privacy.html">Privacidad</a> · <a href="terms.html">Términos</a></p>
 </footer>
 
 </body>
