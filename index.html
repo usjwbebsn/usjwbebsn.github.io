@@ -466,6 +466,18 @@ body.dark .bio-add-line { border-color:rgba(255,255,255,.15); }
   </script>
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8694387925136120"
      crossorigin="anonymous"></script>
+  <script>
+    /* Aplica el tema guardado ANTES de pintar — evita el flash blanco */
+    (function(){
+      try {
+        var saved = localStorage.getItem('diusf_theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (saved === 'dark' || (!saved && prefersDark)) {
+          document.documentElement.classList.add('dark-early');
+        }
+      } catch(_) {}
+    })();
+  </script>
 </head>
 <body>
 
@@ -488,6 +500,10 @@ body.dark .bio-add-line { border-color:rgba(255,255,255,.15); }
         <span class="theme-icon" id="theme-icon">☀️</span>
       </button>
     </div>
+    <nav class="nav-quick-links" aria-label="Navegación rápida">
+      <a href="caja.html" class="nav-quick-link">📦 Caja</a>
+      <a href="simbolos.html" class="nav-quick-link">∞ Símbolos</a>
+    </nav>
   </div>
 </header>
 
