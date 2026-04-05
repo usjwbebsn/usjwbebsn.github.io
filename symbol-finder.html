@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buscador de Símbolos Unicode — Mejorado</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --panel: #12121a;
+    --border: #2a2a3a;
+    --accent: #7c5cfc;
+    --accent2: #fc5c7d;
+    --text: #e8e8f0;
+    --muted: #666680;
+    --success: #5cfca4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 0.82rem;
+    margin-top: 6px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #1a1a2e, #2a1a3e);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-top: 8px;
+    letter-spacing: 1px;
+  }
+
+  .main {
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .canvas-wrap {
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    position: relative;
+  }
+
+  .canvas-label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  canvas {
+    background: #1a1a28;
+    border-radius: 10px;
+    display: block;
+    width: 100%;
+    height: 220px;
+    cursor: crosshair;
+    touch-action: none;
+  }
+
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    padding: 9px 18px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    flex: 1;
+  }
+  .btn-primary:hover { background: #9b7dff; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  .method-selector {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .method-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+
+  .method-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  .section-title {
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .results-panel {
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+  }
+
+  .best-match {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px;
+    background: linear-gradient(135deg, #1a1530, #1a2030);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    margin-bottom: 14px;
+  }
+
+  .symbol-big {
+    font-size: 3rem;
+    line-height: 1;
+    min-width: 56px;
+    text-align: center;
+  }
+
+  .match-info { flex: 1; }
+  .match-score {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--success);
+  }
+  .match-name {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 2px;
+    font-family: 'Space Mono', monospace;
+  }
+  .match-code {
+    font-size: 0.68rem;
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    margin-top: 2px;
+  }
+
+  .copy-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { background: #9b7dff; }
+
+  .alts-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+  }
+
+  .alt-item {
+    background: #1a1a28;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 4px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .alt-item:hover {
+    border-color: var(--accent);
+    background: #1a1530;
+  }
+
+  .alt-symbol { font-size: 1.5rem; }
+  .alt-score {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--muted);
+  }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 0.4s ease;
+  }
+
+  .status {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-align: center;
+    padding: 20px;
+  }
+
+  .thinking {
+    display: inline-block;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  .tag-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+
+  .tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: #1a1a28;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .copied-msg {
+    color: var(--success);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    margin-top: 6px;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .copied-msg.show { opacity: 1; }
+
+  .stroke-info {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    margin-top: 6px;
+    display: flex;
+    gap: 12px;
+  }
+
+  .stroke-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+    margin-right: 4px;
+  }
+</style>
+</head>
+<body>
+
+<a href="index.html" style="
+  position:fixed; top:14px; left:16px; z-index:999;
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(20,20,30,0.85); backdrop-filter:blur(10px);
+  border:1px solid rgba(124,92,252,0.3); border-radius:20px;
+  padding:7px 14px; color:#c0b8f8; font-family:'Syne',sans-serif;
+  font-size:13px; font-weight:700; text-decoration:none;
+  transition:all .18s; -webkit-tap-highlight-color:transparent;
+" onmouseover="this.style.background='rgba(124,92,252,0.25)';this.style.borderColor='rgba(124,92,252,0.6)'"
+   onmouseout="this.style.background='rgba(20,20,30,0.85)';this.style.borderColor='rgba(124,92,252,0.3)'">‹ DIUSF</a>
+
+<header>
+  <h1>Símbolo Unicode</h1>
+  <p>Dibuja → análisis vectorial inteligente</p>
+  <div class="badge">▲ PRECISIÓN MEJORADA</div>
+</header>
+
+<div class="main">
+
+  <div class="canvas-wrap">
+    <div class="canvas-label">✏ Área de dibujo</div>
+    <canvas id="c" width="600" height="220"></canvas>
+    <div class="stroke-info" id="strokeInfo">
+      <span><span class="stroke-dot"></span>Trazos: 0</span>
+      <span>Puntos: 0</span>
+    </div>
+
+    <div style="margin-top:12px">
+      <div class="section-title">Método de análisis</div>
+      <div class="method-selector">
+        <button class="method-btn active" data-m="combined">🧠 Combinado</button>
+        <button class="method-btn" data-m="shape">📐 Forma</button>
+        <button class="method-btn" data-m="topology">🔄 Topología</button>
+        <button class="method-btn" data-m="stroke">✏ Trazo</button>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-primary" id="analyzeBtn">Analizar símbolo</button>
+      <button class="btn btn-ghost" id="clearBtn">Borrar</button>
+    </div>
+  </div>
+
+  <div class="results-panel" id="resultsPanel">
+    <div class="section-title">Resultados</div>
+    <div class="status" id="statusMsg">Dibuja algo y pulsa <b>Analizar</b></div>
+  </div>
+
+</div>
+
+<script>
+// ── Canvas setup ──────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let drawing = false;
+let strokes = [];
+let currentStroke = [];
+let allPoints = [];
+let method = 'combined';
+
+function resizeCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return { scaleX, scaleY };
+}
+
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const { scaleX, scaleY } = resizeCanvas();
+  if (e.touches) {
+    return {
+      x: (e.touches[0].clientX - rect.left) * scaleX,
+      y: (e.touches[0].clientY - rect.top) * scaleY
+    };
+  }
+  return {
+    x: (e.clientX - rect.left) * scaleX,
+    y: (e.clientY - rect.top) * scaleY
+  };
+}
+
+ctx.strokeStyle = '#a090ff';
+ctx.lineWidth = 3;
+ctx.lineCap = 'round';
+ctx.lineJoin = 'round';
+
+canvas.addEventListener('mousedown', startDraw);
+canvas.addEventListener('mousemove', draw);
+canvas.addEventListener('mouseup', endDraw);
+canvas.addEventListener('mouseleave', endDraw);
+canvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e); }, {passive:false});
+canvas.addEventListener('touchmove', e => { e.preventDefault(); draw(e); }, {passive:false});
+canvas.addEventListener('touchend', e => { e.preventDefault(); endDraw(e); }, {passive:false});
+
+function startDraw(e) {
+  drawing = true;
+  currentStroke = [];
+  const p = getPos(e);
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+  currentStroke.push(p);
+  updateInfo();
+}
+
+function draw(e) {
+  if (!drawing) return;
+  const p = getPos(e);
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y);
+  currentStroke.push(p);
+  updateInfo();
+}
+
+function endDraw() {
+  if (!drawing) return;
+  drawing = false;
+  if (currentStroke.length > 2) {
+    strokes.push([...currentStroke]);
+    allPoints.push(...currentStroke);
+  }
+  updateInfo();
+}
+
+function updateInfo() {
+  const total = allPoints.length + currentStroke.length;
+  document.getElementById('strokeInfo').innerHTML =
+    `<span><span class="stroke-dot"></span>Trazos: ${strokes.length}</span><span>Puntos: ${total}</span>`;
+}
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  strokes = []; currentStroke = []; allPoints = [];
+  updateInfo();
+  document.getElementById('statusMsg').textContent = 'Dibuja algo y pulsa Analizar';
+  document.getElementById('resultsPanel').innerHTML = '<div class="section-title">Resultados</div><div class="status" id="statusMsg">Dibuja algo y pulsa <b>Analizar</b></div>';
+});
+
+document.querySelectorAll('.method-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.method-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    method = b.dataset.m;
+  });
+});
+
+// ── Feature Extraction ──────────────────────────────────────
+function extractFeatures(pts) {
+  if (pts.length < 3) return null;
+
+  const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const w = maxX - minX || 1, h = maxY - minY || 1;
+  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+
+  // Normalize points to -1..1
+  const norm = pts.map(p => ({ x: (p.x - cx) / (Math.max(w,h)/2), y: (p.y - cy) / (Math.max(w,h)/2) }));
+
+  // Aspect ratio
+  const aspect = w / h;
+
+  // Curvature: average angle change
+  let totalCurv = 0, curvCount = 0;
+  for (let i = 1; i < norm.length - 1; i++) {
+    const a = Math.atan2(norm[i].y - norm[i-1].y, norm[i].x - norm[i-1].x);
+    const b = Math.atan2(norm[i+1].y - norm[i].y, norm[i+1].x - norm[i].x);
+    let diff = Math.abs(b - a);
+    if (diff > Math.PI) diff = 2*Math.PI - diff;
+    totalCurv += diff;
+    curvCount++;
+  }
+  const avgCurv = curvCount > 0 ? totalCurv / curvCount : 0;
+
+  // Total arc length
+  let arc = 0;
+  for (let i = 1; i < norm.length; i++) {
+    const dx = norm[i].x - norm[i-1].x;
+    const dy = norm[i].y - norm[i-1].y;
+    arc += Math.sqrt(dx*dx + dy*dy);
+  }
+
+  // Closure: distance from first to last point (normalized)
+  const startEnd = Math.sqrt(
+    Math.pow(norm[0].x - norm[norm.length-1].x,2) +
+    Math.pow(norm[0].y - norm[norm.length-1].y,2)
+  );
+  const closure = 1 - Math.min(startEnd / (arc||1), 1);
+
+  // Symmetry: compare left/right halves
+  const leftPts = norm.filter(p => p.x < 0);
+  const rightPts = norm.filter(p => p.x > 0);
+  const vSym = leftPts.length > 0 && rightPts.length > 0
+    ? 1 - Math.abs(leftPts.length - rightPts.length) / norm.length
+    : 0.5;
+
+  // Bounding box fill (convex hull approx via grid)
+  const GRID = 10;
+  const grid = new Set();
+  norm.forEach(p => {
+    const gx = Math.round((p.x + 1) / 2 * GRID);
+    const gy = Math.round((p.y + 1) / 2 * GRID);
+    grid.add(`${gx},${gy}`);
+  });
+  const fill = grid.size / (GRID * GRID);
+
+  // Direction histogram (8 directions)
+  const dirHist = new Array(8).fill(0);
+  for (let i = 1; i < norm.length; i++) {
+    const dx = norm[i].x - norm[i-1].x;
+    const dy = norm[i].y - norm[i-1].y;
+    if (Math.abs(dx) + Math.abs(dy) < 0.01) continue;
+    let angle = Math.atan2(dy, dx);
+    if (angle < 0) angle += 2 * Math.PI;
+    const bin = Math.floor(angle / (2*Math.PI) * 8) % 8;
+    dirHist[bin]++;
+  }
+  const histTotal = dirHist.reduce((a,b)=>a+b,0) || 1;
+  const normHist = dirHist.map(v => v / histTotal);
+
+  // Stroke count
+  const strokeCount = strokes.length;
+
+  // Vertical crossings at center
+  let vCross = 0;
+  for (let i = 1; i < norm.length; i++) {
+    if ((norm[i-1].y < 0) !== (norm[i].y < 0)) vCross++;
+  }
+
+  // Horizontal crossings at center
+  let hCross = 0;
+  for (let i = 1; i < norm.length; i++) {
+    if ((norm[i-1].x < 0) !== (norm[i].x < 0)) hCross++;
+  }
+
+  return { aspect, avgCurv, arc, closure, vSym, fill, normHist, strokeCount, vCross, hCross, norm };
+}
+
+// ── Symbol Definitions ─────────────────────────────────────────
+const SYMBOLS = [
+  // Circles / Ovals
+  { char:'○', name:'Círculo vacío', u:'25CB', aspect:[0.7,1.4], closure:[0.7,1], avgCurv:[0.05,0.35], fill:[0.04,0.2], vSym:[0.6,1], strokes:[1,1] },
+  { char:'●', name:'Círculo lleno', u:'25CF', aspect:[0.7,1.4], closure:[0.7,1], avgCurv:[0.05,0.35], fill:[0.3,0.9], vSym:[0.6,1], strokes:[1,1] },
+  { char:'◯', name:'Círculo grande', u:'25EF', aspect:[0.7,1.4], closure:[0.7,1], avgCurv:[0.05,0.35], fill:[0.03,0.15], vSym:[0.6,1], strokes:[1,1] },
+  { char:'⬭', name:'Elipse horizontal', u:'2B2D', aspect:[1.5,4], closure:[0.6,1], avgCurv:[0.04,0.3], fill:[0.04,0.2], vSym:[0.5,1], strokes:[1,1] },
+  { char:'⬬', name:'Elipse vertical', u:'2B2C', aspect:[0.1,0.7], closure:[0.6,1], avgCurv:[0.04,0.3], fill:[0.04,0.2], vSym:[0.5,1], strokes:[1,1] },
+
+  // Squares / Rectangles
+  { char:'□', name:'Cuadrado vacío', u:'25A1', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.0,0.15], fill:[0.04,0.2], vSym:[0.5,1], strokes:[1,2] },
+  { char:'■', name:'Cuadrado lleno', u:'25A0', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.0,0.15], fill:[0.3,0.9], vSym:[0.5,1], strokes:[1,2] },
+  { char:'▭', name:'Rectángulo horiz.', u:'25AD', aspect:[1.5,5], closure:[0.4,1], avgCurv:[0.0,0.15], fill:[0.04,0.2], vSym:[0.5,1], strokes:[1,2] },
+  { char:'▯', name:'Rectángulo vert.', u:'25AF', aspect:[0.1,0.7], closure:[0.4,1], avgCurv:[0.0,0.15], fill:[0.04,0.2], vSym:[0.5,1], strokes:[1,2] },
+
+  // Triangles
+  { char:'△', name:'Triángulo arriba', u:'25B3', aspect:[0.7,1.8], closure:[0.5,1], avgCurv:[0.1,0.5], fill:[0.04,0.25], vSym:[0.6,1], strokes:[1,2] },
+  { char:'▽', name:'Triángulo abajo', u:'25BD', aspect:[0.7,1.8], closure:[0.5,1], avgCurv:[0.1,0.5], fill:[0.04,0.25], vSym:[0.6,1], strokes:[1,2] },
+  { char:'◁', name:'Triángulo izq.', u:'25C1', aspect:[0.2,0.8], closure:[0.5,1], avgCurv:[0.1,0.5], fill:[0.04,0.25], vSym:[0.1,0.5], strokes:[1,2] },
+  { char:'▷', name:'Triángulo der.', u:'25B7', aspect:[1.2,4], closure:[0.5,1], avgCurv:[0.1,0.5], fill:[0.04,0.25], vSym:[0.1,0.5], strokes:[1,2] },
+
+  // Arrows
+  { char:'→', name:'Flecha derecha', u:'2192', aspect:[1.5,6], closure:[0,0.4], avgCurv:[0.05,0.4], fill:[0.02,0.15], vSym:[0.1,0.5], strokes:[1,3] },
+  { char:'←', name:'Flecha izquierda', u:'2190', aspect:[1.5,6], closure:[0,0.4], avgCurv:[0.05,0.4], fill:[0.02,0.15], vSym:[0.1,0.5], strokes:[1,3] },
+  { char:'↑', name:'Flecha arriba', u:'2191', aspect:[0.1,0.8], closure:[0,0.4], avgCurv:[0.05,0.4], fill:[0.02,0.15], vSym:[0.5,1], strokes:[1,3] },
+  { char:'↓', name:'Flecha abajo', u:'2193', aspect:[0.1,0.8], closure:[0,0.4], avgCurv:[0.05,0.4], fill:[0.02,0.15], vSym:[0.5,1], strokes:[1,3] },
+  { char:'↗', name:'Flecha diagonal ↗', u:'2197', aspect:[0.7,1.4], closure:[0,0.4], avgCurv:[0.05,0.5], fill:[0.02,0.12], vSym:[0.1,0.5], strokes:[1,2] },
+  { char:'↙', name:'Flecha diagonal ↙', u:'2199', aspect:[0.7,1.4], closure:[0,0.4], avgCurv:[0.05,0.5], fill:[0.02,0.12], vSym:[0.1,0.5], strokes:[1,2] },
+  { char:'↔', name:'Flecha doble horiz.', u:'2194', aspect:[2,8], closure:[0,0.4], avgCurv:[0.05,0.5], fill:[0.02,0.15], vSym:[0.1,0.5], strokes:[1,2] },
+  { char:'↕', name:'Flecha doble vert.', u:'2195', aspect:[0.1,0.6], closure:[0,0.4], avgCurv:[0.05,0.5], fill:[0.02,0.15], vSym:[0.5,1], strokes:[1,2] },
+
+  // Lines / Curves
+  { char:'—', name:'Raya (em dash)', u:'2014', aspect:[3,20], closure:[0,0.3], avgCurv:[0,0.08], fill:[0.01,0.1], vSym:[0.1,0.6], strokes:[1,1] },
+  { char:'|', name:'Línea vertical', u:'007C', aspect:[0.01,0.25], closure:[0,0.3], avgCurv:[0,0.08], fill:[0.01,0.1], vSym:[0.5,1], strokes:[1,1] },
+  { char:'/', name:'Diagonal /', u:'002F', aspect:[0.3,1.5], closure:[0,0.3], avgCurv:[0,0.12], fill:[0.01,0.1], vSym:[0.1,0.5], strokes:[1,1] },
+  { char:'\\', name:'Diagonal \\', u:'005C', aspect:[0.3,1.5], closure:[0,0.3], avgCurv:[0,0.12], fill:[0.01,0.1], vSym:[0.1,0.5], strokes:[1,1] },
+  { char:'~', name:'Virgulilla/onda', u:'007E', aspect:[2,8], closure:[0,0.4], avgCurv:[0.1,0.5], fill:[0.01,0.1], vSym:[0.3,0.7], strokes:[1,1] },
+  { char:'∫', name:'Integral', u:'222B', aspect:[0.1,0.7], closure:[0,0.4], avgCurv:[0.1,0.5], fill:[0.01,0.1], vSym:[0.1,0.5], strokes:[1,1] },
+  { char:'∞', name:'Infinito', u:'221E', aspect:[1.5,4], closure:[0.5,1], avgCurv:[0.05,0.35], fill:[0.05,0.2], vSym:[0.5,1], strokes:[1,2] },
+
+  // Stars / Crosses
+  { char:'★', name:'Estrella llena', u:'2605', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.15,0.6], fill:[0.1,0.35], vSym:[0.5,1], strokes:[1,2] },
+  { char:'☆', name:'Estrella vacía', u:'2606', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.15,0.6], fill:[0.04,0.18], vSym:[0.5,1], strokes:[1,2] },
+  { char:'✚', name:'Cruz gruesa', u:'271A', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.05,0.3], fill:[0.08,0.3], vSym:[0.6,1], strokes:[1,3] },
+  { char:'✕', name:'X cruzada', u:'2715', aspect:[0.7,1.4], closure:[0,0.5], avgCurv:[0.1,0.5], fill:[0.04,0.18], vSym:[0.5,1], strokes:[1,3] },
+  { char:'✓', name:'Check/Palomita', u:'2713', aspect:[0.5,2], closure:[0,0.4], avgCurv:[0.1,0.5], fill:[0.02,0.12], vSym:[0.1,0.5], strokes:[1,2] },
+
+  // Hearts / Diamonds
+  { char:'♥', name:'Corazón lleno', u:'2665', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.05,0.4], fill:[0.15,0.5], vSym:[0.6,1], strokes:[1,2] },
+  { char:'♡', name:'Corazón vacío', u:'2661', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.05,0.4], fill:[0.04,0.2], vSym:[0.6,1], strokes:[1,2] },
+  { char:'◆', name:'Diamante lleno', u:'25C6', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.1,0.4], fill:[0.15,0.5], vSym:[0.6,1], strokes:[1,2] },
+  { char:'◇', name:'Diamante vacío', u:'25C7', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.1,0.4], fill:[0.04,0.2], vSym:[0.6,1], strokes:[1,2] },
+
+  // Math
+  { char:'≈', name:'Aprox. igual', u:'2248', aspect:[2,7], closure:[0,0.4], avgCurv:[0.05,0.4], fill:[0.02,0.12], vSym:[0.3,0.7], strokes:[1,3] },
+  { char:'≠', name:'No igual', u:'2260', aspect:[1,4], closure:[0,0.5], avgCurv:[0.0,0.2], fill:[0.03,0.15], vSym:[0.3,0.7], strokes:[1,3] },
+  { char:'±', name:'Más-menos', u:'00B1', aspect:[0.5,1.5], closure:[0,0.5], avgCurv:[0.0,0.2], fill:[0.03,0.15], vSym:[0.5,1], strokes:[1,4] },
+  { char:'∑', name:'Sumatorio', u:'2211', aspect:[0.4,1.2], closure:[0,0.6], avgCurv:[0.05,0.4], fill:[0.03,0.15], vSym:[0.2,0.6], strokes:[1,2] },
+  { char:'√', name:'Raíz cuadrada', u:'221A', aspect:[0.5,2], closure:[0,0.4], avgCurv:[0.05,0.4], fill:[0.02,0.12], vSym:[0.1,0.5], strokes:[1,2] },
+  { char:'π', name:'Pi', u:'03C0', aspect:[1,3], closure:[0,0.4], avgCurv:[0.05,0.4], fill:[0.02,0.12], vSym:[0.5,1], strokes:[1,3] },
+
+  // Misc shapes
+  { char:'⬟', name:'Pentágono', u:'2B1F', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.1,0.4], fill:[0.04,0.2], vSym:[0.6,1], strokes:[1,2] },
+  { char:'⬡', name:'Hexágono', u:'2B21', aspect:[0.7,1.4], closure:[0.5,1], avgCurv:[0.07,0.3], fill:[0.04,0.2], vSym:[0.5,1], strokes:[1,2] },
+  { char:'⟳', name:'Flecha circular der.', u:'27F3', aspect:[0.7,1.4], closure:[0.2,0.8], avgCurv:[0.05,0.35], fill:[0.03,0.18], vSym:[0.3,0.7], strokes:[1,2] },
+  { char:'⟲', name:'Flecha circular izq.', u:'27F2', aspect:[0.7,1.4], closure:[0.2,0.8], avgCurv:[0.05,0.35], fill:[0.03,0.18], vSym:[0.3,0.7], strokes:[1,2] },
+  { char:'◎', name:'Círculo con punto', u:'25CE', aspect:[0.7,1.4], closure:[0.7,1], avgCurv:[0.05,0.35], fill:[0.04,0.2], vSym:[0.6,1], strokes:[2,3] },
+  { char:'⊕', name:'Círculo con cruz', u:'2295', aspect:[0.7,1.4], closure:[0.6,1], avgCurv:[0.04,0.35], fill:[0.06,0.25], vSym:[0.6,1], strokes:[1,4] },
+];
+
+// ── Scoring ────────────────────────────────────────────────────
+function rangeScore(val, [lo, hi]) {
+  if (val >= lo && val <= hi) return 1;
+  const dist = val < lo ? lo - val : val - hi;
+  const range = hi - lo || 0.01;
+  return Math.max(0, 1 - dist / range * 1.5);
+}
+
+function scoreSymbol(feat, sym) {
+  const weights = {
+    aspect: 1.8,
+    closure: 2.2,
+    avgCurv: 1.5,
+    fill: 1.2,
+    vSym: 1.0,
+    strokes: 1.8
+  };
+
+  const scores = {
+    aspect: rangeScore(feat.aspect, sym.aspect),
+    closure: rangeScore(feat.closure, sym.closure),
+    avgCurv: rangeScore(feat.avgCurv, sym.avgCurv),
+    fill: rangeScore(feat.fill, sym.fill),
+    vSym: rangeScore(feat.vSym, sym.vSym),
+    strokes: rangeScore(feat.strokeCount, sym.strokes)
+  };
+
+  let total = 0, wTotal = 0;
+  for (const [k, w] of Object.entries(weights)) {
+    total += scores[k] * w;
+    wTotal += w;
+  }
+
+  return total / wTotal;
+}
+
+// ── Analyze ───────────────────────────────────────────────────
+document.getElementById('analyzeBtn').addEventListener('click', () => {
+  const pts = allPoints.length > 0 ? allPoints : currentStroke;
+  if (pts.length < 5) {
+    document.getElementById('statusMsg').innerHTML = '<span style="color:#fc5c7d">Dibuja algo primero</span>';
+    return;
+  }
+
+  const panel = document.getElementById('resultsPanel');
+  panel.innerHTML = `<div class="section-title">Analizando...</div><div class="status"><span class="thinking">⬤ ⬤ ⬤</span></div>`;
+
+  setTimeout(() => {
+    const feat = extractFeatures(pts);
+    if (!feat) return;
+
+    const scored = SYMBOLS.map(sym => ({
+      ...sym,
+      score: scoreSymbol(feat, sym)
+    })).sort((a, b) => b.score - a.score);
+
+    const top = scored[0];
+    const pct = Math.round(top.score * 100);
+    const alts = scored.slice(1, 13);
+
+    // Debug info
+    const debugTags = [
+      `aspecto: ${feat.aspect.toFixed(2)}`,
+      `cierre: ${feat.closure.toFixed(2)}`,
+      `curvatura: ${feat.avgCurv.toFixed(2)}`,
+      `relleno: ${feat.fill.toFixed(2)}`,
+      `simetría: ${feat.vSym.toFixed(2)}`,
+      `trazos: ${feat.strokeCount}`
+    ];
+
+    panel.innerHTML = `
+      <div class="section-title">✦ Mejor coincidencia</div>
+      <div class="best-match">
+        <div class="symbol-big">${top.char}</div>
+        <div class="match-info">
+          <div class="match-score">${pct}% similitud</div>
+          <div class="match-name">${top.name}</div>
+          <div class="match-code">U+${top.u}</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+        </div>
+        <button class="copy-btn" id="copyTop">Copiar</button>
+      </div>
+
+      <div class="tag-row">
+        ${debugTags.map(t => `<span class="tag">${t}</span>`).join('')}
+      </div>
+
+      <div style="margin-top:16px">
+        <div class="section-title">Alternativas similares</div>
+        <div class="alts-grid">
+          ${alts.map(s => `
+            <div class="alt-item" data-char="${s.char}" title="${s.name} U+${s.u}">
+              <div class="alt-symbol">${s.char}</div>
+              <div class="alt-score">${Math.round(s.score*100)}%</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="copied-msg" id="copiedMsg">✓ ¡Copiado!</div>
+    `;
+
+    document.getElementById('copyTop').addEventListener('click', () => {
+      navigator.clipboard.writeText(top.char).then(() => {
+        const msg = document.getElementById('copiedMsg');
+        msg.classList.add('show');
+        setTimeout(() => msg.classList.remove('show'), 1500);
+      });
+    });
+
+    document.querySelectorAll('.alt-item').forEach(el => {
+      el.addEventListener('click', () => {
+        navigator.clipboard.writeText(el.dataset.char).then(() => {
+          const msg = document.getElementById('copiedMsg');
+          msg.classList.add('show');
+          setTimeout(() => msg.classList.remove('show'), 1500);
+        });
+      });
+    });
+
+  }, 250);
+});
+</script>
+</body>
+</html>

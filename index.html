@@ -16,20 +16,20 @@
   <meta property="og:title"       content="DIUSF — Fuentes Unicode para copiar y pegar" />
   <meta property="og:description" content="Convierte tu texto a estilos Unicode reales. Funciona en Discord, Instagram, TikTok, Twitter/X, Steam y WhatsApp. Gratis y sin registro." />
   <meta property="og:type"        content="website" />
-  <meta property="og:url"         id="og-url"   content="" />
-  <meta property="og:image"       id="og-image" content="" />
+  <meta property="og:url"         id="og-url"   content="https://usjwbebsn.github.io/" />
+  <meta property="og:image"       id="og-image" content="https://usjwbebsn.github.io/assets/og.png" />
   <meta property="og:locale"      content="es_ES" />
   <meta property="og:site_name"   content="DIUSF" />
   <meta name="twitter:card"        content="summary_large_image" />
   <meta name="twitter:title"       content="DIUSF — Fuentes Unicode para copiar y pegar" />
   <meta name="twitter:description" content="Convierte tu texto a estilos Unicode. Discord, Instagram, TikTok y más." />
-  <meta name="twitter:image"       id="tw-image" content="" />
+  <meta name="twitter:image"       id="tw-image" content="https://usjwbebsn.github.io/assets/og.png" />
 
-  <link rel="canonical" id="canonical-url" href="" />
+  <link rel="canonical" id="canonical-url" href="https://usjwbebsn.github.io/" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>𝕴</text></svg>" />
 
   <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"WebApplication","name":"DIUSF","url":"https://tudominio.com/","description":"Conversor de texto a caracteres Unicode. Discord, Instagram, TikTok, Twitter/X, Steam, WhatsApp.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","inLanguage":"es","offers":{"@type":"Offer","price":0,"priceCurrency":"EUR"}}
+  {"@context":"https://schema.org","@type":"WebApplication","name":"DIUSF","url":"https://usjwbebsn.github.io/","description":"Conversor de texto a caracteres Unicode. Discord, Instagram, TikTok, Twitter/X, Steam, WhatsApp.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","inLanguage":"es","offers":{"@type":"Offer","price":0,"priceCurrency":"EUR"}}
   </script>
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"¿Por qué funcionan estas fuentes en Discord pero no en algunos sitios?","acceptedAnswer":{"@type":"Answer","text":"Los caracteres Unicode son parte del estándar universal de texto. La mayoría de apps modernas los aceptan, pero algunos sitios antiguos pueden filtrarlos."}},{"@type":"Question","name":"¿Es gratis para siempre?","acceptedAnswer":{"@type":"Answer","text":"Sí. DIUSF es completamente gratuito y no requiere registro."}},{"@type":"Question","name":"¿Funciona en iPhone y Android?","acceptedAnswer":{"@type":"Answer","text":"Sí. DIUSF funciona en cualquier navegador moderno tanto en iOS como en Android."}},{"@type":"Question","name":"¿Qué diferencia hay entre estas fuentes y las fuentes normales?","acceptedAnswer":{"@type":"Answer","text":"Los caracteres Unicode son el texto en sí mismo; el receptor los ve sin necesitar ninguna fuente instalada. Por eso funcionan en cualquier app."}}]}
@@ -575,7 +575,7 @@ body.dark .bio-add-line { border-color:rgba(255,255,255,.15); }
         var el=document.getElementById(id); if(el) el.setAttribute('content', id==='og-url'?base:img);
       });
       document.querySelectorAll('script[type="application/ld+json"]').forEach(function(s){
-        s.textContent=s.textContent.replace(/https:\/\/tudominio\.com\//g,base);
+        s.textContent=s.textContent.replace(/https:\/\/usjwbebsn\.github\.io\//g,base);
       });
       var t=new URLSearchParams(location.search).get('t');
       if(t) window.__DIUSF_INIT_TEXT__=decodeURIComponent(t).slice(0,200);
@@ -607,20 +607,25 @@ body.dark .bio-add-line { border-color:rgba(255,255,255,.15); }
 <!-- NAV -->
 <header class="nav-bar" role="banner">
   <div class="nav-inner">
-    <div class="nav-top-row">
-      <div class="di-pill" aria-label="Estado: activo">
-        <span class="di-dot" aria-hidden="true"></span>
-        <span class="di-label">Discord · Instagram · TikTok · Steam · WhatsApp</span>
-      </div>
-      <h1 class="app-title" aria-label="DIUSF">DIUSF</h1>
+    <!-- Left: logo -->
+    <h1 class="app-title" aria-label="DIUSF">DIUSF</h1>
+
+    <!-- Center: status pill -->
+    <div class="di-pill" aria-label="Estado: activo">
+      <span class="di-dot" aria-hidden="true"></span>
+      <span class="di-label">Discord · Instagram · TikTok · Steam · WA</span>
+    </div>
+
+    <!-- Right: links + theme toggle -->
+    <div class="nav-right">
+      <nav class="nav-quick-links" aria-label="Navegación rápida">
+        <a href="caja.html" class="nav-quick-link">📦 Caja</a>
+        <a href="#symbols-section" class="nav-quick-link" onclick="var s=document.getElementById('symbols-section');if(s){s.scrollIntoView({behavior:'smooth'});var t=document.getElementById('symbols-toggle');if(t&&!s.classList.contains('open'))t.click();}return false;">∞ Símbolos</a>
+      </nav>
       <button class="theme-toggle" id="theme-toggle" aria-label="Cambiar modo claro/oscuro" title="Modo oscuro / claro">
         <span class="theme-icon" id="theme-icon">☀️</span>
       </button>
     </div>
-    <nav class="nav-quick-links" aria-label="Navegación rápida">
-      <a href="caja.html" class="nav-quick-link">📦 Caja</a>
-      <a href="#symbols-section" class="nav-quick-link" onclick="var s=document.getElementById('symbols-section');if(s){s.scrollIntoView({behavior:'smooth'});var t=document.getElementById('symbols-toggle');if(t&&!s.classList.contains('open'))t.click();}return false;">∞ Símbolos</a>
-    </nav>
   </div>
 </header>
 
@@ -969,7 +974,7 @@ body.dark .bio-add-line { border-color:rgba(255,255,255,.15); }
 
   <footer class="footer">
     <p>DIUSF · <span id="footer-count">0</span> estilos Unicode · Gratis para siempre · <a href="caja.html">📦 Caja</a> · <a href="#symbols-section">∞ Símbolos</a> · <a href="privacy.html">Privacidad</a> · <a href="terms.html">Términos</a></p>
-    <p style="margin-top:6px;"><a href="https://tiktok.com/@neravdz" target="_blank" rel="noopener">🎵 TikTok @neravdz</a> · v6</p>
+    <p style="margin-top:6px;"><a href="https://tiktok.com/@neravdz" target="_blank" rel="noopener">🎵 TikTok @neravdz</a> · v11</p>
   </footer>
 
 </main>

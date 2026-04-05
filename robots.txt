@@ -2,5 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /assets/
 
-# DIUSF v4 — actualiza el dominio en el sitemap
-Sitemap: https://tudominio.com/sitemap.xml
+Sitemap: https://usjwbebsn.github.io/sitemap.xml
