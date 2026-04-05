@@ -937,7 +937,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (inp?.value) document.getElementById('clear-x')?.classList.add('on');
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').then(reg => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
       reg.addEventListener('updatefound', () => {
         const newSW = reg.installing;
         newSW.addEventListener('statechange', () => {
