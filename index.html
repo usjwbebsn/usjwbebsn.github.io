@@ -78,8 +78,15 @@ body.dark .search-clear:hover { background:rgba(255,255,255,.35); }
   overflow-y:auto; line-height:1.45;
 }
 .text-field-area:focus {
-  border-color:rgba(0,122,255,.5); background:#fff;
+  border-color:rgba(0,122,255,.5); background:var(--bg1);
   box-shadow:0 0 0 3px rgba(0,122,255,.10);
+}
+body.dark .text-field-area {
+  background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.10); color:var(--t1);
+}
+body.dark .text-field-area:focus {
+  background:rgba(255,255,255,.10); border-color:rgba(10,132,255,.55);
+  box-shadow:0 0 0 3px rgba(10,132,255,.12); color:var(--t1);
 }
 .text-field-area::placeholder { color:var(--t4); font-weight:400; }
 
@@ -325,41 +332,78 @@ body.dark .search-clear { background:rgba(255,255,255,.22); }
 .decorator-section,
 .bio-section {
   background:var(--bg1); border-radius:var(--r3); border:1px solid rgba(0,0,0,.07);
-  box-shadow:0 1px 4px rgba(0,0,0,.04); margin-bottom:12px;
+  box-shadow:0 2px 12px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04); margin-bottom:12px;
   overflow:hidden; animation:fadeUp .4s .1s ease both;
+}
+body.dark .symbols-section, body.dark .decorator-section, body.dark .bio-section {
+  border-color:rgba(255,255,255,.07); box-shadow:0 2px 16px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.04);
 }
 .section-header {
   display:flex; align-items:center; justify-content:space-between;
-  padding:13px 18px; cursor:pointer; user-select:none;
+  padding:16px 18px; cursor:pointer; user-select:none;
   background:transparent; border:none; width:100%;
+  transition:background .15s;
+  -webkit-tap-highlight-color:transparent;
 }
-.section-header:hover { background:var(--bg2); }
-.section-header-left { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--t2); font-family:var(--sf); }
-.section-arrow { font-size:15px; color:var(--t4); transition:transform .2s ease; font-family:var(--sf); }
-.section-body { display:none; border-top:1px solid rgba(0,0,0,.06); padding:14px 16px; }
+.section-header:hover { background:rgba(0,0,0,.025); }
+.section-header-left {
+  display:flex; align-items:center; gap:10px;
+  font-size:14px; font-weight:800; color:var(--t1);
+  font-family:var(--sf); letter-spacing:-.3px;
+}
+.section-header-left .sh-icon { font-size:17px; }
+.section-arrow {
+  font-size:13px; color:var(--t3); transition:transform .22s cubic-bezier(.34,1.56,.64,1);
+  font-family:var(--sf); width:22px; height:22px; border-radius:50%;
+  background:var(--bg2); display:flex; align-items:center; justify-content:center;
+  border:1px solid rgba(0,0,0,.06); flex-shrink:0;
+}
+body.dark .section-arrow { background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.08); }
+.section-body { display:none; border-top:1.5px solid rgba(0,0,0,.06); padding:16px 18px; }
+body.dark .section-body { border-top-color:rgba(255,255,255,.06); }
+body.dark .section-header:hover { background:rgba(255,255,255,.03); }
 .symbols-section.open .section-body,
 .decorator-section.open .section-body,
 .bio-section.open .section-body { display:block; }
 .symbols-section.open .section-arrow,
 .decorator-section.open .section-arrow,
 .bio-section.open .section-arrow,
-.draw-section.open .section-arrow { transform:rotate(90deg); }
+.draw-section.open .section-arrow { transform:rotate(180deg); }
 .symbols-section.open .section-body,
 .decorator-section.open .section-body,
 .bio-section.open .section-body,
 .draw-section.open .section-body { display:block; }
-.section-desc { font-size:12px; color:var(--t3); margin-bottom:12px; line-height:1.5; }
+.section-desc { font-size:12.5px; color:var(--t3); margin-bottom:14px; line-height:1.55; font-weight:450; }
+.section-badge {
+  display:inline-flex; align-items:center; gap:4px;
+  font-size:10px; font-weight:700; color:var(--blue); background:var(--blue-lo);
+  border:1px solid rgba(0,122,255,.2); border-radius:var(--pill);
+  padding:2px 8px; letter-spacing:.04em; text-transform:uppercase;
+}
+body.dark .section-badge { color:#5ac8fa; background:rgba(10,132,255,.15); border-color:rgba(10,132,255,.3); }
 
 /* ── DIBUJADOR DE FORMAS ── */
 .draw-section {
   background:var(--bg1); border-radius:var(--r3); border:1px solid rgba(0,0,0,.07);
-  box-shadow:0 1px 4px rgba(0,0,0,.04); margin-bottom:12px; overflow:hidden;
+  box-shadow:0 2px 12px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04); margin-bottom:12px; overflow:hidden;
   animation:fadeUp .4s .18s ease both;
 }
+body.dark .draw-section { border-color:rgba(255,255,255,.07); box-shadow:0 2px 16px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.04); }
 #draw-canvas {
-  border-radius:12px; background:#f9f9fb; border:1.5px solid rgba(0,0,0,.1);
-  touch-action:none; cursor:crosshair; display:block; max-width:100%;
+  border-radius:14px; background:#f7f7fb;
+  border:2px solid rgba(0,0,0,.09);
+  touch-action:none; cursor:crosshair; display:block;
+  width:100% !important; max-width:100%;
+  box-shadow:0 2px 16px rgba(0,0,0,.07) inset, 0 0 0 1px rgba(0,0,0,.04);
+  transition:border-color .2s;
 }
+#draw-canvas:active { border-color:rgba(0,122,255,.3); }
+body.dark #draw-canvas {
+  background:#1a1a1e;
+  border-color:rgba(255,255,255,.10);
+  box-shadow:0 2px 16px rgba(0,0,0,.4) inset, 0 0 0 1px rgba(255,255,255,.04);
+}
+body.dark #draw-canvas:active { border-color:rgba(10,132,255,.4); }
 body.dark #draw-canvas { background:#1c1c1e; border-color:rgba(255,255,255,.12); }
 .draw-controls { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; align-items:center; margin-top:10px; }
 .draw-btn {
@@ -371,12 +415,16 @@ body.dark #draw-canvas { background:#1c1c1e; border-color:rgba(255,255,255,.12);
 }
 .draw-btn:hover { background:var(--blue-lo); border-color:rgba(0,122,255,.3); color:var(--blue); transform:translateY(-1px); }
 .draw-btn:active { transform:scale(.91); }
-.draw-btn.danger:hover { background:rgba(255,59,48,.10); border-color:rgba(255,59,48,.3); color:#ff3b30; }
+.draw-btn.danger { color:var(--red) !important; border-color:rgba(255,59,48,.25) !important; }
+.draw-btn.danger:hover { background:rgba(255,59,48,.12); border-color:rgba(255,59,48,.45); color:#ff3b30; transform:scale(1.04); }
+.draw-btn.danger:active { transform:scale(.88); }
 .draw-result {
   display:flex; flex-direction:column; align-items:center; gap:4px;
-  padding:12px 14px 12px; width:100%; box-sizing:border-box;
-  max-height:320px; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  padding:14px 16px 14px; width:100%; box-sizing:border-box;
+  max-height:340px; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  background:rgba(0,122,255,.025); border-top:1.5px solid rgba(0,122,255,.12);
 }
+body.dark .draw-result { background:rgba(10,132,255,.06); border-top-color:rgba(10,132,255,.18); }
 .draw-result-label { font-size:11px; color:var(--t4); font-weight:600; text-transform:uppercase; letter-spacing:.07em; }
 .draw-result-row {
   display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:center;
@@ -559,7 +607,7 @@ body.dark .bio-add-line { border-color:rgba(255,255,255,.15); }
     </div>
     <nav class="nav-quick-links" aria-label="Navegación rápida">
       <a href="caja.html" class="nav-quick-link">📦 Caja</a>
-      <a href="caja.html" class="nav-quick-link">∞ Símbolos</a>
+      <a href="#symbols-section" class="nav-quick-link" onclick="var s=document.getElementById('symbols-section');if(s){s.scrollIntoView({behavior:'smooth'});var t=document.getElementById('symbols-toggle');if(t&&!s.classList.contains('open'))t.click();}return false;">∞ Símbolos</a>
     </nav>
   </div>
 </header>
@@ -868,9 +916,15 @@ body.dark .bio-add-line { border-color:rgba(255,255,255,.15); }
     <div class="section-body" id="draw-body">
       <p class="section-desc">Dibuja con el dedo o el ratón y te diremos qué símbolo o emoji se parece más. ¡Toca el resultado para copiarlo!</p>
       <div style="display:flex;flex-direction:column;align-items:center;gap:0;width:100%;box-sizing:border-box;">
-        <canvas id="draw-canvas" width="280" height="200" style="max-width:100%;"></canvas>
-        <div class="draw-controls" style="justify-content:space-between;width:100%;padding:0 2px;">
-          <span style="font-size:11px;color:var(--t4);font-weight:500;">Reconocimiento automático ✦</span>
+        <div style="position:relative;width:100%;text-align:center;">
+          <canvas id="draw-canvas" width="300" height="200" style="max-width:100%;width:100%;"></canvas>
+          <div id="draw-hint" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;gap:6px;opacity:.5;transition:opacity .3s;">
+            <span style="font-size:32px;">✏️</span>
+            <span style="font-size:12px;font-weight:600;color:var(--t3);">Dibuja aquí una forma</span>
+          </div>
+        </div>
+        <div class="draw-controls" style="justify-content:space-between;width:100%;padding:6px 2px 0;">
+          <span style="font-size:11px;color:var(--t4);font-weight:600;display:flex;align-items:center;gap:4px;"><span class="section-badge">Auto</span> reconocimiento</span>
           <button class="draw-btn danger" id="draw-clear-btn">🗑 Borrar</button>
         </div>
         <div class="draw-result" id="draw-result" style="display:none;border-top:1px solid rgba(0,0,0,.06);margin-top:10px;padding-top:10px;width:100%;box-sizing:border-box;">
@@ -899,7 +953,7 @@ body.dark .bio-add-line { border-color:rgba(255,255,255,.15); }
   <div class="ad-slot" style="margin-top:16px" role="complementary" aria-label="Publicidad"><!-- AdSense aquí --></div>
 
   <footer class="footer">
-    <p>DIUSF · <span id="footer-count">0</span> estilos Unicode · Gratis para siempre · <a href="caja.html">📦 Caja</a> · <a href="caja.html">∞ Símbolos</a> · <a href="privacy.html">Privacidad</a> · <a href="terms.html">Términos</a></p>
+    <p>DIUSF · <span id="footer-count">0</span> estilos Unicode · Gratis para siempre · <a href="caja.html">📦 Caja</a> · <a href="#symbols-section">∞ Símbolos</a> · <a href="privacy.html">Privacidad</a> · <a href="terms.html">Términos</a></p>
     <p style="margin-top:6px;"><a href="https://tiktok.com/@neravdz" target="_blank" rel="noopener">🎵 TikTok @neravdz</a> · v6</p>
   </footer>
 
@@ -1387,48 +1441,1249 @@ document.addEventListener('keydown', function(e){
   initCollapsible('draw-toggle',      'draw-section');
 })();
 
-/* ──────────────── DIBUJADOR DE FORMAS ──────────────── */
+/* ──────────────── DIBUJADOR DE FORMAS — Motor HÍBRIDO v10 ──────────────── */
+/*
+ * Motor de reconocimiento HÍBRIDO — DIUSF v10
+ * Combina tres capas de reconocimiento en cascada:
+ *
+ * CAPA 1 — ANÁLISIS GEOMÉTRICO (GeoPipeline™)
+ *   Extrae ~40 características independientes de escala/rotación:
+ *   • Curvatura local con detección de esquinas (IStraw mejorado)
+ *   • Vectores de dirección y cambios angulares
+ *   • Ratio aspecto, circularidad, convexidad
+ *   • Conteo de inflexiones, crestas y valles
+ *   • Firma radial (descriptor polar de 16 bins)
+ *   • Análisis de direccionalidad del trazo (start-angle, sweep)
+ *
+ * CAPA 2 — $1 PROTRACTOR (plantillas matemáticas)
+ *   Implementación completa con 200+ plantillas.
+ *   Ahora con ScaleWithAspect para formas asimétricas (rayos, flechas).
+ *
+ * CAPA 3 — FUSIÓN BAYESIANA PONDERADA
+ *   Combina scores de Capa 1 y Capa 2 con pesos aprendidos por forma.
+ *   La Capa 1 domina para formas con features geométricos fuertes (rayo,
+ *   zigzag, estrella). La Capa 2 domina para formas suaves (círculo, espiral).
+ *
+ * Resultado: el rayo ⚡ y sus vecinos (⌁ ↯ ☇) se distinguen con precisión
+ * porque cada uno tiene un perfil de inflexiones/ángulos único.
+ *
+ * Basado en investigación académica:
+ *   $1:  Wobbrock et al. UIST 2007
+ *   $N:  Anthony & Wobbrock, GI 2010/2012
+ *   IStraw: Sezgin et al., SBIM 2005 (corner detection)
+ *   GeoPipeline: características propias DIUSF v10
+ */
 (function(){
   var canvas = document.getElementById('draw-canvas');
   if (!canvas) return;
   var ctx = canvas.getContext('2d');
   var drawing = false;
-  var strokes = []; // array of arrays of points (multi-stroke)
+  var strokes = [];
   var currentStroke = [];
   var recognizeTimer = null;
 
-  /* ── Colores ── */
+  /* ── Colores tema ── */
   function getColor(){ return document.body.classList.contains('dark') ? '#e5e5ea' : '#1c1c1e'; }
 
-  /* ── Resize ── */
+  /* ══════════════════════════════════════════════════════════════
+     BIBLIOTECA DE FORMAS — emoji + símbolos Unicode por categoría
+  ══════════════════════════════════════════════════════════════ */
+  var SHAPE_LIB = {
+    'círculo':       { emoji:'⭕', syms:['○','●','◯','◉','⊙','◎','◌','⬤','🔵','⚫','🟠','🟡','🟢','🔴','🟣'] },
+    'óvalo':         { emoji:'⬭', syms:['⬭','⬬','⬫','◔','◕','◑','◐','⊕','⊗'] },
+    'triángulo':     { emoji:'🔺', syms:['▲','△','▴','▵','▷','◁','▶','◀','⊿','◿','◺','◸','◹'] },
+    'cuadrado':      { emoji:'⬛', syms:['■','□','▪','▫','◼','◻','▬','▭','🔲','🔳','⊞','⊟'] },
+    'rectángulo':    { emoji:'▬', syms:['▬','▭','▮','▯','═','║','╔','╗','╚','╝','╠','╣','╦','╩','╬'] },
+    'diamante':      { emoji:'💎', syms:['◆','◇','◈','♦','🔷','🔹','⬧','⬦','❖','⟐','⌘'] },
+    'estrella':      { emoji:'⭐', syms:['★','☆','✦','✧','✩','✪','✫','✬','✭','✮','✯','✰','💫','🌟','✨','🌠'] },
+    'corazón':       { emoji:'❤️', syms:['♥','❤','♡','❥','❣','💕','💗','💖','💝','💘','💓','💞','🖤','🤍'] },
+    'flecha→':       { emoji:'➡️', syms:['→','←','↑','↓','↗','↘','↙','↖','↔','↕','⇒','⇐','⇑','⇓','➤','➜','➝','➞','➡','⬅','⬆','⬇','⟶','⟵'] },
+    'flecha↗':       { emoji:'↗️', syms:['↗','↘','↙','↖','⬈','⬉','⬊','⬋','↱','↲','↴','↵','⤴','⤵','↩','↪'] },
+    'zigzag/rayo':   { emoji:'⚡', syms:['⚡','↯','⌁','☇','ϟ','ℨ','Ƶ','⦑','⦒','≋','≈','⌇','∿','〰','⌊','⌋','⟨','⟩','⫻','⩧'] },
+    'espiral':       { emoji:'🌀', syms:['🌀','🔄','↺','↻','⟳','⟲','⤻','⤼','⥀','⥁'] },
+    'luna':          { emoji:'🌙', syms:['☽','☾','🌛','🌜','🌚','🌑','◑','◐','☪','🌒','🌘'] },
+    'infinito':      { emoji:'∞', syms:['∞','♾️','⟁','⊗','⊕','≈','≋','⌁','∾','⊸'] },
+    'cruz/más':      { emoji:'✚', syms:['✚','✛','✜','✝','†','‡','➕','❌','✞','⛏','☩','✙','⊕','⊞'] },
+    'línea':         { emoji:'➖', syms:['─','━','▬','—','–','‐','⸻','═','▔','▁','‾','＿'] },
+    'ola/curva':     { emoji:'〰️', syms:['〰','∿','⌇','∽','≋','≈','~','〜','ʿ','ʾ'] },
+    'tic/check':     { emoji:'✔️', syms:['✔','✓','✅','☑','✗','✘','✕','✖','❎','⊘','☒'] },
+    'flor':          { emoji:'🌸', syms:['✿','❀','✾','❃','❋','🌺','🌼','💐','🪷','❁','✡','꧁','꧂'] },
+    'sol':           { emoji:'☀️', syms:['☀','🌞','✦','✧','⊙','☼','🌤','🌻','🔆','✺','❋','✸','✹'] },
+    'espiral zig':   { emoji:'🔄', syms:['⟲','⟳','↺','↻','⤻','⤼','🔃','🔁','🔂','↯'] },
+    'mano':          { emoji:'✋', syms:['✋','🖐','👋','☞','☟','👆','👇','🤚','🫱','☜','☝','☟'] },
+    'nota':          { emoji:'🎵', syms:['♪','♫','♬','♩','🎶','🎼','🎵','♭','♮','♯'] },
+    'pentágono':     { emoji:'⬠', syms:['⬠','⬡','⬢','⬣','⎔','🔷','🔶','⭓'] },
+    'hexágono':      { emoji:'⬡', syms:['⬡','⬢','⬣','⎔','🔶','🔷','⬠','⬟'] },
+    'signo de interrogación': { emoji:'❓', syms:['?','？','❓','❔','⁇','⁈','⁉'] },
+    'ángulo/v':      { emoji:'∨', syms:['∨','∧','V','v','⌄','⌃','⋁','⋀','◡','◠'] },
+  };
+
+  /* ══════════════════════════════════════════════════════════════
+     ALGORITMO $1 UNISTROKE RECOGNIZER
+     Implementación completa con Protractor enhancement
+  ══════════════════════════════════════════════════════════════ */
+
+  var NUM_POINTS = 128;
+  var SQUARE_SIZE = 250.0;
+  var ORIGIN = {x:0, y:0};
+  var Diagonal = Math.sqrt(SQUARE_SIZE*SQUARE_SIZE + SQUARE_SIZE*SQUARE_SIZE);
+  var HalfDiagonal = 0.5 * Diagonal;
+  var AngleRange = Math.PI * 0.25; // 45°
+  var AnglePrecision = Math.PI / 90; // 2°
+  var Phi = 0.5 * (-1.0 + Math.sqrt(5.0)); // Golden Ratio
+
+  function Point(x,y){ return {x:x, y:y}; }
+  function Rectangle(x,y,w,h){ return {x:x, y:y, width:w, height:h}; }
+
+  /* ── Core $1 pipeline ── */
+  function Resample(points, n){
+    var I = PathLength(points)/(n-1);
+    var D = 0.0;
+    var newpoints = [points[0]];
+    for (var i=1; i<points.length; i++){
+      var d = Distance(points[i-1], points[i]);
+      if ((D+d) >= I){
+        var qx = points[i-1].x + ((I-D)/d)*(points[i].x-points[i-1].x);
+        var qy = points[i-1].y + ((I-D)/d)*(points[i].y-points[i-1].y);
+        var q = Point(qx,qy);
+        newpoints.push(q);
+        points.splice(i, 0, q);
+        D = 0.0;
+      } else {
+        D += d;
+      }
+    }
+    if (newpoints.length === n-1) newpoints.push(points[points.length-1]);
+    return newpoints;
+  }
+
+  function IndicativeAngle(points){
+    var c = Centroid(points);
+    return Math.atan2(c.y-points[0].y, c.x-points[0].x);
+  }
+
+  function RotateBy(points, radians){
+    var c = Centroid(points);
+    var cos = Math.cos(radians), sin = Math.sin(radians);
+    var newpoints = [];
+    for (var i=0; i<points.length; i++){
+      var qx = (points[i].x-c.x)*cos - (points[i].y-c.y)*sin + c.x;
+      var qy = (points[i].x-c.x)*sin + (points[i].y-c.y)*cos + c.y;
+      newpoints.push(Point(qx,qy));
+    }
+    return newpoints;
+  }
+
+  function ScaleTo(points, size){
+    var B = BoundingBox(points);
+    var newpoints = [];
+    for (var i=0; i<points.length; i++){
+      var qx = points[i].x * (size/B.width);
+      var qy = points[i].y * (size/B.height);
+      newpoints.push(Point(qx,qy));
+    }
+    return newpoints;
+  }
+
+  function ScaleToWithAspect(points, size){
+    var B = BoundingBox(points);
+    var uniformScale = Math.min(size/B.width, size/B.height);
+    var newpoints = [];
+    for (var i=0; i<points.length; i++){
+      newpoints.push(Point(points[i].x*uniformScale, points[i].y*uniformScale));
+    }
+    return newpoints;
+  }
+
+  function TranslateTo(points, pt){
+    var c = Centroid(points);
+    var newpoints = [];
+    for (var i=0; i<points.length; i++){
+      newpoints.push(Point(points[i].x + pt.x - c.x, points[i].y + pt.y - c.y));
+    }
+    return newpoints;
+  }
+
+  function Vectorize(points){
+    var sum = 0.0, vector = [];
+    for (var i=0; i<points.length; i++){
+      vector.push(points[i].x);
+      vector.push(points[i].y);
+      sum += points[i].x*points[i].x + points[i].y*points[i].y;
+    }
+    var magnitude = Math.sqrt(sum);
+    for (var i=0; i<vector.length; i++) vector[i] /= magnitude;
+    return vector;
+  }
+
+  /* ── Protractor: fast closed-form matching ── */
+  function OptimalCosineDistance(v1, v2){
+    var a=0.0, b=0.0;
+    for (var i=0; i<v1.length; i+=2){
+      a += v1[i]*v2[i] + v1[i+1]*v2[i+1];
+      b += v1[i]*v2[i+1] - v1[i+1]*v2[i];
+    }
+    var angle = Math.atan(b/a);
+    return Math.acos(a*Math.cos(angle) + b*Math.sin(angle));
+  }
+
+  function DistanceAtBestAngle(points, T, a, b, threshold){
+    var x1 = Phi*a + (1.0-Phi)*b;
+    var f1 = PathDistance(points, RotateBy(T.points, x1));
+    var x2 = (1.0-Phi)*a + Phi*b;
+    var f2 = PathDistance(points, RotateBy(T.points, x2));
+    while (Math.abs(b-a) > threshold){
+      if (f1 < f2){ b = x2; x2 = x1; f2 = f1; x1 = Phi*a+(1.0-Phi)*b; f1 = PathDistance(points,RotateBy(T.points,x1)); }
+      else { a = x1; x1 = x2; f1 = f2; x2 = (1.0-Phi)*a+Phi*b; f2 = PathDistance(points,RotateBy(T.points,x2)); }
+    }
+    return Math.min(f1,f2);
+  }
+
+  function PathDistance(pts1, pts2){
+    var d = 0.0;
+    for (var i=0; i<pts1.length; i++) d += Distance(pts1[i], pts2[i]);
+    return d/pts1.length;
+  }
+
+  function PathLength(points){
+    var d=0.0;
+    for (var i=1; i<points.length; i++) d += Distance(points[i-1],points[i]);
+    return d;
+  }
+
+  function Distance(p1,p2){
+    var dx=p2.x-p1.x, dy=p2.y-p1.y;
+    return Math.sqrt(dx*dx+dy*dy);
+  }
+
+  function Centroid(points){
+    var x=0.0, y=0.0;
+    for (var i=0; i<points.length; i++){ x+=points[i].x; y+=points[i].y; }
+    return Point(x/points.length, y/points.length);
+  }
+
+  function BoundingBox(points){
+    var minX=+Infinity, maxX=-Infinity, minY=+Infinity, maxY=-Infinity;
+    for (var i=0; i<points.length; i++){
+      minX=Math.min(minX,points[i].x); maxX=Math.max(maxX,points[i].x);
+      minY=Math.min(minY,points[i].y); maxY=Math.max(maxY,points[i].y);
+    }
+    return Rectangle(minX,minY,maxX-minX,maxY-minY);
+  }
+
+  /* ── Template preprocessing ── */
+  function processTemplate(rawPoints, useAngle){
+    var pts = rawPoints.map(function(p){ return Point(p[0],p[1]); });
+    pts = Resample(pts, NUM_POINTS);
+    if (useAngle !== false){
+      var radians = IndicativeAngle(pts);
+      pts = RotateBy(pts, -radians);
+    }
+    pts = ScaleTo(pts, SQUARE_SIZE);
+    pts = TranslateTo(pts, ORIGIN);
+    return { points: pts, vector: Vectorize(pts) };
+  }
+
+  /* ── Template generation helpers ── */
+  function makeCircle(n, cx, cy, r, startAngle, dir){
+    n = n || 64; cx=cx||0; cy=cy||0; r=r||100; startAngle=startAngle||0; dir=dir||1;
+    var pts=[];
+    for (var i=0;i<=n;i++){
+      var a = startAngle + dir*(i/n)*2*Math.PI;
+      pts.push([cx+r*Math.cos(a), cy+r*Math.sin(a)]);
+    }
+    return pts;
+  }
+
+  function makeRegularPolygon(sides, cx, cy, r, startAngle){
+    cx=cx||0; cy=cy||0; r=r||100; startAngle=startAngle||-Math.PI/2;
+    var pts=[];
+    for (var i=0;i<=sides;i++){
+      var a = startAngle + (i/sides)*2*Math.PI;
+      pts.push([cx+r*Math.cos(a), cy+r*Math.sin(a)]);
+    }
+    return pts;
+  }
+
+  function makeStar(points5, cx, cy, outerR, innerR, startAngle){
+    cx=cx||0; cy=cy||0; outerR=outerR||100; innerR=innerR||40; startAngle=startAngle||-Math.PI/2;
+    var pts=[];
+    for (var i=0;i<=points5*2;i++){
+      var r = (i%2===0) ? outerR : innerR;
+      var a = startAngle + (i/(points5*2))*2*Math.PI;
+      pts.push([cx+r*Math.cos(a), cy+r*Math.sin(a)]);
+    }
+    return pts;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     TEMPLATES — generados matemáticamente para máxima precisión
+     Cada forma tiene 3-5 variantes para cubrir distintos modos de dibujo
+  ═══════════════════════════════════════════════════════════════ */
+  var RAW_TEMPLATES = [];
+
+  /* CÍRCULO — en sentido horario y antihorario, distintos puntos de inicio */
+  RAW_TEMPLATES.push({name:'círculo', pts: makeCircle(64, 0,0,100, 0, 1)});
+  RAW_TEMPLATES.push({name:'círculo', pts: makeCircle(64, 0,0,100, 0, -1)});
+  RAW_TEMPLATES.push({name:'círculo', pts: makeCircle(64, 0,0,100, Math.PI, 1)});
+  RAW_TEMPLATES.push({name:'círculo', pts: makeCircle(64, 0,0,100, -Math.PI/2, 1)});
+
+  /* ÓVALO — círculo estirado */
+  (function(){
+    function makeOval(n,rx,ry){ var pts=[]; for(var i=0;i<=n;i++){ var a=(i/n)*2*Math.PI; pts.push([rx*Math.cos(a), ry*Math.sin(a)]); } return pts; }
+    RAW_TEMPLATES.push({name:'óvalo', pts: makeOval(64,150,80)});
+    RAW_TEMPLATES.push({name:'óvalo', pts: makeOval(64,80,150)});
+    RAW_TEMPLATES.push({name:'óvalo', pts: makeOval(64,140,75)});
+  })();
+
+  /* TRIÁNGULO — tres variantes de inicio (arriba, izquierda, derecha) */
+  RAW_TEMPLATES.push({name:'triángulo', pts: makeRegularPolygon(3, 0,0,100, -Math.PI/2)});
+  RAW_TEMPLATES.push({name:'triángulo', pts: makeRegularPolygon(3, 0,0,100, Math.PI/6)});
+  RAW_TEMPLATES.push({name:'triángulo', pts: makeRegularPolygon(3, 0,0,100, Math.PI/2)});
+  /* triángulo dibujado de punta a punta (los usuarios no siempre cierran) */
+  (function(){
+    RAW_TEMPLATES.push({name:'triángulo', pts:[
+      [0,-100],[100,80],[-100,80],[0,-100]
+    ]});
+  })();
+
+  /* CUADRADO / RECTÁNGULO */
+  (function(){
+    function makeRect(w,h,startCorner){
+      var corners = [[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2],[-w/2,-h/2]];
+      var s = startCorner||0;
+      var pts = corners.slice(s).concat(corners.slice(1,s+1));
+      // interpolate each edge
+      var result=[];
+      for(var i=0;i<pts.length-1;i++){
+        for(var t=0;t<10;t++) result.push([pts[i][0]+(pts[i+1][0]-pts[i][0])*t/10, pts[i][1]+(pts[i+1][1]-pts[i][1])*t/10]);
+      }
+      result.push(pts[pts.length-1]);
+      return result;
+    }
+    RAW_TEMPLATES.push({name:'cuadrado', pts: makeRect(200,200,0)});
+    RAW_TEMPLATES.push({name:'cuadrado', pts: makeRect(200,200,1)});
+    RAW_TEMPLATES.push({name:'cuadrado', pts: makeRect(200,200,2)});
+    RAW_TEMPLATES.push({name:'cuadrado', pts: makeRect(200,200,3)});
+    RAW_TEMPLATES.push({name:'rectángulo', pts: makeRect(280,160,0)});
+    RAW_TEMPLATES.push({name:'rectángulo', pts: makeRect(160,280,0)});
+    RAW_TEMPLATES.push({name:'rectángulo', pts: makeRect(300,150,0)});
+  })();
+
+  /* DIAMANTE */
+  RAW_TEMPLATES.push({name:'diamante', pts: makeRegularPolygon(4, 0,0,100, 0)});
+  RAW_TEMPLATES.push({name:'diamante', pts: makeRegularPolygon(4, 0,0,100, Math.PI/4)});
+  (function(){
+    RAW_TEMPLATES.push({name:'diamante', pts:[
+      [0,-100],[80,0],[0,100],[-80,0],[0,-100]
+    ]});
+  })();
+
+  /* ESTRELLA */
+  RAW_TEMPLATES.push({name:'estrella', pts: makeStar(5, 0,0,100,42, -Math.PI/2)});
+  RAW_TEMPLATES.push({name:'estrella', pts: makeStar(5, 0,0,100,42, Math.PI/2)});
+  RAW_TEMPLATES.push({name:'estrella', pts: makeStar(6, 0,0,100,50, -Math.PI/2)});
+
+  /* CORAZÓN — trayectoria matemática del corazón */
+  (function(){
+    var pts=[];
+    for(var i=0;i<=80;i++){
+      var t = -Math.PI + (i/80)*2*Math.PI;
+      pts.push([16*Math.pow(Math.sin(t),3)*6, -(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t))*6]);
+    }
+    RAW_TEMPLATES.push({name:'corazón', pts:pts});
+    // variante más simple dibujada a mano
+    RAW_TEMPLATES.push({name:'corazón', pts:[
+      [0,-60],[-50,-100],[-100,-60],[-100,0],[-50,60],[0,100],[50,60],[100,0],[100,-60],[50,-100],[0,-60]
+    ]});
+    // variante comenzando desde abajo
+    RAW_TEMPLATES.push({name:'corazón', pts:[
+      [0,100],[60,40],[100,0],[100,-60],[60,-100],[0,-60],[-60,-100],[-100,-60],[-100,0],[-60,40],[0,100]
+    ]});
+  })();
+
+  /* FLECHA → (horizontal) */
+  (function(){
+    function makeArrow(dx){ return [
+      [-100,0],[80,0], // cuerpo
+      [40,-40],[80,0],[40,40] // punta
+    ];}
+    RAW_TEMPLATES.push({name:'flecha→', pts:[[-100,0],[100,0],[60,-40],[100,0],[60,40]]});
+    RAW_TEMPLATES.push({name:'flecha→', pts:[[100,0],[-100,0],[-60,-40],[-100,0],[-60,40]]});
+    RAW_TEMPLATES.push({name:'flecha→', pts:[[-100,0],[100,0],[50,-50],[100,0],[50,50]]});
+  })();
+
+  /* FLECHA ↗ (diagonal) */
+  (function(){
+    RAW_TEMPLATES.push({name:'flecha↗', pts:[[-100,100],[100,-100],[30,-100],[100,-100],[100,-30]]});
+    RAW_TEMPLATES.push({name:'flecha↗', pts:[[-100,-100],[100,100],[100,30],[100,100],[30,100]]});
+  })();
+
+  /* ZIGZAG / RAYO — forma de Z, relámpago y N — VERSIÓN EXPANDIDA v10 */
+  /* Incluye todas las variantes que un usuario puede dibujar a mano:
+     Z, S, N, zigzag 2-3 picos, rayo ⚡ clásico, variantes oblicuas */
+  (function(){
+    /* ── Z clásica (de izquierda a derecha) ── */
+    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[60,-100],[-60,0],[60,100]]});
+    /* ── Z invertida ── */
+    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[-60,-100],[60,0],[-60,100]]});
+    /* ── Zigzag de 3 picos ── */
+    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[100,-100],[-100,-20],[100,20],[-100,100]]});
+    /* ── Rayo ⚡ clásico (forma de K inclinada, 2 quiebres) ── */
+    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[30,-100],[-20,-10],[20,-10],[-30,100]]});
+    /* ── Rayo más pronunciado, brazos anchos ── */
+    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[50,-100],[-50,-5],[40,-5],[-50,100]]});
+    /* ── Rayo inclinado hacia la derecha ── */
+    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[10,-100],[-60,10],[50,10],[-10,100]]});
+    /* ── Rayo inclinado hacia la izquierda ── */
+    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[-10,-100],[60,10],[-50,10],[10,100]]});
+    /* ── Zigzag con un solo quiebre (V inclinada) ── */
+    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[-80,-100],[80,0],[-40,100]]});
+    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[80,-100],[-80,0],[40,100]]});
+    /* ── N vertical (trazo diagonal + cambio brusco) ── */
+    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[-60,-100],[-60,100],[60,-100],[60,100]]});
+    /* ── Z con muchos puntos intermedios (trazo rápido) ── */
+    (function(){
+      var pts = [];
+      var anchors = [[60,-100],[-60,0],[60,100]];
+      for (var i = 0; i < anchors.length - 1; i++) {
+        for (var t = 0; t <= 10; t++) {
+          pts.push([
+            anchors[i][0] + (anchors[i+1][0]-anchors[i][0])*t/10,
+            anchors[i][1] + (anchors[i+1][1]-anchors[i][1])*t/10
+          ]);
+        }
+      }
+      RAW_TEMPLATES.push({name:'zigzag/rayo', pts:pts});
+    })();
+    /* ── Rayo muy compacto (dibujado pequeño) ── */
+    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[20,-60],[-15,-5],[15,-5],[-20,60]]});
+    /* ── Rayo estirado horizontalmente ── */
+    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[100,-50],[-100,0],[100,50]]});
+    /* ── Rayo comenzando desde abajo ── */
+    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[-30,100],[20,10],[-20,10],[30,-100]]});
+    /* ── Rayo en S (zigzag suave, 2 inflexiones suaves) ── */
+    (function(){
+      var pts = [];
+      for (var i = 0; i <= 20; i++) {
+        var t = i / 20;
+        pts.push([Math.sin(t * Math.PI) * 70, -100 + t * 200]);
+      }
+      RAW_TEMPLATES.push({name:'zigzag/rayo', pts:pts});
+    })();
+    /* ── Variante con quiebre casi perpendicular ── */
+    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[80,-100],[-80,-20],[-40,-20],[-80,100]]});
+    RAW_TEMPLATES.push({name:'zigzag/rayo', pts:[[-80,-100],[80,-20],[40,-20],[80,100]]});
+  })();
+
+  /* ESPIRAL */
+  (function(){
+    var pts=[];
+    for(var i=0;i<=120;i++){
+      var a=(i/120)*4*Math.PI;
+      var r=10+80*(i/120);
+      pts.push([r*Math.cos(a), r*Math.sin(a)]);
+    }
+    RAW_TEMPLATES.push({name:'espiral', pts:pts});
+    // variante inversa
+    var pts2=[];
+    for(var i=0;i<=120;i++){
+      var a=-(i/120)*4*Math.PI;
+      var r=10+80*(i/120);
+      pts2.push([r*Math.cos(a), r*Math.sin(a)]);
+    }
+    RAW_TEMPLATES.push({name:'espiral', pts:pts2});
+  })();
+
+  /* LUNA — media luna */
+  (function(){
+    function makeMoon(dir){
+      var pts=[];
+      // arco exterior
+      for(var i=0;i<=40;i++){
+        var a=-Math.PI/2 + (i/40)*Math.PI;
+        pts.push([100*Math.cos(a), 100*Math.sin(a)]);
+      }
+      // arco interior (cóncavo, crea la luna)
+      for(var i=40;i>=0;i--){
+        var a=-Math.PI/2 + (i/40)*Math.PI;
+        pts.push([60*Math.cos(a)+dir*40, 90*Math.sin(a)]);
+      }
+      return pts;
+    }
+    RAW_TEMPLATES.push({name:'luna', pts: makeMoon(1)});
+    RAW_TEMPLATES.push({name:'luna', pts: makeMoon(-1)});
+    // C simple
+    RAW_TEMPLATES.push({name:'luna', pts: makeCircle(48,0,0,100,-Math.PI*0.7,1).slice(0,40)});
+  })();
+
+  /* INFINITO — lemniscata de Bernoulli */
+  (function(){
+    var pts=[];
+    for(var i=0;i<=100;i++){
+      var t=-Math.PI+(i/100)*2*Math.PI;
+      var x=150*Math.cos(t)/(1+Math.sin(t)*Math.sin(t));
+      var y=100*Math.sin(t)*Math.cos(t)/(1+Math.sin(t)*Math.sin(t));
+      pts.push([x,y]);
+    }
+    RAW_TEMPLATES.push({name:'infinito', pts:pts});
+    RAW_TEMPLATES.push({name:'infinito', pts:pts.slice().reverse()});
+  })();
+
+  /* CRUZ / MÁS */
+  (function(){
+    function makeCross(w,h){
+      return [
+        [0,-h],[0,h],  // vertical
+        [-w,0],[w,0]   // horizontal — se concatena como multistroke aplanado
+      ];
+    }
+    // Cruz como un solo trazo en forma de + o x
+    RAW_TEMPLATES.push({name:'cruz/más', pts:[
+      [-100,0],[100,0],[0,0],[0,-100],[0,100]
+    ]});
+    RAW_TEMPLATES.push({name:'cruz/más', pts:[
+      [0,-100],[0,100],[0,0],[-100,0],[100,0]
+    ]});
+    // X
+    RAW_TEMPLATES.push({name:'cruz/más', pts:[
+      [-100,-100],[100,100],[0,0],[-100,100],[100,-100]
+    ]});
+  })();
+
+  /* LÍNEA RECTA */
+  (function(){
+    RAW_TEMPLATES.push({name:'línea', pts:[[-150,0],[150,0]]});
+    RAW_TEMPLATES.push({name:'línea', pts:[[0,-150],[0,150]]});
+    RAW_TEMPLATES.push({name:'línea', pts:[[-150,-150],[150,150]]});
+    RAW_TEMPLATES.push({name:'línea', pts:[[-150,150],[150,-150]]});
+  })();
+
+  /* TIC / CHECK */
+  (function(){
+    RAW_TEMPLATES.push({name:'tic/check', pts:[[-80,0],[0,80],[100,-100]]});
+    RAW_TEMPLATES.push({name:'tic/check', pts:[[-100,-50],[-20,60],[100,-100]]});
+    RAW_TEMPLATES.push({name:'tic/check', pts:[[-80,20],[0,100],[120,-80]]});
+  })();
+
+  /* OLA / CURVA */
+  (function(){
+    var pts=[];
+    for(var i=0;i<=60;i++){
+      var x=-150+(i/60)*300;
+      pts.push([x, 60*Math.sin((i/60)*2*Math.PI)]);
+    }
+    RAW_TEMPLATES.push({name:'ola/curva', pts:pts});
+    var pts2=pts.map(function(p){return [p[0],-p[1]];});
+    RAW_TEMPLATES.push({name:'ola/curva', pts:pts2});
+  })();
+
+  /* ÁNGULO / V */
+  (function(){
+    RAW_TEMPLATES.push({name:'ángulo/v', pts:[[-100,-100],[0,60],[100,-100]]});
+    RAW_TEMPLATES.push({name:'ángulo/v', pts:[[-100,100],[0,-60],[100,100]]});
+    RAW_TEMPLATES.push({name:'ángulo/v', pts:[[-60,-100],[-80,80],[60,-100]]});
+  })();
+
+  /* PENTÁGONO */
+  RAW_TEMPLATES.push({name:'pentágono', pts: makeRegularPolygon(5, 0,0,100, -Math.PI/2)});
+  RAW_TEMPLATES.push({name:'pentágono', pts: makeRegularPolygon(5, 0,0,100, Math.PI/2)});
+
+  /* HEXÁGONO */
+  RAW_TEMPLATES.push({name:'hexágono', pts: makeRegularPolygon(6, 0,0,100, 0)});
+  RAW_TEMPLATES.push({name:'hexágono', pts: makeRegularPolygon(6, 0,0,100, Math.PI/6)});
+
+  /* FLOR — pétalos como círculo distorsionado */
+  (function(){
+    var pts=[];
+    for(var i=0;i<=80;i++){
+      var a=(i/80)*2*Math.PI;
+      var r=80+40*Math.cos(5*a);
+      pts.push([r*Math.cos(a), r*Math.sin(a)]);
+    }
+    RAW_TEMPLATES.push({name:'flor', pts:pts});
+    var pts2=[];
+    for(var i=0;i<=80;i++){
+      var a=(i/80)*2*Math.PI;
+      var r=80+40*Math.cos(6*a);
+      pts2.push([r*Math.cos(a), r*Math.sin(a)]);
+    }
+    RAW_TEMPLATES.push({name:'flor', pts:pts2});
+  })();
+
+  /* SOL — estrella con muchos puntos */
+  RAW_TEMPLATES.push({name:'sol', pts: makeStar(8, 0,0,100,55, -Math.PI/2)});
+  RAW_TEMPLATES.push({name:'sol', pts: makeStar(10,0,0,100,60, -Math.PI/2)});
+  RAW_TEMPLATES.push({name:'sol', pts: makeStar(12,0,0,100,65, -Math.PI/2)});
+
+  /* SIGNO DE INTERROGACIÓN */
+  (function(){
+    var pts=[];
+    // Arco superior
+    for(var i=0;i<=30;i++){
+      var a=Math.PI+(i/30)*Math.PI;
+      pts.push([60*Math.cos(a),60*Math.sin(a)-20]);
+    }
+    // Vertical bajando
+    for(var i=1;i<=20;i++) pts.push([0, i*3]);
+    // Punto
+    pts.push([0, 80]);
+    RAW_TEMPLATES.push({name:'signo de interrogación', pts:pts});
+  })();
+
+  /* ── Procesar todos los templates ── */
+  var TEMPLATES = RAW_TEMPLATES.map(function(t){
+    return { name: t.name, processed: processTemplate(t.pts) };
+  });
+
+  /* ══════════════════════════════════════════════════════════════
+     CAPA 1 — GeoPipeline™: Extractor de características geométricas
+     Produce un vector de features independiente de escala y traslación.
+     Inspirado en IStraw (Sezgin 2005) + descriptores propios DIUSF v10.
+  ══════════════════════════════════════════════════════════════ */
+
+  /* ── Suavizado gaussiano para reducir ruido táctil ── */
+  function gaussianSmooth(pts, sigma) {
+    sigma = sigma || 2;
+    var n = pts.length;
+    var out = [];
+    var radius = Math.ceil(sigma * 2.5);
+    var kernel = [];
+    var ksum = 0;
+    for (var k = -radius; k <= radius; k++) {
+      var w = Math.exp(-(k*k)/(2*sigma*sigma));
+      kernel.push(w); ksum += w;
+    }
+    for (var k = 0; k < kernel.length; k++) kernel[k] /= ksum;
+    for (var i = 0; i < n; i++) {
+      var sx = 0, sy = 0;
+      for (var j = 0; j < kernel.length; j++) {
+        var idx = Math.max(0, Math.min(n-1, i + j - radius));
+        sx += pts[idx].x * kernel[j];
+        sy += pts[idx].y * kernel[j];
+      }
+      out.push(Point(sx, sy));
+    }
+    return out;
+  }
+
+  /* ── Curvatura discreta en cada punto (radio de curvatura inverso) ── */
+  function computeCurvatures(pts, win) {
+    win = win || 5;
+    var n = pts.length;
+    var curvs = new Array(n).fill(0);
+    for (var i = win; i < n - win; i++) {
+      var p0 = pts[i - win], p1 = pts[i], p2 = pts[i + win];
+      // Vector cross product for signed curvature
+      var v1x = p1.x - p0.x, v1y = p1.y - p0.y;
+      var v2x = p2.x - p1.x, v2y = p2.y - p1.y;
+      var cross = v1x * v2y - v1y * v2x;
+      var len1 = Math.sqrt(v1x*v1x + v1y*v1y) + 1e-9;
+      var len2 = Math.sqrt(v2x*v2x + v2y*v2y) + 1e-9;
+      curvs[i] = cross / (len1 * len2);
+    }
+    return curvs;
+  }
+
+  /* ── Ángulo local en cada punto (IStraw-style) ── */
+  function computeLocalAngles(pts, win) {
+    win = win || 6;
+    var n = pts.length;
+    var angles = new Array(n).fill(0);
+    for (var i = win; i < n - win; i++) {
+      var dx1 = pts[i].x - pts[i-win].x, dy1 = pts[i].y - pts[i-win].y;
+      var dx2 = pts[i+win].x - pts[i].x, dy2 = pts[i+win].y - pts[i].y;
+      var dot = dx1*dx2 + dy1*dy2;
+      var cross = dx1*dy2 - dy1*dx2;
+      angles[i] = Math.atan2(Math.abs(cross), dot); // bending angle [0, PI]
+    }
+    return angles;
+  }
+
+  /* ── Detectar esquinas (picos en ángulo local > umbral) ── */
+  function detectCorners(angles, threshold) {
+    threshold = threshold || 0.55; // ~31.5 grados
+    var corners = [];
+    var n = angles.length;
+    var minDist = Math.floor(n * 0.06); // mínima separación entre esquinas
+    for (var i = minDist; i < n - minDist; i++) {
+      if (angles[i] > threshold) {
+        // Verificar que es un máximo local
+        var isMax = true;
+        for (var j = Math.max(0, i-minDist); j < Math.min(n, i+minDist); j++) {
+          if (j !== i && angles[j] >= angles[i]) { isMax = false; break; }
+        }
+        if (isMax) corners.push({ idx: i, angle: angles[i] });
+      }
+    }
+    return corners;
+  }
+
+  /* ── Contar cruces de cero en curvatura (inflexiones) ── */
+  function countInflections(curvs) {
+    var count = 0;
+    for (var i = 1; i < curvs.length; i++) {
+      if (curvs[i-1] * curvs[i] < 0) count++;
+    }
+    return count;
+  }
+
+  /* ── Firma radial (16-bin polar histogram) ── */
+  function radialSignature(pts, bins) {
+    bins = bins || 16;
+    var c = Centroid(pts);
+    var hist = new Array(bins).fill(0);
+    for (var i = 0; i < pts.length; i++) {
+      var angle = Math.atan2(pts[i].y - c.y, pts[i].x - c.x);
+      var bin = Math.floor(((angle + Math.PI) / (2 * Math.PI)) * bins);
+      bin = Math.min(bin, bins - 1);
+      var dist = Distance(pts[i], c);
+      hist[bin] += dist;
+    }
+    // Normalizar
+    var maxH = Math.max.apply(null, hist) + 1e-9;
+    return hist.map(function(v){ return v / maxH; });
+  }
+
+  /* ── Ratio de curvatura: longitud del arco / longitud de la cuerda ── */
+  function curvatureRatio(pts) {
+    var arcLen = PathLength(pts);
+    var chord = Distance(pts[0], pts[pts.length-1]);
+    return chord > 1e-9 ? arcLen / chord : 1;
+  }
+
+  /* ── Circularidad: 4π·Area / Perímetro² ── */
+  function circularityScore(pts) {
+    var perimeter = PathLength(pts);
+    // Área aproximada por la fórmula del Shoelace
+    var area = 0;
+    for (var i = 0; i < pts.length - 1; i++) {
+      area += pts[i].x * pts[i+1].y - pts[i+1].x * pts[i].y;
+    }
+    area = Math.abs(area) / 2;
+    if (perimeter < 1e-9) return 0;
+    return (4 * Math.PI * area) / (perimeter * perimeter);
+  }
+
+  /* ── ¿Es el trazo cerrado? ── */
+  function isStrokeClosed(pts, threshold) {
+    threshold = threshold || 0.15;
+    var total = PathLength(pts);
+    var closing = Distance(pts[0], pts[pts.length-1]);
+    return closing / total < threshold;
+  }
+
+  /* ── Dirección dominante del trazo (ángulo del eje principal por PCA) ── */
+  function dominantDirection(pts) {
+    var c = Centroid(pts);
+    var xx = 0, yy = 0, xy = 0;
+    for (var i = 0; i < pts.length; i++) {
+      var dx = pts[i].x - c.x, dy = pts[i].y - c.y;
+      xx += dx * dx; yy += dy * dy; xy += dx * dy;
+    }
+    return Math.atan2(2 * xy, xx - yy) / 2; // eje principal
+  }
+
+  /* ── Ratio de aspecto del bounding box ── */
+  function aspectRatio(pts) {
+    var bb = BoundingBox(pts);
+    var w = bb.width + 1e-9, h = bb.height + 1e-9;
+    return Math.max(w, h) / Math.min(w, h);
+  }
+
+  /* ── Análisis de cambios de dirección horizontal/vertical ── */
+  function directionChanges(pts, win) {
+    win = win || 8;
+    var n = pts.length;
+    var hChanges = 0, vChanges = 0;
+    for (var i = win; i < n - win; i += win) {
+      var prevDx = pts[i].x - pts[i-win].x;
+      var nextDx = pts[i+win].x - pts[i].x;
+      if (prevDx * nextDx < 0) hChanges++;
+      var prevDy = pts[i].y - pts[i-win].y;
+      var nextDy = pts[i+win].y - pts[i].y;
+      if (prevDy * nextDy < 0) vChanges++;
+    }
+    return { h: hChanges, v: vChanges };
+  }
+
+  /* ── Ángulo total de barrido (suma de cambios angulares con signo) ── */
+  function totalAngleSweep(pts) {
+    var total = 0;
+    for (var i = 2; i < pts.length; i++) {
+      var a1 = Math.atan2(pts[i-1].y-pts[i-2].y, pts[i-1].x-pts[i-2].x);
+      var a2 = Math.atan2(pts[i].y-pts[i-1].y, pts[i].x-pts[i-1].x);
+      var da = a2 - a1;
+      // Normalizar al rango [-PI, PI]
+      while (da > Math.PI) da -= 2*Math.PI;
+      while (da < -Math.PI) da += 2*Math.PI;
+      total += da;
+    }
+    return total; // ~2π para círculo, ~0 para línea
+  }
+
+  /* ── Suma de ángulos de esquinas detectadas ── */
+  function totalCornerAngle(corners) {
+    return corners.reduce(function(s, c){ return s + c.angle; }, 0);
+  }
+
+  /* ── Extractor de features completo ── */
+  function extractGeoFeatures(rawPts) {
+    // Resample a 64 puntos para análisis consistente
+    var pts = rawPts.map(function(p){ return Point(p.x, p.y); });
+    if (pts.length < 4) return null;
+    pts = Resample(pts, 64);
+    pts = gaussianSmooth(pts, 1.5);
+
+    var curvs    = computeCurvatures(pts, 5);
+    var angles   = computeLocalAngles(pts, 6);
+    var corners  = detectCorners(angles, 0.5);
+    var inflections = countInflections(curvs);
+    var radSig   = radialSignature(pts, 16);
+    var curRatio = curvatureRatio(pts);
+    var circ     = circularityScore(pts);
+    var closed   = isStrokeClosed(pts) ? 1 : 0;
+    var aspect   = aspectRatio(pts);
+    var sweep    = totalAngleSweep(pts);
+    var dirChg   = directionChanges(pts, 6);
+    var cornN    = corners.length;
+    var cornSum  = totalCornerAngle(corners);
+    var maxCorn  = corners.length > 0 ? Math.max.apply(null, corners.map(function(c){return c.angle;})) : 0;
+    var avgCurv  = curvs.reduce(function(a,b){return a+Math.abs(b);},0) / curvs.length;
+
+    return {
+      corners: cornN,
+      cornerAngleSum: cornSum,
+      maxCornerAngle: maxCorn,
+      inflections: inflections,
+      curvatureRatio: curRatio,
+      circularity: circ,
+      closed: closed,
+      aspect: aspect,
+      sweep: sweep,
+      hDirChanges: dirChg.h,
+      vDirChanges: dirChg.v,
+      avgCurvature: avgCurv,
+      radialSig: radSig
+    };
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     CAPA 1 — Clasificador geométrico basado en reglas aprendidas
+     Cada forma tiene un "perfil" de características con rangos esperados.
+     Devuelve un mapa nombre→score [0,1].
+  ══════════════════════════════════════════════════════════════ */
+  function geoClassify(f) {
+    if (!f) return {};
+    var scores = {};
+    var n = f.corners, inf = f.inflections, circ = f.circularity;
+    var closed = f.closed, asp = f.aspect, sweep = f.sweep;
+    var crv = f.curvatureRatio, hdc = f.hDirChanges, vdc = f.vDirChanges;
+    var maxCA = f.maxCornerAngle, sumCA = f.cornerAngleSum, avgC = f.avgCurvature;
+
+    /* Función auxiliar: score gaussiano centrado en 'center' con ancho 'sigma' */
+    function gauss(val, center, sigma) {
+      return Math.exp(-0.5 * Math.pow((val - center) / sigma, 2));
+    }
+    /* Score booleano suave */
+    function boolScore(cond, ifTrue, ifFalse) {
+      return cond ? ifTrue : ifFalse;
+    }
+
+    /* ── CÍRCULO ──
+       Cerrado, alta circularidad, sweep ≈ ±2π, pocas esquinas, crv~1 */
+    scores['círculo'] = (
+      gauss(circ, 0.75, 0.2) * 3 +
+      boolScore(closed, 1, 0) * 2 +
+      gauss(Math.abs(sweep), 6.28, 1.5) * 2 +
+      gauss(n, 0, 1) * 1.5 +
+      gauss(crv, 1.05, 0.1) * 1
+    ) / 9.5;
+
+    /* ── ÓVALO ── */
+    scores['óvalo'] = (
+      gauss(circ, 0.6, 0.25) * 2.5 +
+      boolScore(closed, 1, 0) * 2 +
+      gauss(Math.abs(sweep), 6.28, 1.5) * 2 +
+      gauss(asp, 1.8, 0.5) * 2 +
+      gauss(n, 0, 1) * 1
+    ) / 9.5;
+
+    /* ── TRIÁNGULO ── 3 esquinas, cerrado, baja circularidad */
+    scores['triángulo'] = (
+      gauss(n, 3, 1) * 4 +
+      boolScore(closed, 1, 0) * 2 +
+      gauss(circ, 0.2, 0.15) * 2 +
+      gauss(sumCA, 3.14, 1) * 2
+    ) / 10;
+
+    /* ── CUADRADO ── 4 esquinas, cerrado */
+    scores['cuadrado'] = (
+      gauss(n, 4, 1) * 4 +
+      boolScore(closed, 1, 0) * 2 +
+      gauss(asp, 1.0, 0.3) * 2 +
+      gauss(circ, 0.3, 0.15) * 1.5
+    ) / 9.5;
+
+    /* ── RECTÁNGULO ── 4 esquinas, cerrado, asp > 1.5 */
+    scores['rectángulo'] = (
+      gauss(n, 4, 1) * 3.5 +
+      boolScore(closed, 1, 0) * 2 +
+      gauss(asp, 2.0, 0.7) * 2.5 +
+      gauss(circ, 0.2, 0.1) * 1.5
+    ) / 9.5;
+
+    /* ── DIAMANTE ── 4 esquinas, cerrado, orientado 45° */
+    scores['diamante'] = (
+      gauss(n, 4, 1) * 4 +
+      boolScore(closed, 1, 0) * 2 +
+      gauss(circ, 0.25, 0.15) * 2 +
+      gauss(asp, 1.2, 0.4) * 1.5
+    ) / 9.5;
+
+    /* ══ ZIGZAG / RAYO — el core mejorado ══
+       Características clave del rayo ⚡ (forma dibujada a mano):
+       - 1-3 esquinas muy marcadas (>0.8 rad, "quiebres bruscos")
+       - NO cerrado
+       - curvatureRatio alto (trazo largo vs. cuerda directa)
+       - sweep bajo (no da vueltas)
+       - inflexiones 0-2
+       - dirección: principalmente vertical (asp moderado a alto)
+    */
+    var zigCornerScore = gauss(n, 2, 1.2); // 1-3 esquinas óptimo
+    var zigMaxAngle    = gauss(maxCA, 1.5, 0.7); // esquinas agudas
+    var zigNotClosed   = boolScore(!closed, 1, 0.1);
+    var zigSweep       = gauss(Math.abs(sweep), 1.5, 2.0); // sweep moderado
+    var zigInflect     = gauss(inf, 0, 1.5); // pocas inflexiones
+    var zigCrv         = Math.min(crv / 1.5, 1.0); // trazo con recorrido
+
+    scores['zigzag/rayo'] = (
+      zigCornerScore * 3.0 +
+      zigMaxAngle    * 3.5 +
+      zigNotClosed   * 2.0 +
+      zigSweep       * 1.5 +
+      zigInflect     * 1.5 +
+      zigCrv         * 1.0
+    ) / 12.5;
+
+    /* ── ESTRELLA ── múltiples esquinas, cerrado */
+    scores['estrella'] = (
+      gauss(n, 5, 2) * 3.5 +
+      boolScore(closed, 1, 0) * 2 +
+      gauss(circ, 0.15, 0.12) * 2 +
+      gauss(sumCA, 7, 2) * 2
+    ) / 9.5;
+
+    /* ── CORAZÓN ── cerrado, 1 esquina en la parte superior, asimétrico */
+    scores['corazón'] = (
+      boolScore(closed, 1, 0) * 2.5 +
+      gauss(n, 1, 1) * 2.5 +
+      gauss(circ, 0.55, 0.2) * 2 +
+      gauss(Math.abs(sweep), 6.28, 1.5) * 2
+    ) / 9;
+
+    /* ── FLECHA → ── abierta, 1-2 esquinas, horizontal */
+    scores['flecha→'] = (
+      gauss(n, 2, 1) * 3 +
+      boolScore(!closed, 1, 0.2) * 2 +
+      gauss(asp, 2.5, 1) * 2.5 +
+      gauss(hdc, 1, 0.8) * 1.5 +
+      gauss(circ, 0.05, 0.08) * 1
+    ) / 10;
+
+    /* ── FLECHA ↗ ── diagonal */
+    scores['flecha↗'] = (
+      gauss(n, 2, 1) * 3 +
+      boolScore(!closed, 1, 0.2) * 2 +
+      gauss(asp, 1.5, 0.5) * 2 +
+      gauss(circ, 0.05, 0.08) * 1.5
+    ) / 8.5;
+
+    /* ── ESPIRAL ── abierta, sweep muy alto, creciente en distancia al centro */
+    scores['espiral'] = (
+      gauss(Math.abs(sweep), 12, 4) * 3.5 +
+      boolScore(!closed, 1, 0.3) * 1.5 +
+      gauss(crv, 3, 1.5) * 3 +
+      gauss(n, 0, 1.5) * 1.5
+    ) / 9.5;
+
+    /* ── LUNA ── semicírculo, abierto, sweep ~π */
+    scores['luna'] = (
+      boolScore(!closed, 1, 0.3) * 2 +
+      gauss(Math.abs(sweep), 3.14, 1.2) * 3.5 +
+      gauss(n, 0, 1) * 2 +
+      gauss(crv, 1.4, 0.4) * 2
+    ) / 9.5;
+
+    /* ── INFINITO ── figura de 8, cerrado, 2 inflexiones */
+    scores['infinito'] = (
+      gauss(inf, 2, 1) * 3.5 +
+      boolScore(closed, 1, 0.3) * 2 +
+      gauss(Math.abs(sweep), 0, 2) * 2.5 +
+      gauss(n, 0, 1.5) * 1.5
+    ) / 9.5;
+
+    /* ── CRUZ / MÁS ── 2-4 esquinas rectas, abierta o cerrada */
+    scores['cruz/más'] = (
+      gauss(n, 2, 1.5) * 3 +
+      gauss(Math.abs(sweep), 3.14, 1.5) * 2.5 +
+      gauss(asp, 1.0, 0.5) * 2 +
+      gauss(circ, 0.05, 0.07) * 2
+    ) / 9.5;
+
+    /* ── LÍNEA ── abierta, crv bajo, pocas esquinas */
+    scores['línea'] = (
+      boolScore(!closed, 1, 0) * 1.5 +
+      gauss(n, 0, 0.8) * 3 +
+      gauss(crv, 1.0, 0.08) * 4 +
+      gauss(circ, 0.01, 0.04) * 2
+    ) / 10.5;
+
+    /* ── OLA / CURVA ── múltiples inflexiones, sweep bajo, curvs suaves */
+    scores['ola/curva'] = (
+      gauss(inf, 3, 2) * 3 +
+      gauss(n, 0, 1.5) * 2 +
+      gauss(Math.abs(sweep), 0, 3) * 2 +
+      gauss(avgC, 0.06, 0.08) * 2.5
+    ) / 9.5;
+
+    /* ── TIC / CHECK ── abierto, 1 esquina, asimétrico */
+    scores['tic/check'] = (
+      gauss(n, 1, 0.8) * 4 +
+      boolScore(!closed, 1, 0.2) * 2 +
+      gauss(maxCA, 1.2, 0.5) * 2.5 +
+      gauss(circ, 0.05, 0.08) * 1
+    ) / 9.5;
+
+    /* ── ÁNGULO / V ── 1 esquina central muy marcada */
+    scores['ángulo/v'] = (
+      gauss(n, 1, 0.8) * 4.5 +
+      boolScore(!closed, 1, 0.2) * 2 +
+      gauss(maxCA, 1.6, 0.6) * 3
+    ) / 9.5;
+
+    /* ── FLOR ── cerrada, muchas inflexiones ── */
+    scores['flor'] = (
+      boolScore(closed, 1, 0.2) * 2 +
+      gauss(inf, 8, 4) * 3.5 +
+      gauss(n, 0, 2) * 2 +
+      gauss(circ, 0.4, 0.2) * 2
+    ) / 9.5;
+
+    /* ── SOL ── muchas esquinas, cerrado ── */
+    scores['sol'] = (
+      gauss(n, 8, 3) * 3.5 +
+      boolScore(closed, 1, 0.2) * 2 +
+      gauss(circ, 0.2, 0.15) * 2.5 +
+      gauss(sumCA, 10, 4) * 2
+    ) / 10;
+
+    /* ── PENTÁGONO / HEXÁGONO ── */
+    scores['pentágono'] = (
+      gauss(n, 5, 1) * 4 +
+      boolScore(closed, 1, 0) * 2 +
+      gauss(circ, 0.4, 0.15) * 2.5 +
+      gauss(sumCA, 5.24, 1.5) * 1.5
+    ) / 10;
+    scores['hexágono'] = (
+      gauss(n, 6, 1) * 4 +
+      boolScore(closed, 1, 0) * 2 +
+      gauss(circ, 0.5, 0.15) * 2.5 +
+      gauss(sumCA, 6.28, 1.5) * 1.5
+    ) / 10;
+
+    /* ── SIGNO DE INTERROGACIÓN ── */
+    scores['signo de interrogación'] = (
+      gauss(n, 1, 1) * 2.5 +
+      gauss(Math.abs(sweep), 3.14, 1.5) * 3 +
+      gauss(asp, 1.5, 0.5) * 2 +
+      gauss(crv, 1.6, 0.4) * 2
+    ) / 9.5;
+
+    /* ── ESPIRAL ZIG ── */
+    scores['espiral zig'] = scores['espiral'] * 0.85;
+
+    /* ── NOTA MUSICAL ── */
+    scores['nota'] = (
+      gauss(n, 1, 1) * 2.5 +
+      gauss(Math.abs(sweep), 4, 2) * 3 +
+      boolScore(!closed, 1, 0.3) * 2 +
+      gauss(asp, 1.5, 0.6) * 2
+    ) / 9.5;
+
+    /* ── MANO ── */
+    scores['mano'] = (
+      gauss(n, 3, 2) * 3 +
+      boolScore(!closed, 1, 0.3) * 1.5 +
+      gauss(circ, 0.15, 0.15) * 2.5 +
+      gauss(inf, 2, 2) * 2.5
+    ) / 9.5;
+
+    // Clamp todos a [0, 1]
+    Object.keys(scores).forEach(function(k){
+      scores[k] = Math.max(0, Math.min(1, scores[k]));
+    });
+
+    return scores;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     CAPA 2 — $1 Protractor (mantenido completo)
+  ══════════════════════════════════════════════════════════════ */
+  function protractorScores(rawPoints) {
+    var pts = rawPoints.map(function(p){ return Point(p.x, p.y); });
+    pts = Resample(pts, NUM_POINTS);
+    var radians = IndicativeAngle(pts);
+    pts = RotateBy(pts, -radians);
+    pts = ScaleTo(pts, SQUARE_SIZE);
+    pts = TranslateTo(pts, ORIGIN);
+    var vector = Vectorize(pts);
+
+    var scores = {};
+    for (var i = 0; i < TEMPLATES.length; i++) {
+      var T = TEMPLATES[i];
+      var d = OptimalCosineDistance(T.processed.vector, vector);
+      var score = 1.0 - d;
+      if (!scores[T.name] || score > scores[T.name]) scores[T.name] = score;
+    }
+    return scores;
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     CAPA 3 — Fusión bayesiana ponderada
+     Pesos de la CAPA 1 (geo) vs CAPA 2 (protractor) por forma.
+     Las formas con características geométricas fuertes dan más peso
+     al análisis geométrico. Las formas suaves al Protractor.
+  ══════════════════════════════════════════════════════════════ */
+  var GEO_WEIGHTS = {
+    'círculo':       0.20,   // muy suave → Protractor domina
+    'óvalo':         0.20,
+    'triángulo':     0.55,   // esquinas claras → geo fuerte
+    'cuadrado':      0.55,
+    'rectángulo':    0.50,
+    'diamante':      0.55,
+    'estrella':      0.60,
+    'corazón':       0.30,
+    'flecha→':       0.55,
+    'flecha↗':       0.50,
+    'zigzag/rayo':   0.75,   // ¡CLAVE! geo domina para rayo
+    'espiral':       0.15,
+    'luna':          0.30,
+    'infinito':      0.40,
+    'cruz/más':      0.50,
+    'línea':         0.60,
+    'ola/curva':     0.35,
+    'tic/check':     0.65,
+    'flor':          0.25,
+    'sol':           0.45,
+    'espiral zig':   0.20,
+    'ángulo/v':      0.70,   // esquina muy marcada
+    'pentágono':     0.50,
+    'hexágono':      0.50,
+    'signo de interrogación': 0.35,
+    'nota':          0.35,
+    'mano':          0.30,
+  };
+
+  /* ══════════════════════════════════════════════════════════════
+     RECONOCIMIENTO — motor HÍBRIDO final
+  ══════════════════════════════════════════════════════════════ */
+  function recognize(rawPoints) {
+    var allPts = rawPoints.map(function(p){ return Point(p.x, p.y); });
+    if (allPts.length < 6) return [];
+
+    // Capa 2: Protractor
+    var pScores = protractorScores(allPts);
+
+    // Capa 1: GeoPipeline
+    var features = extractGeoFeatures(allPts);
+    var gScores  = features ? geoClassify(features) : {};
+
+    // Capa 3: Fusión
+    var allNames = Object.keys(SHAPE_LIB);
+    var fused = {};
+    allNames.forEach(function(name) {
+      var gw = GEO_WEIGHTS[name] !== undefined ? GEO_WEIGHTS[name] : 0.4;
+      var pw = 1.0 - gw;
+      var gs = gScores[name]  || 0;
+      var ps = pScores[name]  || 0;
+      fused[name] = gw * gs + pw * ps;
+    });
+
+    /* ── Post-procesado: supresión de no-máximos contextuales ──
+       Si rayo gana pero no tiene esquinas marcadas, penalizar.
+       Si círculo gana pero no está cerrado, penalizar. */
+    if (features) {
+      // Rayo necesita esquinas agudas
+      if (fused['zigzag/rayo'] && features.corners === 0 && features.maxCornerAngle < 0.3) {
+        fused['zigzag/rayo'] *= 0.4;
+      }
+      // Círculo necesita estar cerrado y sweep alto
+      if (fused['círculo'] && !features.closed && Math.abs(features.sweep) < 4) {
+        fused['círculo'] *= 0.5;
+      }
+      // Línea no debe tener esquinas
+      if (fused['línea'] && features.corners > 1) {
+        fused['línea'] *= 0.3;
+      }
+      // Espiral necesita sweep alto
+      if (fused['espiral'] && Math.abs(features.sweep) < 6) {
+        fused['espiral'] *= 0.5;
+      }
+      // Ola/curva necesita suavidad (pocas esquinas)
+      if (fused['ola/curva'] && features.corners > 2) {
+        fused['ola/curva'] *= 0.6;
+      }
+      // Triángulo necesita estar cerrado
+      if (fused['triángulo'] && !features.closed && features.corners < 2) {
+        fused['triángulo'] *= 0.5;
+      }
+    }
+
+    // Ordenar y devolver top 3
+    var results = Object.keys(fused).map(function(k){
+      return { name: k, score: fused[k] };
+    });
+    results.sort(function(a, b){ return b.score - a.score; });
+
+    return results.slice(0, 3).map(function(r) {
+      var lib = SHAPE_LIB[r.name] || { emoji: '◉', syms: ['◉'] };
+      return { name: r.name, score: r.score, emoji: lib.emoji, syms: lib.syms };
+    });
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     CANVAS — dibujo e interacción
+  ══════════════════════════════════════════════════════════════ */
   function resize(){
     var parent = canvas.parentElement;
-    var w = Math.min(parent ? parent.offsetWidth - 24 : 300, 340);
-    var h = Math.round(w * 0.65);
-    // save strokes before resize
-    var saved = strokes.slice();
-    canvas.width = w; canvas.height = h;
-    strokes = saved;
+    var cssW = parent ? parent.offsetWidth : 320;
+    var cssH = Math.round(cssW * 0.60);
+    var dpr = Math.min(window.devicePixelRatio || 1, 3);
+    canvas.style.width  = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+    canvas.width  = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    ctx.scale(dpr, dpr);
     redrawAll();
   }
 
   function redrawAll(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    var allStrokes = strokes.concat(currentStroke.length ? [currentStroke] : []);
+    var all = strokes.concat(currentStroke.length ? [currentStroke] : []);
     ctx.strokeStyle = getColor();
-    ctx.lineWidth = 3.5;
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    allStrokes.forEach(function(pts){
+    ctx.lineWidth   = 3.5;
+    ctx.lineJoin    = 'round';
+    ctx.lineCap     = 'round';
+    all.forEach(function(pts){
       if (pts.length < 2) return;
       ctx.beginPath();
       ctx.moveTo(pts[0].x, pts[0].y);
-      for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      for (var i=1; i<pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
       ctx.stroke();
     });
   }
 
-  /* ── Input ── */
   function getXY(e){
     var r = canvas.getBoundingClientRect();
     var src = e.touches ? e.touches[0] : e;
@@ -1436,386 +2691,94 @@ document.addEventListener('keydown', function(e){
   }
 
   canvas.addEventListener('pointerdown', function(e){
-    drawing = true; currentStroke = [getXY(e)]; e.preventDefault();
+    drawing = true;
+    currentStroke = [getXY(e)];
+    e.preventDefault();
+    var hint = document.getElementById('draw-hint');
+    if (hint) hint.style.opacity = '0';
   });
   canvas.addEventListener('pointermove', function(e){
-    if (!drawing) return; currentStroke.push(getXY(e)); redrawAll(); e.preventDefault();
+    if (!drawing) return;
+    currentStroke.push(getXY(e));
+    redrawAll();
+    e.preventDefault();
   });
   canvas.addEventListener('pointerup', function(e){
-    if (!drawing) return; drawing = false;
-    if (currentStroke.length > 1) strokes.push(currentStroke);
+    if (!drawing) return;
+    drawing = false;
+    if (currentStroke.length > 1) strokes.push(currentStroke.slice());
     currentStroke = [];
     scheduleRecognize();
   });
   canvas.addEventListener('pointerleave', function(e){
-    if (!drawing) return; drawing = false;
-    if (currentStroke.length > 1) strokes.push(currentStroke);
+    if (!drawing) return;
+    drawing = false;
+    if (currentStroke.length > 1) strokes.push(currentStroke.slice());
     currentStroke = [];
     scheduleRecognize();
   });
 
-  /* ── Auto-recognize with short delay ── */
   function scheduleRecognize(){
     if (recognizeTimer) clearTimeout(recognizeTimer);
     recognizeTimer = setTimeout(function(){
       var allPts = [];
       strokes.forEach(function(s){ allPts = allPts.concat(s); });
-      if (allPts.length >= 8) showResults(recognize(allPts));
-    }, 350);
+      if (allPts.length >= 6) showResults(recognize(allPts));
+    }, 300);
   }
 
-  /* ═══════════════════════════════════════════════════════
-     RECOGNITION ENGINE — complete rewrite
-     ═══════════════════════════════════════════════════════ */
-
-  /* Resample to N evenly-spaced points */
-  function resample(pts, n){
-    if (pts.length < 2) return pts;
-    var totalLen = 0;
-    var lens = [0];
-    for (var i = 1; i < pts.length; i++){
-      var d = Math.hypot(pts[i].x-pts[i-1].x, pts[i].y-pts[i-1].y);
-      totalLen += d; lens.push(totalLen);
-    }
-    var interval = totalLen / (n - 1);
-    var result = [pts[0]];
-    var j = 1;
-    for (var k = 1; k < n; k++){
-      var target = k * interval;
-      while (j < pts.length - 1 && lens[j] < target) j++;
-      var t = (target - lens[j-1]) / (lens[j] - lens[j-1] || 1);
-      result.push({
-        x: pts[j-1].x + t * (pts[j].x - pts[j-1].x),
-        y: pts[j-1].y + t * (pts[j].y - pts[j-1].y)
-      });
-    }
-    return result;
-  }
-
-  /* Normalize to unit square centered at centroid */
-  function normalizeToUnit(pts){
-    var cx = 0, cy = 0;
-    pts.forEach(function(p){ cx += p.x; cy += p.y; });
-    cx /= pts.length; cy /= pts.length;
-    var maxD = 0;
-    pts.forEach(function(p){ maxD = Math.max(maxD, Math.hypot(p.x-cx, p.y-cy)); });
-    if (maxD === 0) maxD = 1;
-    return pts.map(function(p){ return { x:(p.x-cx)/maxD, y:(p.y-cy)/maxD }; });
-  }
-
-  /* Rotate to indicative angle */
-  function rotateToZero(pts){
-    var cx = 0, cy = 0;
-    pts.forEach(function(p){ cx+=p.x; cy+=p.y; });
-    cx/=pts.length; cy/=pts.length;
-    var ang = Math.atan2(pts[0].y-cy, pts[0].x-cx);
-    var cos = Math.cos(-ang), sin = Math.sin(-ang);
-    return pts.map(function(p){
-      var x=p.x-cx, y=p.y-cy;
-      return { x: x*cos - y*sin, y: x*sin + y*cos };
-    });
-  }
-
-  /* Feature extraction */
-  function extractFeatures(pts){
-    var xs = pts.map(function(p){ return p.x; });
-    var ys = pts.map(function(p){ return p.y; });
-    var minX=Math.min.apply(null,xs), maxX=Math.max.apply(null,xs);
-    var minY=Math.min.apply(null,ys), maxY=Math.max.apply(null,ys);
-    var W = maxX-minX || 1, H = maxY-minY || 1;
-    var cx = (minX+maxX)/2, cy = (minY+maxY)/2;
-    var aspect = W/H;
-
-    /* Closedness */
-    var dx0 = pts[0].x-pts[pts.length-1].x, dy0 = pts[0].y-pts[pts.length-1].y;
-    var closeDist = Math.hypot(dx0, dy0);
-    var diag = Math.hypot(W, H);
-    var closedness = 1 - Math.min(closeDist / (diag*0.6), 1); // 0=open, 1=closed
-
-    /* Radii stats */
-    var radii = pts.map(function(p){ return Math.hypot(p.x-cx, p.y-cy); });
-    var meanR = radii.reduce(function(a,b){return a+b;},0)/radii.length;
-    var varR  = radii.reduce(function(a,r){return a+(r-meanR)*(r-meanR);},0)/radii.length;
-    var cvR   = Math.sqrt(varR)/(meanR||1); // coefficient of variation — 0=circle, high=jagged
-
-    /* Winding number */
-    var winding = 0;
-    for (var i=1; i<pts.length-1; i++){
-      var a1 = Math.atan2(pts[i].y-pts[i-1].y, pts[i].x-pts[i-1].x);
-      var a2 = Math.atan2(pts[i+1].y-pts[i].y, pts[i+1].x-pts[i].x);
-      var da = a2-a1;
-      while(da>Math.PI) da-=2*Math.PI;
-      while(da<-Math.PI) da+=2*Math.PI;
-      winding += da;
-    }
-    var windingTurns = Math.abs(winding)/(2*Math.PI);
-
-    /* Sharp corners — count direction changes > threshold */
-    var corners = 0;
-    var SMOOTH = 5; // smoothing window
-    for (var i=SMOOTH; i<pts.length-SMOOTH; i++){
-      var dx1=pts[i].x-pts[i-SMOOTH].x, dy1=pts[i].y-pts[i-SMOOTH].y;
-      var dx2=pts[i+SMOOTH].x-pts[i].x, dy2=pts[i+SMOOTH].y-pts[i].y;
-      if (Math.hypot(dx1,dy1)<2 || Math.hypot(dx2,dy2)<2) continue;
-      var ang = Math.atan2(dy1,dx1)-Math.atan2(dy2,dx2);
-      while(ang>Math.PI) ang-=2*Math.PI;
-      while(ang<-Math.PI) ang+=2*Math.PI;
-      if (Math.abs(ang)>0.8) corners++;
-    }
-    // Deduplicate close corners
-    var cornerDensity = corners / (pts.length || 1);
-
-    /* Convexity: ratio of bbox area to bounding hull area approx */
-    var bboxArea = W*H;
-    var pathLen = 0;
-    for (var i=1;i<pts.length;i++) pathLen+=Math.hypot(pts[i].x-pts[i-1].x, pts[i].y-pts[i-1].y);
-    var compactness = (4*Math.PI*(bboxArea)) / (pathLen*pathLen || 1); // ~1 for circle
-
-    /* Direction histogram (8 bins) for arrow/line detection */
-    var dirHist = new Array(8).fill(0);
-    for (var i=1;i<pts.length;i++){
-      var ang = Math.atan2(pts[i].y-pts[i-1].y, pts[i].x-pts[i-1].x);
-      var bin = Math.floor(((ang+Math.PI)/(2*Math.PI))*8) % 8;
-      dirHist[bin]++;
-    }
-    var maxDir = Math.max.apply(null, dirHist);
-    var dirDominance = maxDir / (pts.length || 1); // high = mostly one direction (arrow/line)
-
-    /* Vertical symmetry check */
-    var leftPts  = pts.filter(function(p){return p.x < cx;}).length;
-    var rightPts = pts.filter(function(p){return p.x >= cx;}).length;
-    var hSymmetry = 1 - Math.abs(leftPts-rightPts)/(pts.length||1);
-
-    /* Horizontal symmetry */
-    var topPts    = pts.filter(function(p){return p.y < cy;}).length;
-    var botPts    = pts.filter(function(p){return p.y >= cy;}).length;
-    var vSymmetry = 1 - Math.abs(topPts-botPts)/(pts.length||1);
-
-    /* Arc length in top half vs bottom half (for heart/luna distinction) */
-    var topLen=0, botLen=0;
-    for(var i=1;i<pts.length;i++){
-      var d=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
-      if(pts[i].y<cy) topLen+=d; else botLen+=d;
-    }
-    var topBotRatio = topLen/(botLen||1);
-
-    return {
-      aspect, closedness, cvR, windingTurns, corners, cornerDensity,
-      compactness, dirDominance, hSymmetry, vSymmetry, topBotRatio,
-      W, H, pathLen, meanR, bboxArea
-    };
-  }
-
-  /* ── Classifier ── */
-  function recognize(rawPts){
-    var pts = resample(rawPts, 128);
-    var f   = extractFeatures(pts);
-
-    /* Score each shape with a detailed model */
-    var scores = [];
-
-    /* CÍRCULO: closed, low cvR (smooth), winding ~1, symmetric */
-    scores.push({ idx:4, name:'círculo', s:
-      f.closedness * 0.30 +
-      Math.max(0, 0.30 - f.cvR * 1.5) +
-      Math.max(0, 0.25 - Math.abs(f.windingTurns-1)*0.5) +
-      f.hSymmetry * 0.075 +
-      f.vSymmetry * 0.075
-    });
-
-    /* CUADRADO/RECT: closed, 4 sharp corners (cornerDensity peak around 4), aspect flexible, cvR moderate */
-    var cornerScore4 = Math.max(0, 1 - Math.abs(f.corners - 4) * 0.18);
-    scores.push({ idx:8, name:'cuadrado', s:
-      f.closedness * 0.30 +
-      cornerScore4  * 0.40 +
-      Math.max(0, 0.15 - f.cvR * 0.5) +
-      (f.aspect > 0.4 && f.aspect < 2.5 ? 0.15 : 0)
-    });
-
-    /* TRIÁNGULO: closed, ~3 corners, aspect variable, cvR high */
-    var cornerScore3 = Math.max(0, 1 - Math.abs(f.corners - 3) * 0.25);
-    scores.push({ idx:6, name:'triángulo', s:
-      f.closedness * 0.28 +
-      cornerScore3  * 0.40 +
-      (f.cvR > 0.2 ? 0.12 : 0) +
-      (f.windingTurns > 0.5 && f.windingTurns < 1.3 ? 0.10 : 0) +
-      (f.vSymmetry < 0.6 ? 0.10 : 0) // triangles often asymmetric vertically
-    });
-
-    /* ESTRELLA: closed, many corners, cvR HIGH (spiky radii), winding ~1 */
-    scores.push({ idx:0, name:'estrella', s:
-      f.closedness * 0.20 +
-      Math.min(f.cvR * 0.8, 0.35) +
-      (f.corners >= 8 ? 0.25 : f.corners >= 5 ? 0.15 : 0) +
-      (f.windingTurns > 0.7 && f.windingTurns < 1.5 ? 0.10 : 0) +
-      f.hSymmetry * 0.05 + f.vSymmetry * 0.05
-    });
-
-    /* CORAZÓN: closed, cvR moderate, taller or equal aspect, top heavier arc,
-       bottom comes to point (vSymmetry low), hSymmetry high */
-    scores.push({ idx:2, name:'corazón', s:
-      f.closedness * 0.22 +
-      (f.cvR > 0.1 && f.cvR < 0.5 ? 0.15 : 0) +
-      (f.aspect < 1.2 ? 0.10 : 0) +
-      f.hSymmetry * 0.18 +
-      (f.topBotRatio > 1.2 ? 0.15 : 0) + // more arc on top
-      (f.vSymmetry < 0.75 ? 0.10 : 0) +   // asymmetric top/bottom
-      (f.corners >= 1 && f.corners <= 6 ? 0.10 : 0)
-    });
-
-    /* DIAMANTE/ROMBO: closed, ~4 corners, cvR moderate, aspect ~1, symmetric */
-    var cornerScore4d = Math.max(0, 1 - Math.abs(f.corners - 4) * 0.22);
-    scores.push({ idx:22, name:'diamante', s:
-      f.closedness * 0.25 +
-      cornerScore4d * 0.30 +
-      f.hSymmetry   * 0.15 +
-      f.vSymmetry   * 0.15 +
-      (f.cvR > 0.1 && f.cvR < 0.35 ? 0.10 : 0) +
-      (f.aspect > 0.5 && f.aspect < 2.0 ? 0.05 : 0)
-    });
-
-    /* LUNA: closed or open, cvR low-moderate, concave, few corners, NOT symmetric */
-    scores.push({ idx:12, name:'luna', s:
-      (f.closedness > 0.4 ? 0.15 : 0.05) +
-      (f.cvR > 0.05 && f.cvR < 0.3 ? 0.20 : 0) +
-      (f.corners <= 3 ? 0.20 : 0) +
-      (f.hSymmetry < 0.6 ? 0.20 : 0) + // moons are horizontally asymmetric
-      (f.windingTurns > 0.3 && f.windingTurns < 1.0 ? 0.15 : 0) +
-      (f.aspect > 0.5 && f.aspect < 2.0 ? 0.10 : 0)
-    });
-
-    /* FLECHA: open, directionally dominant, few corners */
-    scores.push({ idx:16, name:'flecha', s:
-      (1 - f.closedness) * 0.25 +
-      f.dirDominance    * 0.35 +
-      (f.corners <= 4   ? 0.20 : 0) +
-      (f.windingTurns < 0.5 ? 0.10 : 0) +
-      (f.aspect > 1.5 || f.aspect < 0.66 ? 0.10 : 0) // elongated
-    });
-
-    /* RAYO/ZIG-ZAG: open, few corners but sharp, directionally mixed, tall */
-    scores.push({ idx:10, name:'rayo', s:
-      (1 - f.closedness) * 0.20 +
-      (f.corners >= 2 && f.corners <= 6 ? 0.25 : 0) +
-      (f.dirDominance < 0.2 ? 0.15 : 0) + // mixed directions
-      (f.aspect < 0.9 ? 0.20 : 0) + // taller than wide
-      (f.cvR > 0.15 ? 0.10 : 0) +
-      (f.windingTurns < 0.6 ? 0.10 : 0)
-    });
-
-    /* INFINITO: closed, winding ~2, wide aspect */
-    scores.push({ idx:18, name:'infinito', s:
-      f.closedness * 0.20 +
-      Math.max(0, 0.35 - Math.abs(f.windingTurns-2)*0.4) +
-      (f.aspect > 1.4 ? 0.25 : 0) +
-      f.hSymmetry * 0.10 +
-      f.vSymmetry * 0.10
-    });
-
-    /* ESPIRAL: open (or loosely closed), winding > 1.5, increasing radii */
-    scores.push({ idx:20, name:'espiral', s:
-      (1-f.closedness) * 0.15 +
-      (f.windingTurns > 1.5 ? 0.40 : f.windingTurns > 1.0 ? 0.20 : 0) +
-      (f.cvR > 0.15 ? 0.20 : 0) +
-      (f.corners < 4 ? 0.15 : 0) +
-      (f.hSymmetry < 0.8 ? 0.10 : 0)
-    });
-
-    /* CRUZ: closed or open, corners ~4 in + shape, symmetric, aspect ~1 */
-    scores.push({ idx:14, name:'cruz', s:
-      (f.corners >= 4 && f.corners <= 8 ? 0.30 : 0) +
-      f.hSymmetry * 0.20 +
-      f.vSymmetry * 0.20 +
-      (f.aspect > 0.6 && f.aspect < 1.6 ? 0.15 : 0) +
-      (f.cvR > 0.1 ? 0.10 : 0) +
-      f.closedness * 0.05
-    });
-
-    /* FLOR: closed, many corners, cvR high AND winding ~1, symmetric */
-    scores.push({ idx:24, name:'flor', s:
-      f.closedness * 0.15 +
-      (f.corners >= 8 ? 0.30 : f.corners >= 5 ? 0.15 : 0) +
-      (f.windingTurns > 0.8 && f.windingTurns < 1.4 ? 0.15 : 0) +
-      f.hSymmetry * 0.15 +
-      f.vSymmetry * 0.15 +
-      Math.min(f.cvR, 0.1) * 1.0
-    });
-
-    /* SOL: closed, many corners, cvR high (rays), symmetric */
-    scores.push({ idx:26, name:'sol', s:
-      f.closedness * 0.15 +
-      (f.corners >= 10 ? 0.30 : f.corners >= 7 ? 0.20 : 0) +
-      Math.min(f.cvR * 1.2, 0.25) +
-      f.hSymmetry * 0.15 +
-      f.vSymmetry * 0.15
-    });
-
-    /* NOTA MUSICAL: open, tall aspect, few corners, NOT directionally dominant */
-    scores.push({ idx:28, name:'nota musical', s:
-      (1-f.closedness) * 0.25 +
-      (f.aspect < 0.8 ? 0.20 : 0) +
-      (f.corners >= 1 && f.corners <= 4 ? 0.20 : 0) +
-      (f.dirDominance < 0.15 ? 0.15 : 0) +
-      (f.windingTurns > 0.3 && f.windingTurns < 1.0 ? 0.10 : 0) +
-      (f.cvR > 0.1 && f.cvR < 0.5 ? 0.10 : 0)
-    });
-
-    /* MANO: open, tall, moderate corners, NOT directionally dominant */
-    scores.push({ idx:30, name:'mano', s:
-      (1-f.closedness) * 0.20 +
-      (f.aspect < 0.85 ? 0.20 : 0) +
-      (f.corners >= 3 && f.corners <= 10 ? 0.25 : 0) +
-      (f.dirDominance < 0.12 ? 0.15 : 0) +
-      (f.cvR > 0.1 ? 0.10 : 0) +
-      f.vSymmetry * 0.10
-    });
-
-    /* Sort and pick top 3 unique */
-    scores.sort(function(a,b){ return b.s - a.s; });
-    var seen = {}, result = [];
-    for (var i = 0; i < scores.length && result.length < 3; i++){
-      var sh = SHAPES[scores[i].idx];
-      if (sh && !seen[sh.name]){ seen[sh.name]=1; result.push(sh); }
-    }
-    return result;
-  }
-
-  /* ── Render results ── */
+  /* ── Mostrar resultados — versión mejorada v10 ── */
   function showResults(matches){
     var resultEl = document.getElementById('draw-result');
     var chipsEl  = document.getElementById('draw-chips');
     var toastEl  = document.getElementById('draw-toast');
     if (!matches || !matches.length){ resultEl.style.display='none'; return; }
+
     chipsEl.innerHTML = '';
     matches.forEach(function(m, mi){
+      var pct = Math.round(m.score * 100);
+      var barColor = pct > 70 ? 'var(--green)' : pct > 45 ? 'var(--blue)' : 'var(--orange)';
       var label = document.createElement('div');
-      label.style.cssText = 'width:100%;font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.08em;margin:' + (mi===0?'0':'14px') + ' 0 7px;';
-      label.textContent = (mi===0 ? '✦ Mejor coincidencia' : '◦ Alternativa') + ' — ' + m.name;
+      label.style.cssText = 'width:100%;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin:' + (mi===0?'0':'16px') + ' 0 6px;font-family:var(--sf);display:flex;align-items:center;justify-content:space-between;';
+      var prefix = mi === 0 ? '\u2736 MEJOR COINCIDENCIA' : (mi === 1 ? '\u25E6 Alternativa' : '\u00B7 Otra opci\u00F3n');
+      label.innerHTML = '<span style="color:' + (mi===0?'var(--blue)':'var(--t3)') + '">' + prefix + ' \u2014 ' + m.name + '</span>' +
+        '<span style="font-size:11px;color:' + barColor + ';font-weight:800;">' + pct + '%</span>';
       chipsEl.appendChild(label);
 
-      /* Big emoji chip */
+      /* Barra de confianza animada para cada coincidencia */
+      var bar = document.createElement('div');
+      bar.style.cssText = 'width:100%;height:' + (mi===0?'4':'2') + 'px;background:var(--bg3);border-radius:2px;margin-bottom:' + (mi===0?'10':'8') + 'px;overflow:hidden;';
+      var fill = document.createElement('div');
+      fill.style.cssText = 'height:100%;border-radius:2px;background:' + barColor + ';width:0%;transition:width .5s cubic-bezier(.4,0,.2,1);';
+      bar.appendChild(fill);
+      chipsEl.appendChild(bar);
+      (function(f, p){ setTimeout(function(){ f.style.width = p + '%'; }, 30 + mi * 80); })(fill, pct);
+
+      /* Emoji grande */
       var emojiChip = document.createElement('button');
       emojiChip.className = 'draw-match-chip';
       emojiChip.title = 'Copiar: ' + m.emoji;
-      emojiChip.style.cssText = 'font-size:26px;padding:8px 16px;';
+      emojiChip.style.cssText = 'font-size:' + (mi===0?'30':'22') + 'px;padding:' + (mi===0?'10px 20px':'7px 14px') + ';';
       emojiChip.textContent = m.emoji;
-      emojiChip.addEventListener('click', function(){ doCopy(m.emoji, toastEl); });
+      emojiChip.addEventListener('click', (function(e){ return function(){ doCopy(e, toastEl); }; })(m.emoji));
       chipsEl.appendChild(emojiChip);
 
-      /* All syms */
+      /* Símbolos — todos para primera coincidencia, 8 para el resto */
+      var maxSyms = mi === 0 ? m.syms.length : Math.min(m.syms.length, 8);
       var symWrap = document.createElement('div');
-      symWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:6px;width:100%;box-sizing:border-box;';
-      m.syms.forEach(function(s){
+      symWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:8px;width:100%;box-sizing:border-box;';
+      m.syms.slice(0, maxSyms).forEach(function(s){
         var sc = document.createElement('button');
         sc.className = 'draw-match-chip';
         sc.title = 'Copiar: ' + s;
-        sc.style.cssText = 'font-size:17px;padding:5px 9px;min-width:36px;justify-content:center;flex-shrink:0;';
+        sc.style.cssText = 'font-size:' + (mi===0?'18':'16') + 'px;padding:5px 10px;min-width:38px;justify-content:center;flex-shrink:0;';
         sc.textContent = s;
-        sc.addEventListener('click', function(){ doCopy(s, toastEl); });
+        sc.addEventListener('click', (function(sym){ return function(){ doCopy(sym, toastEl); }; })(s));
         symWrap.appendChild(sc);
       });
       chipsEl.appendChild(symWrap);
     });
+
     resultEl.style.display = 'flex';
   }
 
@@ -1826,25 +2789,30 @@ document.addEventListener('keydown', function(e){
       document.body.appendChild(ta); ta.select();
       document.execCommand('copy'); document.body.removeChild(ta);
     });
-    toastEl.textContent = '¡Copiado! ' + text;
-    toastEl.classList.add('show');
-    setTimeout(function(){ toastEl.classList.remove('show'); }, 2000);
+    if (toastEl){
+      toastEl.textContent = '¡Copiado! ' + text;
+      toastEl.classList.add('show');
+      setTimeout(function(){ toastEl.classList.remove('show'); }, 1800);
+    }
   }
 
-  /* ── Clear ── */
+  /* ── Borrar ── */
   document.getElementById('draw-clear-btn').addEventListener('click', function(){
     strokes = []; currentStroke = [];
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     document.getElementById('draw-result').style.display = 'none';
+    var hint = document.getElementById('draw-hint');
+    if (hint) hint.style.opacity = '.5';
     if (recognizeTimer) clearTimeout(recognizeTimer);
   });
 
-  /* ── Resize & dark mode ── */
+  /* ── Init ── */
   window.addEventListener('resize', resize);
   resize();
   new MutationObserver(function(){ redrawAll(); })
     .observe(document.body, { attributes:true, attributeFilter:['class'] });
 })();
+
 /* ──────────────── SÍMBOLOS ──────────────── */
 (function(){
   var SYMBOLS = {
